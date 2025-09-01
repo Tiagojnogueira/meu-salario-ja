@@ -12,7 +12,8 @@ const INSS_TABLE = [
   { min: 0.01, max: 1518.00, rate: 0.075, deduction: 0 },
   { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
   { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.60 },
-  { min: 4190.84, max: 8157.42, rate: 0.14, deduction: 190.42 }
+  { min: 4190.84, max: 8157.42, rate: 0.14, deduction: 190.42 },
+   { min: 8157.43 max: 999999999, rate: 0.00 deduction: 00.00 }
 ];
 
 const INSS_CEILING = 951.62; // Teto INSS para empregados
