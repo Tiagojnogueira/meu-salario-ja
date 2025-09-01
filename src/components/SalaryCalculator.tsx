@@ -415,6 +415,34 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           </CardContent>
         </Card>
 
+        {/* Comparison Section */}
+        {calculations.grossSalary > 0 && calculations.netSalary !== calculations.simplifiedNetSalary && (
+          <div className="col-span-1 lg:col-span-3">
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/20 border-amber-200 dark:border-amber-800">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                    💡 Recomendação
+                  </h3>
+                  <p className="text-amber-700 dark:text-amber-300">
+                    {calculations.netSalary > calculations.simplifiedNetSalary ? (
+                      <>
+                        O método das <strong>Deduções Legais</strong> é mais vantajoso para você, 
+                        resultando em <strong>{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)}</strong> a mais no salário líquido.
+                      </>
+                    ) : (
+                      <>
+                        O método da <strong>Dedução Simplificada</strong> é mais vantajoso para você, 
+                        resultando em <strong>{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)}</strong> a mais no salário líquido.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Charts Section */}
         {calculations.grossSalary > 0 && (
           <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
