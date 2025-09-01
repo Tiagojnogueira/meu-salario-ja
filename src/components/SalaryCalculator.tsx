@@ -38,7 +38,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     const salary = parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     const dependentCount = parseInt(dependents) || 0;
 
-    // Calcular INSS
+    // Calcular INSS (mesmo para ambos os métodos)
     let inssDiscount = 0;
     if (salary > 8157.42) {
       // Aplicar teto do INSS para salários acima do limite
@@ -52,10 +52,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       }
     }
 
+    // CÁLCULO TRADICIONAL
     // Calcular base para IRRF (salário - INSS - dependentes)
     const irrfBase = salary - inssDiscount - (dependentCount * DEPENDENT_DEDUCTION);
     
-    // Calcular IRRF
+    // Calcular IRRF tradicional
     let irrfDiscount = 0;
     let irrfOptional = false;
     const irrfRange = IRRF_TABLE.find(range => irrfBase >= range.min && irrfBase <= range.max);
@@ -72,6 +73,27 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     const totalDiscounts = inssDiscount + irrfDiscount;
     const netSalary = salary - totalDiscounts;
 
+    // CÁLCULO DEDUÇÃO SIMPLIFICADA
+    // Base para IRRF simplificado: salário - R$ 607,20
+    const simplifiedIrrfBase = salary - 607.20;
+    
+    // Calcular IRRF simplificado
+    let simplifiedIrrfDiscount = 0;
+    let simplifiedIrrfOptional = false;
+    const simplifiedIrrfRange = IRRF_TABLE.find(range => simplifiedIrrfBase >= range.min && simplifiedIrrfBase <= range.max);
+    if (simplifiedIrrfRange && simplifiedIrrfBase > 0) {
+      simplifiedIrrfDiscount = simplifiedIrrfBase * simplifiedIrrfRange.rate - simplifiedIrrfRange.deduction;
+      simplifiedIrrfDiscount = Math.max(0, simplifiedIrrfDiscount);
+      
+      // Verificar se IRRF é menor que R$ 10,00 (opcional)
+      if (simplifiedIrrfDiscount > 0 && simplifiedIrrfDiscount < 10) {
+        simplifiedIrrfOptional = true;
+      }
+    }
+
+    const simplifiedTotalDiscounts = inssDiscount + simplifiedIrrfDiscount;
+    const simplifiedNetSalary = salary - simplifiedTotalDiscounts;
+
     return {
       grossSalary: salary,
       inssDiscount,
@@ -79,7 +101,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       irrfOptional,
       totalDiscounts,
       netSalary,
-      dependentDeduction: dependentCount * DEPENDENT_DEDUCTION
+      dependentDeduction: dependentCount * DEPENDENT_DEDUCTION,
+      // Dedução Simplificada
+      simplifiedIrrfDiscount,
+      simplifiedIrrfOptional,
+      simplifiedTotalDiscounts,
+      simplifiedNetSalary
     };
   }, [grossSalary, dependents]);
 
@@ -116,7 +143,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
         {/* Input Section */}
         <Card className="shadow-lg border-0 bg-gradient-to-br from-card to-accent/20">
           <CardHeader className="pb-4">
@@ -222,9 +249,50 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           </CardContent>
         </Card>
 
+        {/* Simplified Deduction Results Section */}
+        <Card className="shadow-lg border-0 bg-gradient-to-br from-primary-light to-card">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <Calculator className="w-6 h-6 text-primary" />
+              Resultado - Dedução Simplificada
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="bg-card/80 backdrop-blur p-4 rounded-lg border">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-muted-foreground">Salário Bruto:</span>
+                  <span className="font-semibold text-lg">{formatCurrency(calculations.grossSalary)}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-muted-foreground">INSS:</span>
+                  <span className="text-destructive font-medium">-{formatCurrency(calculations.inssDiscount)}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-muted-foreground">IRRF (Base: Bruto - R$ 607,20):</span>
+                  <span className="text-destructive font-medium">-{formatCurrency(calculations.simplifiedIrrfDiscount)}</span>
+                </div>
+                {calculations.simplifiedIrrfOptional && (
+                  <p className="text-xs text-amber-600 mb-2 italic">
+                    * IRRF menor que R$ 10,00 - recolhimento opcional
+                  </p>
+                )}
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold">Salário Líquido:</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {formatCurrency(calculations.simplifiedNetSalary)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Chart Section */}
         {calculations.grossSalary > 0 && (
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <Card className="shadow-lg border-0">
               <CardHeader>
                 <CardTitle className="text-xl text-center">Distribuição do Salário</CardTitle>
