@@ -356,17 +356,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                       {formatCurrency(calculations.netSalary)}
                     </span>
                   </div>
-                  {calculations.grossSalary > 0 && calculations.netSalary !== calculations.simplifiedNetSalary && (
+                  {calculations.grossSalary > 0 && calculations.netSalary > calculations.simplifiedNetSalary && (
                     <div className="mt-2 text-center">
-                      {calculations.netSalary > calculations.simplifiedNetSalary ? (
-                        <p className="text-xs text-success font-medium">
-                          ✓ Método mais vantajoso (+{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)})
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          Dedução simplificada é mais vantajosa
-                        </p>
-                      )}
+                      <p className="text-xs text-success font-medium">
+                        ✓ Método mais vantajoso (+{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)})
+                      </p>
                     </div>
                   )}
                 </div>
@@ -422,17 +416,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                       {formatCurrency(calculations.simplifiedNetSalary)}
                     </span>
                   </div>
-                  {calculations.grossSalary > 0 && calculations.netSalary !== calculations.simplifiedNetSalary && (
+                  {calculations.grossSalary > 0 && calculations.simplifiedNetSalary > calculations.netSalary && (
                     <div className="mt-2 text-center">
-                      {calculations.simplifiedNetSalary > calculations.netSalary ? (
-                        <p className="text-xs text-primary font-medium">
-                          ✓ Método mais vantajoso (+{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)})
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          Deduções legais são mais vantajosas
-                        </p>
-                      )}
+                      <p className="text-xs text-primary font-medium">
+                        ✓ Método mais vantajoso (+{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)})
+                      </p>
                     </div>
                   )}
                 </div>
