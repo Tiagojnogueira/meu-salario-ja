@@ -170,7 +170,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <TrendingUp className="w-6 h-6 text-success" />
-              Resultado do Cálculo - Deduções Legais
+              Resultado do Cálculo
             </CardTitle>
           </CardHeader>
           <CardContent>
