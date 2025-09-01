@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calculator, TrendingUp, Users, DollarSign, RotateCcw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Calculator, TrendingUp, Users, DollarSign, RotateCcw, Info, Gift } from "lucide-react";
 import { SalaryChart } from "./SalaryChart";
 
 // Tabela INSS 2025
@@ -34,16 +35,18 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
   const [grossSalary, setGrossSalary] = useState<string>("");
   const [dependents, setDependents] = useState<string>("0");
   const [otherDiscounts, setOtherDiscounts] = useState<string>("");
+  const [benefits, setBenefits] = useState<string>("");
 
   // Parse numeric values only when needed to avoid constant re-calculations
   const parsedValues = useMemo(() => ({
     salary: parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
     dependentCount: parseInt(dependents) || 0,
-    otherDiscountsValue: parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0
-  }), [grossSalary, dependents, otherDiscounts]);
+    otherDiscountsValue: parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
+    benefitsValue: parseFloat(benefits.replace(/[^\d,]/g, '').replace(',', '.')) || 0
+  }), [grossSalary, dependents, otherDiscounts, benefits]);
 
   const calculations = useMemo(() => {
-    const { salary, dependentCount, otherDiscountsValue } = parsedValues;
+    const { salary, dependentCount, otherDiscountsValue, benefitsValue } = parsedValues;
 
     // Calcular INSS (mesmo para ambos os métodos)
     let inssDiscount = 0;
@@ -78,7 +81,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     const totalDiscounts = inssDiscount + irrfDiscount;
-    const netSalary = salary - totalDiscounts - otherDiscountsValue;
+    const netSalary = salary - totalDiscounts - otherDiscountsValue + benefitsValue;
 
     // CÁLCULO DEDUÇÃO SIMPLIFICADA
     // Base para IRRF simplificado: salário - R$ 607,20
@@ -99,7 +102,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     const simplifiedTotalDiscounts = inssDiscount + simplifiedIrrfDiscount;
-    const simplifiedNetSalary = salary - simplifiedTotalDiscounts - otherDiscountsValue;
+    const simplifiedNetSalary = salary - simplifiedTotalDiscounts - otherDiscountsValue + benefitsValue;
 
     return {
       grossSalary: salary,
@@ -143,102 +146,160 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     setOtherDiscounts(formattedValue);
   };
 
+  const handleBenefitsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(parseInt(value) / 100 || 0);
+    setBenefits(formattedValue);
+  };
+
   const handleNewCalculation = () => {
     setGrossSalary("");
     setDependents("0");
     setOtherDiscounts("");
+    setBenefits("");
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-3">
-          <Calculator className="w-10 h-10 text-primary" />
-          Calculadora de Salário Líquido
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-3 flex-wrap">
+          <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+          <span>Calculadora de Salário Líquido</span>
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Calcule seu salário líquido - tiagonogueira.com.br
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          Calcule seu salário líquido - 
+          <a 
+            href="https://tiagonogueira.com.br" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline ml-1"
+          >
+            tiagonogueira.com.br
+          </a>
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Input Section */}
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-card to-accent/20">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <DollarSign className="w-6 h-6 text-primary" />
-              Dados do Salário
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="gross-salary" className="text-base font-medium">
-                Salário Bruto
-              </Label>
-              <Input
-                id="gross-salary"
-                type="text"
-                value={grossSalary}
-                onChange={handleSalaryChange}
-                placeholder="R$ 0,00"
-                className="text-lg h-14 text-center font-semibold"
-              />
-            </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Input Section */}
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-card to-accent/20">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                Dados do Salário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="gross-salary" className="text-base font-medium flex items-center gap-2">
+                  R$ Salário Bruto
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>O valor salário bruto, sem considerar os descontos oficiais obrigatórios</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="gross-salary"
+                  type="text"
+                  value={grossSalary}
+                  onChange={handleSalaryChange}
+                  placeholder="R$ 0,00"
+                  className="text-lg h-12 sm:h-14 text-center font-semibold"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dependents" className="text-base font-medium flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Número de Dependentes
-              </Label>
-              <Select value={dependents} onValueChange={setDependents}>
-                <SelectTrigger className="h-12 text-lg">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 11 }, (_, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {i} {i === 1 ? 'dependente' : 'dependentes'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {parseInt(dependents) > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Dedução por dependente: {formatCurrency(DEPENDENT_DEDUCTION)}
-                </p>
-              )}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="dependents" className="text-base font-medium flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Número de Dependentes
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Indica o número de dependentes legais, que são considerados para cálculos de benefícios como Imposto de renda</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Select value={dependents} onValueChange={setDependents}>
+                  <SelectTrigger className="h-12 text-lg">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 11 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {i} {i === 1 ? 'dependente' : 'dependentes'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {parseInt(dependents) > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Dedução por dependente: {formatCurrency(DEPENDENT_DEDUCTION)}
+                  </p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="other-discounts" className="text-base font-medium">
-                Outros Descontos (R$)
-              </Label>
-              <Input
-                id="other-discounts"
-                type="text"
-                value={otherDiscounts}
-                onChange={handleOtherDiscountsChange}
-                placeholder="R$ 0,00"
-                className="text-lg h-14 text-center font-semibold"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="benefits" className="text-base font-medium flex items-center gap-2">
+                  <Gift className="w-4 h-4" />
+                  Benefícios
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>São valores adicionais, recebidos além do salário, mas que não são considerados como parte integrantes do salário</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="benefits"
+                  type="text"
+                  value={benefits}
+                  onChange={handleBenefitsChange}
+                  placeholder="R$ 0,00"
+                  className="text-lg h-12 sm:h-14 text-center font-semibold"
+                />
+              </div>
 
-            <Button
-              onClick={handleNewCalculation}
-              variant="outline"
-              className="w-full h-12 text-lg gap-2"
-            >
-              <RotateCcw className="w-5 h-5" />
-              Novo Cálculo
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label htmlFor="other-discounts" className="text-base font-medium">
+                  Outros Descontos (R$)
+                </Label>
+                <Input
+                  id="other-discounts"
+                  type="text"
+                  value={otherDiscounts}
+                  onChange={handleOtherDiscountsChange}
+                  placeholder="R$ 0,00"
+                  className="text-lg h-12 sm:h-14 text-center font-semibold"
+                />
+              </div>
+
+              <Button
+                onClick={handleNewCalculation}
+                variant="outline"
+                className="w-full h-12 text-lg gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Novo Cálculo
+              </Button>
+            </CardContent>
+          </Card>
 
         {/* Results Section */}
         <Card className="shadow-lg border-0 bg-gradient-to-br from-success-light to-card">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <TrendingUp className="w-6 h-6 text-success" />
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
               Resultado do Cálculo - Deduções Legais
             </CardTitle>
           </CardHeader>
@@ -246,16 +307,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
             <div className="space-y-4">
               <div className="bg-card/80 backdrop-blur p-4 rounded-lg border">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">Salário Bruto:</span>
-                  <span className="font-semibold text-lg">{formatCurrency(calculations.grossSalary)}</span>
+                  <span className="text-muted-foreground text-sm sm:text-base">Salário Bruto:</span>
+                  <span className="font-semibold text-base sm:text-lg">{formatCurrency(calculations.grossSalary)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">INSS:</span>
-                  <span className="text-destructive font-medium">-{formatCurrency(calculations.inssDiscount)}</span>
+                  <span className="text-muted-foreground text-sm sm:text-base">INSS:</span>
+                  <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.inssDiscount)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">IRRF:</span>
-                  <span className="text-destructive font-medium">-{formatCurrency(calculations.irrfDiscount)}</span>
+                  <span className="text-muted-foreground text-sm sm:text-base">IRRF:</span>
+                  <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.irrfDiscount)}</span>
                 </div>
                 {calculations.irrfOptional && (
                   <p className="text-xs text-amber-600 mb-2 italic">
@@ -264,20 +325,26 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 )}
                 {calculations.dependentDeduction > 0 && (
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-muted-foreground">Dedução Dependentes:</span>
-                    <span className="text-success font-medium">-{formatCurrency(calculations.dependentDeduction)}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">Dedução Dependentes:</span>
+                    <span className="text-success font-medium text-sm sm:text-base">-{formatCurrency(calculations.dependentDeduction)}</span>
                   </div>
                 )}
                 {calculations.otherDiscounts > 0 && (
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-muted-foreground">Outros Descontos:</span>
-                    <span className="text-destructive font-medium">-{formatCurrency(calculations.otherDiscounts)}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">Outros Descontos:</span>
+                    <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.otherDiscounts)}</span>
+                  </div>
+                )}
+                {parsedValues.benefitsValue > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground text-sm sm:text-base">Benefícios:</span>
+                    <span className="text-success font-medium text-sm sm:text-base">+{formatCurrency(parsedValues.benefitsValue)}</span>
                   </div>
                 )}
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Salário Líquido:</span>
-                    <span className="text-2xl font-bold text-success">
+                    <span className="text-base sm:text-lg font-semibold">Salário Líquido:</span>
+                    <span className="text-xl sm:text-2xl font-bold text-success">
                       {formatCurrency(calculations.netSalary)}
                     </span>
                   </div>
@@ -290,8 +357,8 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
         {/* Simplified Deduction Results Section */}
         <Card className="shadow-lg border-0 bg-gradient-to-br from-primary-light to-card">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Calculator className="w-6 h-6 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               Resultado - Dedução Simplificada
             </CardTitle>
           </CardHeader>
@@ -299,16 +366,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
             <div className="space-y-4">
               <div className="bg-card/80 backdrop-blur p-4 rounded-lg border">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">Salário Bruto:</span>
-                  <span className="font-semibold text-lg">{formatCurrency(calculations.grossSalary)}</span>
+                  <span className="text-muted-foreground text-sm sm:text-base">Salário Bruto:</span>
+                  <span className="font-semibold text-base sm:text-lg">{formatCurrency(calculations.grossSalary)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">INSS:</span>
-                  <span className="text-destructive font-medium">-{formatCurrency(calculations.inssDiscount)}</span>
+                  <span className="text-muted-foreground text-sm sm:text-base">INSS:</span>
+                  <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.inssDiscount)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">IRRF (Base: Bruto - R$ 607,20):</span>
-                  <span className="text-destructive font-medium">-{formatCurrency(calculations.simplifiedIrrfDiscount)}</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">IRRF (Base: Bruto - R$ 607,20):</span>
+                  <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.simplifiedIrrfDiscount)}</span>
                 </div>
                 {calculations.simplifiedIrrfOptional && (
                   <p className="text-xs text-amber-600 mb-2 italic">
@@ -317,14 +384,20 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 )}
                 {calculations.otherDiscounts > 0 && (
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-muted-foreground">Outros Descontos:</span>
-                    <span className="text-destructive font-medium">-{formatCurrency(calculations.otherDiscounts)}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">Outros Descontos:</span>
+                    <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(calculations.otherDiscounts)}</span>
+                  </div>
+                )}
+                {parsedValues.benefitsValue > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground text-sm sm:text-base">Benefícios:</span>
+                    <span className="text-success font-medium text-sm sm:text-base">+{formatCurrency(parsedValues.benefitsValue)}</span>
                   </div>
                 )}
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Salário Líquido:</span>
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-base sm:text-lg font-semibold">Salário Líquido:</span>
+                    <span className="text-xl sm:text-2xl font-bold text-primary">
                       {formatCurrency(calculations.simplifiedNetSalary)}
                     </span>
                   </div>
@@ -336,11 +409,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
 
         {/* Charts Section */}
         {calculations.grossSalary > 0 && (
-          <div className="lg:col-span-3 grid md:grid-cols-2 gap-6">
+          <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Legal Deductions Chart */}
             <Card className="shadow-lg border-0">
               <CardHeader>
-                <CardTitle className="text-xl text-center">Distribuição do Salário - Deduções Legais</CardTitle>
+                <CardTitle className="text-base sm:text-lg lg:text-xl text-center">Distribuição do Salário - Deduções Legais</CardTitle>
               </CardHeader>
               <CardContent>
                 <SalaryChart 
@@ -355,7 +428,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
             {/* Simplified Deduction Chart */}
             <Card className="shadow-lg border-0">
               <CardHeader>
-                <CardTitle className="text-xl text-center">Distribuição do Salário - Dedução Simplificada</CardTitle>
+                <CardTitle className="text-base sm:text-lg lg:text-xl text-center">Distribuição do Salário - Dedução Simplificada</CardTitle>
               </CardHeader>
               <CardContent>
                 <SalaryChart 
@@ -368,7 +441,8 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
             </Card>
           </div>
         )}
-      </div>
+        </div>
+      </TooltipProvider>
     </div>
   );
 };
