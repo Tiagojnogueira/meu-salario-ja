@@ -12,8 +12,7 @@ const INSS_TABLE = [
   { min: 0.01, max: 1518.00, rate: 0.075, deduction: 0 },
   { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
   { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.60 },
-  { min: 4190.84, max: 8157.42, rate: 0.14, deduction: 190.42 },
-   { min: 8157.43 max: 999999999, rate: 0.00 deduction: 00.00 }
+  { min: 4190.84, max: 8157.42, rate: 0.14, deduction: 190.42 }
 ];
 
 const INSS_CEILING = 951.62; // Teto INSS para empregados
@@ -41,12 +40,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
 
     // Calcular INSS
     let inssDiscount = 0;
-    const inssRange = INSS_TABLE.find(range => salary >= range.min && salary <= range.max);
-    if (inssRange) {
-      inssDiscount = salary * inssRange.rate - inssRange.deduction;
-      inssDiscount = Math.max(0, inssDiscount);
-      // Aplicar teto do INSS
-      if (salary > 8157.42) inssDiscount = INSS_CEILING;
+    if (salary > 8157.42) {
+      // Aplicar teto do INSS para salários acima do limite
+      inssDiscount = INSS_CEILING;
+    } else {
+      // Aplicar tabela progressiva para salários dentro do limite
+      const inssRange = INSS_TABLE.find(range => salary >= range.min && salary <= range.max);
+      if (inssRange) {
+        inssDiscount = salary * inssRange.rate - inssRange.deduction;
+        inssDiscount = Math.max(0, inssDiscount);
+      }
     }
 
     // Calcular base para IRRF (salário - INSS - dependentes)
@@ -54,10 +57,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     
     // Calcular IRRF
     let irrfDiscount = 0;
+    let irrfOptional = false;
     const irrfRange = IRRF_TABLE.find(range => irrfBase >= range.min && irrfBase <= range.max);
     if (irrfRange && irrfBase > 0) {
       irrfDiscount = irrfBase * irrfRange.rate - irrfRange.deduction;
       irrfDiscount = Math.max(0, irrfDiscount);
+      
+      // Verificar se IRRF é menor que R$ 10,00 (opcional)
+      if (irrfDiscount > 0 && irrfDiscount < 10) {
+        irrfOptional = true;
+      }
     }
 
     const totalDiscounts = inssDiscount + irrfDiscount;
@@ -67,6 +76,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       grossSalary: salary,
       inssDiscount,
       irrfDiscount,
+      irrfOptional,
       totalDiscounts,
       netSalary,
       dependentDeduction: dependentCount * DEPENDENT_DEDUCTION
@@ -188,6 +198,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                   <span className="text-muted-foreground">IRRF:</span>
                   <span className="text-destructive font-medium">-{formatCurrency(calculations.irrfDiscount)}</span>
                 </div>
+                {calculations.irrfOptional && (
+                  <p className="text-xs text-amber-600 mb-2 italic">
+                    * IRRF menor que R$ 10,00 - recolhimento opcional
+                  </p>
+                )}
                 {calculations.dependentDeduction > 0 && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground">Dedução Dependentes:</span>
