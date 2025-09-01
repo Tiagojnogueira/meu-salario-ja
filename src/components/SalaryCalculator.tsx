@@ -33,10 +33,12 @@ interface SalaryCalculatorProps {}
 export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
   const [grossSalary, setGrossSalary] = useState<string>("");
   const [dependents, setDependents] = useState<string>("0");
+  const [otherDiscounts, setOtherDiscounts] = useState<string>("");
 
   const calculations = useMemo(() => {
     const salary = parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     const dependentCount = parseInt(dependents) || 0;
+    const otherDiscountsValue = parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
 
     // Calcular INSS (mesmo para ambos os métodos)
     let inssDiscount = 0;
@@ -71,7 +73,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     const totalDiscounts = inssDiscount + irrfDiscount;
-    const netSalary = salary - totalDiscounts;
+    const netSalary = salary - totalDiscounts - otherDiscountsValue;
 
     // CÁLCULO DEDUÇÃO SIMPLIFICADA
     // Base para IRRF simplificado: salário - R$ 607,20
@@ -92,7 +94,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     const simplifiedTotalDiscounts = inssDiscount + simplifiedIrrfDiscount;
-    const simplifiedNetSalary = salary - simplifiedTotalDiscounts;
+    const simplifiedNetSalary = salary - simplifiedTotalDiscounts - otherDiscountsValue;
 
     return {
       grossSalary: salary,
@@ -102,13 +104,14 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       totalDiscounts,
       netSalary,
       dependentDeduction: dependentCount * DEPENDENT_DEDUCTION,
+      otherDiscounts: otherDiscountsValue,
       // Dedução Simplificada
       simplifiedIrrfDiscount,
       simplifiedIrrfOptional,
       simplifiedTotalDiscounts,
       simplifiedNetSalary
     };
-  }, [grossSalary, dependents]);
+  }, [grossSalary, dependents, otherDiscounts]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -126,9 +129,19 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     setGrossSalary(formattedValue);
   };
 
+  const handleOtherDiscountsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(parseInt(value) / 100 || 0);
+    setOtherDiscounts(formattedValue);
+  };
+
   const handleNewCalculation = () => {
     setGrossSalary("");
     setDependents("0");
+    setOtherDiscounts("");
   };
 
   return (
@@ -139,7 +152,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           Calculadora de Salário Líquido
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Calcule seu salário líquido com precisão usando as tabelas oficiais do INSS e IRRF 2025
+          Calcule seu salário líquido - tiagonogueira.com.br
         </p>
       </div>
 
@@ -191,6 +204,20 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="other-discounts" className="text-base font-medium">
+                Outros Descontos (R$)
+              </Label>
+              <Input
+                id="other-discounts"
+                type="text"
+                value={otherDiscounts}
+                onChange={handleOtherDiscountsChange}
+                placeholder="R$ 0,00"
+                className="text-lg h-14 text-center font-semibold"
+              />
+            </div>
+
             <Button
               onClick={handleNewCalculation}
               variant="outline"
@@ -207,7 +234,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <TrendingUp className="w-6 h-6 text-success" />
-              Resultado do Cálculo
+              Resultado do Cálculo - Deduções Legais
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -234,6 +261,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground">Dedução Dependentes:</span>
                     <span className="text-success font-medium">-{formatCurrency(calculations.dependentDeduction)}</span>
+                  </div>
+                )}
+                {calculations.otherDiscounts > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground">Outros Descontos:</span>
+                    <span className="text-destructive font-medium">-{formatCurrency(calculations.otherDiscounts)}</span>
                   </div>
                 )}
                 <div className="border-t pt-3 mt-3">
@@ -277,6 +310,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                     * IRRF menor que R$ 10,00 - recolhimento opcional
                   </p>
                 )}
+                {calculations.otherDiscounts > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground">Outros Descontos:</span>
+                    <span className="text-destructive font-medium">-{formatCurrency(calculations.otherDiscounts)}</span>
+                  </div>
+                )}
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Salário Líquido:</span>
@@ -290,12 +329,13 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           </CardContent>
         </Card>
 
-        {/* Chart Section */}
+        {/* Charts Section */}
         {calculations.grossSalary > 0 && (
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 grid md:grid-cols-2 gap-6">
+            {/* Legal Deductions Chart */}
             <Card className="shadow-lg border-0">
               <CardHeader>
-                <CardTitle className="text-xl text-center">Distribuição do Salário</CardTitle>
+                <CardTitle className="text-xl text-center">Distribuição do Salário - Deduções Legais</CardTitle>
               </CardHeader>
               <CardContent>
                 <SalaryChart 
@@ -303,6 +343,21 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                   inssDiscount={calculations.inssDiscount}
                   irrfDiscount={calculations.irrfDiscount}
                   netSalary={calculations.netSalary}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Simplified Deduction Chart */}
+            <Card className="shadow-lg border-0">
+              <CardHeader>
+                <CardTitle className="text-xl text-center">Distribuição do Salário - Dedução Simplificada</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SalaryChart 
+                  grossSalary={calculations.grossSalary}
+                  inssDiscount={calculations.inssDiscount}
+                  irrfDiscount={calculations.simplifiedIrrfDiscount}
+                  netSalary={calculations.simplifiedNetSalary}
                 />
               </CardContent>
             </Card>
