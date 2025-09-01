@@ -7,21 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Calculator, TrendingUp, Users, DollarSign } from "lucide-react";
 import { SalaryChart } from "./SalaryChart";
 
-// Tabela INSS 2024
+// Tabela INSS 2025
 const INSS_TABLE = [
-  { min: 0, max: 1412.00, rate: 0.075, deduction: 0 },
-  { min: 1412.01, max: 2666.68, rate: 0.09, deduction: 21.18 },
-  { min: 2666.69, max: 4000.03, rate: 0.12, deduction: 101.18 },
-  { min: 4000.04, max: 7786.02, rate: 0.14, deduction: 181.18 }
+  { min: 0.01, max: 1518.00, rate: 0.075, deduction: 0 },
+  { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
+  { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.60 },
+  { min: 4190.84, max: 8157.41, rate: 0.14, deduction: 190.42 }
 ];
 
-// Tabela IRRF 2024
+const INSS_CEILING = 951.62; // Teto INSS para empregados
+
+// Tabela IRRF 2025
 const IRRF_TABLE = [
-  { min: 0, max: 2259.20, rate: 0, deduction: 0 },
-  { min: 2259.21, max: 2826.65, rate: 0.075, deduction: 169.44 },
-  { min: 2826.66, max: 3751.05, rate: 0.15, deduction: 381.44 },
-  { min: 3751.06, max: 4664.68, rate: 0.225, deduction: 662.77 },
-  { min: 4664.69, max: Infinity, rate: 0.275, deduction: 896.00 }
+  { min: 0, max: 2428.80, rate: 0, deduction: 0 },
+  { min: 2428.81, max: 2826.65, rate: 0.075, deduction: 182.16 },
+  { min: 2826.66, max: 3751.05, rate: 0.15, deduction: 394.16 },
+  { min: 3751.06, max: 4664.68, rate: 0.225, deduction: 675.49 },
+  { min: 4664.69, max: Infinity, rate: 0.275, deduction: 908.73 }
 ];
 
 const DEPENDENT_DEDUCTION = 189.59;
@@ -42,7 +44,8 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     if (inssRange) {
       inssDiscount = salary * inssRange.rate - inssRange.deduction;
       inssDiscount = Math.max(0, inssDiscount);
-      if (salary > 7786.02) inssDiscount = 908.85; // Teto do INSS
+      // Aplicar teto do INSS
+      if (salary > 8157.41) inssDiscount = INSS_CEILING;
     }
 
     // Calcular base para IRRF (salário - INSS - dependentes)
@@ -93,7 +96,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           Calculadora de Salário Líquido
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Calcule seu salário líquido com precisão usando as tabelas oficiais do INSS e IRRF
+          Calcule seu salário líquido com precisão usando as tabelas oficiais do INSS e IRRF 2025
         </p>
       </div>
 
