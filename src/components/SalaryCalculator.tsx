@@ -35,10 +35,15 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
   const [dependents, setDependents] = useState<string>("0");
   const [otherDiscounts, setOtherDiscounts] = useState<string>("");
 
+  // Parse numeric values only when needed to avoid constant re-calculations
+  const parsedValues = useMemo(() => ({
+    salary: parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
+    dependentCount: parseInt(dependents) || 0,
+    otherDiscountsValue: parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0
+  }), [grossSalary, dependents, otherDiscounts]);
+
   const calculations = useMemo(() => {
-    const salary = parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-    const dependentCount = parseInt(dependents) || 0;
-    const otherDiscountsValue = parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    const { salary, dependentCount, otherDiscountsValue } = parsedValues;
 
     // Calcular INSS (mesmo para ambos os métodos)
     let inssDiscount = 0;
@@ -111,7 +116,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       simplifiedTotalDiscounts,
       simplifiedNetSalary
     };
-  }, [grossSalary, dependents, otherDiscounts]);
+  }, [parsedValues]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
