@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calculator, TrendingUp, Users, DollarSign } from "lucide-react";
+import { Calculator, TrendingUp, Users, DollarSign, RotateCcw } from "lucide-react";
 import { SalaryChart } from "./SalaryChart";
 
 // Tabela INSS 2025
@@ -12,7 +12,7 @@ const INSS_TABLE = [
   { min: 0.01, max: 1518.00, rate: 0.075, deduction: 0 },
   { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
   { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.60 },
-  { min: 4190.84, max: 8157.41, rate: 0.14, deduction: 190.42 }
+  { min: 4190.84, max: 8157.42, rate: 0.14, deduction: 190.42 }
 ];
 
 const INSS_CEILING = 951.62; // Teto INSS para empregados
@@ -45,7 +45,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       inssDiscount = salary * inssRange.rate - inssRange.deduction;
       inssDiscount = Math.max(0, inssDiscount);
       // Aplicar teto do INSS
-      if (salary > 8157.41) inssDiscount = INSS_CEILING;
+      if (salary > 8157.42) inssDiscount = INSS_CEILING;
     }
 
     // Calcular base para IRRF (salário - INSS - dependentes)
@@ -86,6 +86,11 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
       currency: 'BRL'
     }).format(parseInt(value) / 100 || 0);
     setGrossSalary(formattedValue);
+  };
+
+  const handleNewCalculation = () => {
+    setGrossSalary("");
+    setDependents("0");
   };
 
   return (
@@ -147,6 +152,15 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 </p>
               )}
             </div>
+
+            <Button
+              onClick={handleNewCalculation}
+              variant="outline"
+              className="w-full h-12 text-lg gap-2"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Novo Cálculo
+            </Button>
           </CardContent>
         </Card>
 
