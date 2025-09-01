@@ -250,7 +250,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
               <div className="space-y-2">
                 <Label htmlFor="benefits" className="text-base font-medium flex items-center gap-2">
                   <Gift className="w-4 h-4" />
-                  Benefícios
+                  Benefícios <span className="text-muted-foreground text-sm">(Opcional)</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -271,8 +271,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="other-discounts" className="text-base font-medium">
-                  Outros Descontos (R$)
+                <Label htmlFor="other-discounts" className="text-base font-medium flex items-center gap-2">
+                  Outros Descontos <span className="text-muted-foreground text-sm">(Opcional)</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Engloba tanto descontos não oficiais acordados com a empresa quanto aqueles determinados por lei ou regulamentos</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </Label>
                 <Input
                   id="other-discounts"
