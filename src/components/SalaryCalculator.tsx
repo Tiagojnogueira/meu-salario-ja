@@ -36,17 +36,19 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
   const [dependents, setDependents] = useState<string>("0");
   const [otherDiscounts, setOtherDiscounts] = useState<string>("");
   const [benefits, setBenefits] = useState<string>("");
+  const [alimony, setAlimony] = useState<string>("");
 
   // Parse numeric values only when needed to avoid constant re-calculations
   const parsedValues = useMemo(() => ({
     salary: parseFloat(grossSalary.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
     dependentCount: parseInt(dependents) || 0,
     otherDiscountsValue: parseFloat(otherDiscounts.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
-    benefitsValue: parseFloat(benefits.replace(/[^\d,]/g, '').replace(',', '.')) || 0
-  }), [grossSalary, dependents, otherDiscounts, benefits]);
+    benefitsValue: parseFloat(benefits.replace(/[^\d,]/g, '').replace(',', '.')) || 0,
+    alimonyValue: parseFloat(alimony.replace(/[^\d,]/g, '').replace(',', '.')) || 0
+  }), [grossSalary, dependents, otherDiscounts, benefits, alimony]);
 
   const calculations = useMemo(() => {
-    const { salary, dependentCount, otherDiscountsValue, benefitsValue } = parsedValues;
+    const { salary, dependentCount, otherDiscountsValue, benefitsValue, alimonyValue } = parsedValues;
 
     // Calcular INSS (mesmo para ambos os métodos)
     let inssDiscount = 0;
@@ -63,8 +65,8 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     // CÁLCULO TRADICIONAL
-    // Calcular base para IRRF (salário - INSS - dependentes)
-    const irrfBase = salary - inssDiscount - (dependentCount * DEPENDENT_DEDUCTION);
+    // Calcular base para IRRF (salário - INSS - dependentes - pensão alimentícia)
+    const irrfBase = salary - inssDiscount - (dependentCount * DEPENDENT_DEDUCTION) - alimonyValue;
     
     // Calcular IRRF tradicional
     let irrfDiscount = 0;
@@ -155,11 +157,21 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     setBenefits(formattedValue);
   };
 
+  const handleAlimonyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(parseInt(value) / 100 || 0);
+    setAlimony(formattedValue);
+  };
+
   const handleNewCalculation = () => {
     setGrossSalary("");
     setDependents("0");
     setOtherDiscounts("");
     setBenefits("");
+    setAlimony("");
   };
 
   return (
@@ -271,6 +283,28 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="alimony" className="text-base font-medium flex items-center gap-2">
+                  Pensão Alimentícia <span className="text-muted-foreground text-sm">(Opcional)</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Valor de pensão alimentícia que será deduzido da base de cálculo do IRRF (apenas no método tradicional)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="alimony"
+                  type="text"
+                  value={alimony}
+                  onChange={handleAlimonyChange}
+                  placeholder="R$ 0,00"
+                  className="text-lg h-12 sm:h-14 text-center font-semibold"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="other-discounts" className="text-base font-medium flex items-center gap-2">
                   Outros Descontos <span className="text-muted-foreground text-sm">(Opcional)</span>
                   <Tooltip>
@@ -337,6 +371,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                     <span className="text-success font-medium text-sm sm:text-base">-{formatCurrency(calculations.dependentDeduction)}</span>
                   </div>
                 )}
+                {parsedValues.alimonyValue > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground text-sm sm:text-base">Pensão Alimentícia:</span>
+                    <span className="text-success font-medium text-sm sm:text-base">-{formatCurrency(parsedValues.alimonyValue)}</span>
+                  </div>
+                )}
                 {calculations.otherDiscounts > 0 && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground text-sm sm:text-base">Outros Descontos:</span>
@@ -357,9 +397,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                     </span>
                   </div>
                   {calculations.grossSalary > 0 && calculations.netSalary > calculations.simplifiedNetSalary && (
-                    <div className="mt-2 text-center">
+                    <div className="mt-2 text-center bg-success/10 border border-success/20 rounded-lg p-2">
+                      <p className="text-sm text-success font-bold">
+                        🏆 MÉTODO MAIS VANTAJOSO
+                      </p>
                       <p className="text-xs text-success font-medium">
-                        ✓ Método mais vantajoso (+{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)})
+                        +{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)} a mais
                       </p>
                     </div>
                   )}
@@ -417,9 +460,12 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                     </span>
                   </div>
                   {calculations.grossSalary > 0 && calculations.simplifiedNetSalary > calculations.netSalary && (
-                    <div className="mt-2 text-center">
+                    <div className="mt-2 text-center bg-primary/10 border border-primary/20 rounded-lg p-2">
+                      <p className="text-sm text-primary font-bold">
+                        🏆 MÉTODO MAIS VANTAJOSO
+                      </p>
                       <p className="text-xs text-primary font-medium">
-                        ✓ Método mais vantajoso (+{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)})
+                        +{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)} a mais
                       </p>
                     </div>
                   )}
