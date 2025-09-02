@@ -5,13 +5,15 @@ interface SalaryChartProps {
   inssDiscount: number;
   irrfDiscount: number;
   netSalary: number;
+  alimonyDiscount?: number;
 }
 
 export const SalaryChart: React.FC<SalaryChartProps> = ({
   grossSalary,
   inssDiscount,
   irrfDiscount,
-  netSalary
+  netSalary,
+  alimonyDiscount = 0
 }) => {
   const data = [
     {
@@ -34,6 +36,15 @@ export const SalaryChart: React.FC<SalaryChartProps> = ({
       value: irrfDiscount,
       color: 'hsl(220 90% 70%)',
       percentage: ((irrfDiscount / grossSalary) * 100).toFixed(1)
+    });
+  }
+
+  if (alimonyDiscount > 0) {
+    data.push({
+      name: 'Pensão Alimentícia',
+      value: alimonyDiscount,
+      color: 'hsl(280 90% 70%)',
+      percentage: ((alimonyDiscount / grossSalary) * 100).toFixed(1)
     });
   }
 

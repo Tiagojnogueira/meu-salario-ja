@@ -495,6 +495,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                   inssDiscount={calculations.inssDiscount}
                   irrfDiscount={calculations.irrfDiscount}
                   netSalary={calculations.netSalary}
+                  alimonyDiscount={parsedValues.alimonyValue}
                 />
               </CardContent>
             </Card>
@@ -510,6 +511,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                   inssDiscount={calculations.inssDiscount}
                   irrfDiscount={calculations.simplifiedIrrfDiscount}
                   netSalary={calculations.simplifiedNetSalary}
+                  alimonyDiscount={parsedValues.alimonyValue}
                 />
               </CardContent>
             </Card>
