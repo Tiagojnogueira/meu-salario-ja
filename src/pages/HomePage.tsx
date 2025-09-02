@@ -40,10 +40,10 @@ const HomePage = () => {
           </div>
 
           {/* Applications Grid */}
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {/* Salary Calculator App */}
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20">
-              <CardHeader>
+            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
+              <CardHeader className="flex-grow">
                 <div className="flex items-center justify-between">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
                     <Calculator className="h-6 w-6 text-primary" />
@@ -55,8 +55,8 @@ const HomePage = () => {
                   Calcule seu salário líquido - simule valores de descontos de INSS e IRRF, compare se compensa tributar pelas deduções legais ou pela dedução simplificada.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="pt-0">
+                <div className="space-y-3 mb-6">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                     Tabelas 2025 atualizadas
@@ -71,7 +71,7 @@ const HomePage = () => {
                   </div>
                 </div>
                 <Link to="/calculadora-salario">
-                  <Button className="w-full mt-6 group-hover:bg-primary/90 transition-colors">
+                  <Button className="w-full group-hover:bg-primary/90 transition-colors">
                     Acessar Calculadora
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -80,8 +80,8 @@ const HomePage = () => {
             </Card>
 
             {/* Unemployment Simulator App */}
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20">
-              <CardHeader>
+            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
+              <CardHeader className="flex-grow">
                 <div className="flex items-center justify-between">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
                     <Shield className="h-6 w-6 text-primary" />
@@ -93,8 +93,8 @@ const HomePage = () => {
                   Simule Aqui os Valores das Parcelas do Seguro Desemprego em 2025
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="pt-0">
+                <div className="space-y-3 mb-6">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                     Valores atualizados para 2025
@@ -109,7 +109,7 @@ const HomePage = () => {
                   </div>
                 </div>
                 <Link to="/simulador-seguro-desemprego">
-                  <Button className="w-full mt-6 group-hover:bg-primary/90 transition-colors">
+                  <Button className="w-full group-hover:bg-primary/90 transition-colors">
                     Acessar Simulador
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -117,8 +117,9 @@ const HomePage = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-dashed border-2 border-muted-foreground/20 bg-muted/5">
-              <CardHeader>
+            {/* Future Project 1 */}
+            <Card className="border-dashed border-2 border-muted-foreground/20 bg-muted/5 flex flex-col">
+              <CardHeader className="flex-grow">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-muted rounded-lg">
                   <Code className="h-6 w-6 text-muted-foreground" />
                 </div>
@@ -127,7 +128,55 @@ const HomePage = () => {
                   Em breve, uma nova ferramenta será disponibilizada aqui.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Aguarde novidades
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Em desenvolvimento
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Funcionalidades exclusivas
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" disabled>
+                  Em Desenvolvimento
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Future Project 2 */}
+            <Card className="border-dashed border-2 border-muted-foreground/20 bg-muted/5 flex flex-col">
+              <CardHeader className="flex-grow">
+                <div className="inline-flex items-center justify-between">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-muted rounded-lg">
+                    <Code className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                </div>
+                <CardTitle className="text-xl text-muted-foreground">Futuro Projeto</CardTitle>
+                <CardDescription>
+                  Mais uma ferramenta inovadora está sendo desenvolvida para facilitar seus processos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Próxima atualização
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Interface moderna
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
+                    Resultados precisos
+                  </div>
+                </div>
                 <Button variant="outline" className="w-full" disabled>
                   Em Desenvolvimento
                 </Button>
