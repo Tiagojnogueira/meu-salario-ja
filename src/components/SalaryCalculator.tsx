@@ -83,7 +83,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
     }
 
     const totalDiscounts = inssDiscount + irrfDiscount;
-    const netSalary = salary - totalDiscounts - otherDiscountsValue + benefitsValue;
+    const netSalary = salary - totalDiscounts - otherDiscountsValue - alimonyValue + benefitsValue;
 
     // CÁLCULO DEDUÇÃO SIMPLIFICADA
     // Base para IRRF simplificado: salário - R$ 607,20
@@ -374,7 +374,7 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 {parsedValues.alimonyValue > 0 && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground text-sm sm:text-base">Pensão Alimentícia:</span>
-                    <span className="text-success font-medium text-sm sm:text-base">-{formatCurrency(parsedValues.alimonyValue)}</span>
+                    <span className="text-destructive font-medium text-sm sm:text-base">-{formatCurrency(parsedValues.alimonyValue)}</span>
                   </div>
                 )}
                 {calculations.otherDiscounts > 0 && (
