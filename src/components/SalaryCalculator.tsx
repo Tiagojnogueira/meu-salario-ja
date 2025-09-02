@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Calculator, TrendingUp, Users, DollarSign, RotateCcw, Info, Gift } from "lucide-react";
+import { Calculator, TrendingUp, Users, DollarSign, RotateCcw, Info, Gift, ArrowLeft } from "lucide-react";
 import { SalaryChart } from "./SalaryChart";
 
 // Tabela INSS 2025
@@ -32,6 +33,7 @@ const DEPENDENT_DEDUCTION = 189.59;
 interface SalaryCalculatorProps {}
 
 export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
+  const navigate = useNavigate();
   const [grossSalary, setGrossSalary] = useState<string>("");
   const [dependents, setDependents] = useState<string>("0");
   const [otherDiscounts, setOtherDiscounts] = useState<string>("");
@@ -177,6 +179,17 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="text-center mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            onClick={() => navigate("/")}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao Início
+          </Button>
+          <div className="flex-1" />
+        </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-3 flex-wrap">
           <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
           <span>Calculadora de Salário Líquido</span>
