@@ -338,22 +338,10 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
           </Card>
 
         {/* Results Section */}
-        <Card className={`shadow-lg border-0 ${
-          calculations.grossSalary > 0 && calculations.netSalary >= calculations.simplifiedNetSalary 
-            ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900" 
-            : "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900"
-        }`}>
+        <Card className="shadow-lg border-0 bg-gradient-to-br from-success-light to-card">
           <CardHeader className="pb-4">
-            <CardTitle className={`flex items-center gap-2 text-xl sm:text-2xl ${
-              calculations.grossSalary > 0 && calculations.netSalary >= calculations.simplifiedNetSalary 
-                ? "text-green-700 dark:text-green-300" 
-                : "text-blue-700 dark:text-blue-300"
-            }`}>
-              <TrendingUp className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                calculations.grossSalary > 0 && calculations.netSalary >= calculations.simplifiedNetSalary 
-                  ? "text-green-600 dark:text-green-400" 
-                  : "text-blue-600 dark:text-blue-400"
-              }`} />
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
               Resultado do Cálculo - Deduções Legais
             </CardTitle>
           </CardHeader>
@@ -404,20 +392,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-base sm:text-lg font-semibold">Salário Líquido:</span>
-                    <span className={`text-xl sm:text-2xl font-bold ${
-                      calculations.grossSalary > 0 && calculations.netSalary >= calculations.simplifiedNetSalary 
-                        ? "text-green-600 dark:text-green-400" 
-                        : "text-blue-600 dark:text-blue-400"
-                    }`}>
+                    <span className="text-xl sm:text-2xl font-bold text-success">
                       {formatCurrency(calculations.netSalary)}
                     </span>
                   </div>
                   {calculations.grossSalary > 0 && calculations.netSalary > calculations.simplifiedNetSalary && (
-                    <div className="mt-2 text-center bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded-lg p-2">
-                      <p className="text-sm text-green-700 dark:text-green-300 font-bold">
+                    <div className="mt-2 text-center bg-success/10 border border-success/20 rounded-lg p-2">
+                      <p className="text-sm text-success font-bold">
                         🏆 MÉTODO MAIS VANTAJOSO
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      <p className="text-xs text-success font-medium">
                         +{formatCurrency(calculations.netSalary - calculations.simplifiedNetSalary)} a mais
                       </p>
                     </div>
@@ -429,22 +413,10 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
         </Card>
 
         {/* Simplified Deduction Results Section */}
-        <Card className={`shadow-lg border-0 ${
-          calculations.grossSalary > 0 && calculations.simplifiedNetSalary >= calculations.netSalary 
-            ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900" 
-            : "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900"
-        }`}>
+        <Card className="shadow-lg border-0 bg-gradient-to-br from-primary-light to-card">
           <CardHeader className="pb-4">
-            <CardTitle className={`flex items-center gap-2 text-xl sm:text-2xl ${
-              calculations.grossSalary > 0 && calculations.simplifiedNetSalary >= calculations.netSalary 
-                ? "text-green-700 dark:text-green-300" 
-                : "text-blue-700 dark:text-blue-300"
-            }`}>
-              <Calculator className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                calculations.grossSalary > 0 && calculations.simplifiedNetSalary >= calculations.netSalary 
-                  ? "text-green-600 dark:text-green-400" 
-                  : "text-blue-600 dark:text-blue-400"
-              }`} />
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               Resultado - Dedução Simplificada
             </CardTitle>
           </CardHeader>
@@ -483,20 +455,16 @@ export const SalaryCalculator: React.FC<SalaryCalculatorProps> = () => {
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-base sm:text-lg font-semibold">Salário Líquido:</span>
-                    <span className={`text-xl sm:text-2xl font-bold ${
-                      calculations.grossSalary > 0 && calculations.simplifiedNetSalary >= calculations.netSalary 
-                        ? "text-green-600 dark:text-green-400" 
-                        : "text-blue-600 dark:text-blue-400"
-                    }`}>
+                    <span className="text-xl sm:text-2xl font-bold text-primary">
                       {formatCurrency(calculations.simplifiedNetSalary)}
                     </span>
                   </div>
                   {calculations.grossSalary > 0 && calculations.simplifiedNetSalary > calculations.netSalary && (
-                    <div className="mt-2 text-center bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded-lg p-2">
-                      <p className="text-sm text-green-700 dark:text-green-300 font-bold">
+                    <div className="mt-2 text-center bg-primary/10 border border-primary/20 rounded-lg p-2">
+                      <p className="text-sm text-primary font-bold">
                         🏆 MÉTODO MAIS VANTAJOSO
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      <p className="text-xs text-primary font-medium">
                         +{formatCurrency(calculations.simplifiedNetSalary - calculations.netSalary)} a mais
                       </p>
                     </div>
