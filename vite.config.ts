@@ -24,7 +24,6 @@ export default defineConfig(({ mode }) => ({
     // Optimized build for Hostinger - fewer files, less inodes
     outDir: "dist",
     sourcemap: false, // Disable sourcemaps in production
-    minify: "terser",
     rollupOptions: {
       output: {
         // Generate fewer chunks to reduce inode usage
@@ -57,11 +56,5 @@ export default defineConfig(({ mode }) => ({
     assetsInlineLimit: 4096,
     // Optimize CSS
     cssCodeSplit: false, // Bundle all CSS into one file
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.logs in production
-        drop_debugger: true
-      }
-    }
   }
 }));
