@@ -31,7 +31,7 @@ const HomePage = () => {
               <Zap className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Ferramentas Profissionais
+              Ferramentas Profissionais Para o Departamento Pessoal
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Aplicações desenvolvidas para facilitar cálculos e processos do dia a dia. 
@@ -120,14 +120,16 @@ const HomePage = () => {
       {/* Footer */}
       <footer className="border-t bg-background/50 mt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2025 Tiago Nogueira - Consultoria em Dpto. Pessoal
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Desenvolvido com React + TypeScript
-            </p>
-          </div>
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            © 2025 Tiago Nogueira - Consultoria em Dpto. Pessoal
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            <a href="https://tiagonogueira.com.br" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+              tiagonogueira.com.br
+            </a>
+          </p>
+        </div>
         </div>
       </footer>
     </div>
