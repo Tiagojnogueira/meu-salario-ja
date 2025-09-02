@@ -52,7 +52,7 @@ const HomePage = () => {
                 </div>
                 <CardTitle className="text-xl">Calculadora de Salário</CardTitle>
                 <CardDescription>
-                  Calcule seu salário líquido com precisão usando as tabelas oficiais do INSS e IRRF 2025.
+                  Calcule seu salário líquido - simule valores de descontos de INSS e IRRF, compare se compensa tributar pelas deduções legais ou pela dedução simplificada.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -67,7 +67,7 @@ const HomePage = () => {
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Interface responsiva
+                    Gráfico com descontos
                   </div>
                 </div>
                 <Link to="/calculadora-salario">
@@ -104,7 +104,7 @@ const HomePage = () => {
                 </div>
                 <CardTitle className="text-xl text-muted-foreground">Futuro Projeto</CardTitle>
                 <CardDescription>
-                  Mais aplicações serão adicionadas conforme a demanda.
+                  Em breve, uma nova ferramenta será disponibilizada aqui.
                 </CardDescription>
               </CardHeader>
               <CardContent>
