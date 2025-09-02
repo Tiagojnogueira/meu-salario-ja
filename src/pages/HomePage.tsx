@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, ChevronRight, Code, Zap } from "lucide-react";
+import { Calculator, ChevronRight, Code, Zap, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HomePage = () => {
@@ -79,21 +79,41 @@ const HomePage = () => {
               </CardContent>
             </Card>
 
-            {/* Placeholder for future apps */}
-            <Card className="border-dashed border-2 border-muted-foreground/20 bg-muted/5">
+            {/* Unemployment Simulator App */}
+            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20">
               <CardHeader>
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-muted rounded-lg">
-                  <Code className="h-6 w-6 text-muted-foreground" />
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
+                    <Shield className="h-6 w-6 text-primary" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-                <CardTitle className="text-xl text-muted-foreground">Próximo Aplicativo</CardTitle>
+                <CardTitle className="text-xl">Simulador de Seguro Desemprego - 2025</CardTitle>
                 <CardDescription>
-                  Em breve, uma nova ferramenta será disponibilizada aqui.
+                  Simule Aqui os Valores das Parcelas do Seguro Desemprego em 2025
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" disabled>
-                  Em Desenvolvimento
-                </Button>
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Valores atualizados para 2025
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Cálculo automático das parcelas
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Interface intuitiva passo a passo
+                  </div>
+                </div>
+                <Link to="/simulador-seguro-desemprego">
+                  <Button className="w-full mt-6 group-hover:bg-primary/90 transition-colors">
+                    Acessar Simulador
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
