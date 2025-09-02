@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Calculator, Home, Shield, DollarSign, Clock, Calendar, TrendingUp, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calculator, Home, Shield, DollarSign, Clock, Calendar, TrendingUp, CheckCircle, AlertCircle, Users, FileText, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const UnemploymentSimulatorPage = () => {
@@ -507,6 +507,129 @@ const UnemploymentSimulatorPage = () => {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Nova Simulação
                     </Button>
+                  </div>
+
+                  {/* Informações Adicionais */}
+                  <div className="mt-12 space-y-6">
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-info/10 rounded-full mb-3">
+                        <Info className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <h4 className="text-xl font-bold text-foreground mb-2">Informações Importantes</h4>
+                      <p className="text-muted-foreground">Critérios e regras para o Seguro-Desemprego</p>
+                    </div>
+
+                    {/* Quem tem direito */}
+                    <Card className="border-blue-200 bg-blue-50/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-blue-800">
+                          <Users className="h-5 w-5 mr-2" />
+                          Quem tem direito?
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-blue-700 font-medium mb-3">
+                          Tem direito ao Seguro-Desemprego o trabalhador que:
+                        </p>
+                        <ul className="space-y-2 text-blue-700">
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            For dispensado sem justa causa;
+                          </li>
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            Estiver desempregado no momento da solicitação do benefício;
+                          </li>
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            Tiver recebido salários de pessoa jurídica ou pessoa física equiparada à jurídica (inscrita no CEI), conforme os critérios abaixo:
+                            <ul className="ml-6 mt-2 space-y-1 text-sm">
+                              <li>• Pelo menos 12 (doze) meses nos últimos 18 (dezoito) meses imediatamente anteriores à data da dispensa, na primeira solicitação;</li>
+                              <li>• Pelo menos 9 (nove) meses nos últimos 12 (doze) meses imediatamente anteriores à data da dispensa, na segunda solicitação;</li>
+                              <li>• Cada um dos 6 (seis) meses imediatamente anteriores à data da dispensa, nas demais solicitações;</li>
+                            </ul>
+                          </li>
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            Não possuir renda própria para o seu sustento e de sua família;
+                          </li>
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            Não estar recebendo benefício de prestação continuada da Previdência Social, exceto pensão por morte ou auxílio-acidente.
+                          </li>
+                          <li className="flex items-start">
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            Se tiver decorrido um período de 16 meses ou mais entre a data de desligamento da última solicitação do seguro-desemprego e a data de desligamento da nova solicitação.
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {/* Empregado Doméstico */}
+                    <Card className="border-purple-200 bg-purple-50/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-purple-800">
+                          <Users className="h-5 w-5 mr-2" />
+                          Particularidades do Empregado Doméstico
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-purple-700">
+                          <li className="flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-purple-600" />
+                            São devidas somente 3 parcelas.
+                          </li>
+                          <li className="flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-purple-600" />
+                            Parcela fixa de um salário-mínimo.
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {/* Como é calculado */}
+                    <Card className="border-green-200 bg-green-50/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-green-800">
+                          <Calculator className="h-5 w-5 mr-2" />
+                          Como é calculado as parcelas do seguro desemprego em 2025
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-green-700 font-medium">
+                          A partir de 11/01/2025 a parcela do seguro desempregado passa a vigorar com os valores atualizados pelo MTE:
+                        </p>
+                        <div className="space-y-3 text-green-700">
+                          <div className="flex items-start p-3 bg-white/70 rounded-lg">
+                            <DollarSign className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium">Até R$ 2.138,76</p>
+                              <p className="text-sm">Multiplica-se o salário médio por 0,8.</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 bg-white/70 rounded-lg">
+                            <DollarSign className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium">De R$ 2.138,77 até R$ 3.564,96</p>
+                              <p className="text-sm">O que exceder a R$ 2.138,76 multiplica-se por 0,5 e soma-se com R$ 1.711,01.</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 bg-white/70 rounded-lg">
+                            <DollarSign className="h-4 w-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium">Acima de R$ 3.564,96</p>
+                              <p className="text-sm">O valor será invariável de R$ 2.424,11.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+                          <p className="text-yellow-800 font-medium flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            Com a atualização, a parcela do seguro-desemprego não pode ser inferior a R$ 1.518,00
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}
