@@ -40,7 +40,7 @@ const HomePage = () => {
           </div>
 
           {/* Applications Grid */}
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Salary Calculator App */}
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
               <CardHeader className="flex-grow">
