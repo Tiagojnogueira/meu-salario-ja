@@ -183,7 +183,7 @@ export const useSupabaseCalculations = (userId?: string) => {
     wednesday: '08:00',
     thursday: '08:00',
     friday: '08:00',
-    saturday: '00:00',
+    saturday: '04:00',
     sunday: '00:00',
     rest: '00:00'
   });

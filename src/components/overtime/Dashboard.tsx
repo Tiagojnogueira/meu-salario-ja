@@ -24,9 +24,13 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   };
 
   const formatDate = (dateString: string) => {
-    // Use parseISO to avoid timezone issues
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('pt-BR');
+    try {
+      // Handle both ISO timestamps and date-only strings
+      const date = dateString.includes('T') ? new Date(dateString) : new Date(dateString + 'T00:00:00');
+      return date.toLocaleDateString('pt-BR');
+    } catch {
+      return 'Data inválida';
+    }
   };
 
   const getDateRange = (startDate: string, endDate: string) => {

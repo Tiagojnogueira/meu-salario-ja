@@ -167,7 +167,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
             <CardHeader>
               <CardTitle>Horários do Período</CardTitle>
               <CardDescription>
-                Configure os horários e tipo de cada dia. Cores: Verde = Trabalho, Amarelo = Descanso/Falta Justificada, Vermelho = Falta
+                Digite os horários e marque cada dia.
               </CardDescription>
             </CardHeader>
             <CardContent>

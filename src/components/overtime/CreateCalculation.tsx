@@ -192,15 +192,15 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                         {startDate ? format(startDate, "PPP", { locale: ptBR }) : "Selecione a data"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
                   </Popover>
                 </div>
 
@@ -219,17 +219,17 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                          {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione a data"}
                        </Button>
                      </PopoverTrigger>
-                     <PopoverContent className="w-auto p-0" align="start">
-                       <Calendar
-                         mode="single"
-                         selected={endDate}
-                         onSelect={setEndDate}
-                         disabled={(date) => startDate ? date < startDate : false}
-                         defaultMonth={startDate || new Date()}
-                         initialFocus
-                         className="pointer-events-auto"
-                       />
-                     </PopoverContent>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          disabled={(date) => startDate ? date < startDate : false}
+                          defaultMonth={startDate || new Date()}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
                    </Popover>
                  </div>
               </div>
