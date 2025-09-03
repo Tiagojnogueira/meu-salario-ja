@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SalaryCalculatorPage from "./pages/SalaryCalculatorPage";
 import UnemploymentSimulatorPage from "./pages/UnemploymentSimulatorPage";
+import OvertimeCalculatorPage from "./pages/OvertimeCalculatorPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<HomePage />} />
           <Route path="/calculadora-salario" element={<SalaryCalculatorPage />} />
           <Route path="/simulador-seguro-desemprego" element={<UnemploymentSimulatorPage />} />
+          <Route path="/horas-extras" element={<OvertimeCalculatorPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
