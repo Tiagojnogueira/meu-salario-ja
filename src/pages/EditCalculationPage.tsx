@@ -158,8 +158,8 @@ export const EditCalculationPage = () => {
       const success = await updateCalculation(id, calculationData);
       if (success) {
         toast.success('Dados salvos com sucesso!');
-        // Navegar para os resultados
-        navigate(`/horas-extras/resultados/${id}`);
+        // Navegar para a tela de edição de horários
+        navigate(`/horas-extras/editar-horarios/${id}`);
       }
     } catch (error) {
       console.error('EditCalculation - Update error:', error);
@@ -492,7 +492,7 @@ export const EditCalculationPage = () => {
             </Button>
             <Button type="submit" size="lg" className="px-8">
               <Calculator className="h-4 w-4 mr-2" />
-              Calcular Resultados
+              Continuar para Horários
             </Button>
           </div>
         </form>
