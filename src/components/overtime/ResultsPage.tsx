@@ -177,16 +177,29 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     let overtimePercentage = 0;
 
     if (entry.type === 'workday' || entry.type === 'rest') {
-      // Calculate worked hours
-      if (entryMinutes && exitMinutes) {
-        workedMinutes = exitMinutes - entryMinutes;
+      // Calculate worked hours with new logic for different scenarios
+      let effectiveExitMinutes = exitMinutes;
+      
+      // Cenário 1: Tem entrada e início de intervalo, mas não tem fim de intervalo e nem saída
+      // Considera o início de intervalo como horário de saída
+      if (entryMinutes && intervalStartMinutes && !intervalEndMinutes && !exitMinutes) {
+        effectiveExitMinutes = intervalStartMinutes;
+      }
+      // Cenário 2: Tem entrada, início de intervalo, fim de intervalo mas não tem saída
+      // Ignora fim de intervalo e calcula entre entrada e início de intervalo
+      else if (entryMinutes && intervalStartMinutes && intervalEndMinutes && !exitMinutes) {
+        effectiveExitMinutes = intervalStartMinutes;
+      }
+
+      if (entryMinutes && effectiveExitMinutes) {
+        workedMinutes = effectiveExitMinutes - entryMinutes;
         if (workedMinutes < 0) {
           // Crosses midnight
-          workedMinutes = (24 * 60 - entryMinutes) + exitMinutes;
+          workedMinutes = (24 * 60 - entryMinutes) + effectiveExitMinutes;
         }
 
-        // Subtract interval
-        if (intervalStartMinutes && intervalEndMinutes) {
+        // Subtract interval apenas se tiver fim de intervalo e saída preenchidos (cenário normal)
+        if (intervalStartMinutes && intervalEndMinutes && exitMinutes) {
           const intervalMinutes = intervalEndMinutes - intervalStartMinutes;
           workedMinutes -= intervalMinutes;
         }
