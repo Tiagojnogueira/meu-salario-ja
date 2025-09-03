@@ -85,6 +85,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
     });
 
     if (success) {
+      toast.success('Cálculo criado com sucesso!');
       onCalculate();
     }
   };

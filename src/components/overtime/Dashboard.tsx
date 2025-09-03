@@ -205,7 +205,9 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                 if (currentPage > 1) setCurrentPage(currentPage - 1);
                               }}
                               className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                            />
+                            >
+                              Anterior
+                            </PaginationPrevious>
                           </PaginationItem>
                           
                           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
@@ -262,7 +264,9 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                 if (currentPage < totalPages) setCurrentPage(currentPage + 1);
                               }}
                               className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                            />
+                            >
+                              Próxima
+                            </PaginationNext>
                           </PaginationItem>
                         </PaginationContent>
                       </Pagination>
