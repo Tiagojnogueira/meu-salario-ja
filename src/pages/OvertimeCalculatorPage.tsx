@@ -71,7 +71,6 @@ const OvertimeCalculatorPage = () => {
         <Dashboard 
           onCreateNew={handleCreateNew}
           onViewCalculation={handleViewCalculation}
-          onEditCalculation={handleEditCalculation}
         />
       );
     
@@ -86,7 +85,6 @@ const OvertimeCalculatorPage = () => {
     case 'edit':
       return (
         <CreateCalculation 
-          editingId={editingCalculationId}
           onBack={handleBackToDashboard}
           onContinue={handleContinueToTimeEntry}
         />
@@ -107,7 +105,6 @@ const OvertimeCalculatorPage = () => {
           calculationId={currentCalculationId}
           onBack={() => setCurrentStep('time-entry')}
           onBackToDashboard={handleBackToDashboard}
-          onEdit={handleEditFromResults}
         />
       );
     
@@ -116,7 +113,6 @@ const OvertimeCalculatorPage = () => {
         <Dashboard 
           onCreateNew={handleCreateNew}
           onViewCalculation={handleViewCalculation}
-          onEditCalculation={handleEditCalculation}
         />
       );
   }

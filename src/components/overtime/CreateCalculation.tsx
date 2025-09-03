@@ -17,15 +17,12 @@ import { cn } from '@/lib/utils';
 interface CreateCalculationProps {
   onBack: () => void;
   onContinue: (calculationId: string) => void;
-  editingId?: string;
 }
 
-export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalculationProps) => {
+export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps) => {
   const { profile } = useSupabaseAuth();
   const { 
     createCalculation, 
-    updateCalculation, 
-    getCalculation,
     getDefaultWorkingHours, 
     getDefaultOvertimePercentages,
     loading 
@@ -37,21 +34,6 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
   const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
-
-  // Load existing data when editing and data becomes available
-  useEffect(() => {
-    if (editingId && !loading) {
-      const existingCalculation = getCalculation(editingId);
-      if (existingCalculation) {
-        setDescription(existingCalculation.description);
-        // Fix timezone issue by adding T00:00:00 to ensure local timezone
-        setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
-        setEndDate(new Date(existingCalculation.end_date + 'T00:00:00'));
-        setWorkingHours(existingCalculation.working_hours);
-        setOvertimePercentages(existingCalculation.overtime_percentages);
-      }
-    }
-  }, [editingId, getCalculation, loading]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     console.log('WORKING HOUR CHANGE:', day, value);
@@ -102,20 +84,13 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
       end_date: format(endDate, 'yyyy-MM-dd'),
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
-      day_entries: editingId ? getCalculation(editingId)?.day_entries || [] : []
+      day_entries: []
     };
 
     try {
-      if (editingId) {
-        const success = await updateCalculation(editingId, calculationData);
-        if (success) {
-          onContinue(editingId);
-        }
-      } else {
-        const newId = await createCalculation(calculationData);
-        if (newId) {
-          onContinue(newId);
-        }
+      const newId = await createCalculation(calculationData);
+      if (newId) {
+        onContinue(newId);
       }
     } catch (error) {
       toast.error('Erro ao salvar cálculo');
@@ -134,7 +109,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {editingId ? 'Editar Cálculo' : 'Calcular Horas Extras'}
+                Calcular Horas Extras
               </h1>
               <p className="text-sm text-muted-foreground">
                 Configure os parâmetros para o cálculo de horas extras
@@ -425,7 +400,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
           <div className="flex justify-end">
             <Button type="submit" size="lg" className="px-8">
               <Save className="h-4 w-4 mr-2" />
-              {editingId ? 'Salvar Alterações' : 'Gravar / Continuar'}
+              Gravar / Continuar
             </Button>
           </div>
         </form>
