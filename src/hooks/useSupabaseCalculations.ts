@@ -14,6 +14,11 @@ export interface Calculation {
   day_entries: DayEntry[];
   created_at: string;
   updated_at: string;
+  // Campos de horário noturno
+  night_shift_start?: string;
+  night_shift_end?: string;
+  extend_night_hours?: boolean;
+  apply_night_reduction?: boolean;
 }
 
 export const useSupabaseCalculations = (userId?: string) => {
@@ -76,7 +81,11 @@ export const useSupabaseCalculations = (userId?: string) => {
         end_date: calculationData.end_date,
         working_hours: calculationData.working_hours as unknown as any,
         overtime_percentages: calculationData.overtime_percentages as unknown as any,
-        day_entries: calculationData.day_entries as unknown as any
+        day_entries: calculationData.day_entries as unknown as any,
+        night_shift_start: calculationData.night_shift_start,
+        night_shift_end: calculationData.night_shift_end,
+        extend_night_hours: calculationData.extend_night_hours,
+        apply_night_reduction: calculationData.apply_night_reduction
       };
 
       const { data, error } = await supabase
@@ -130,6 +139,18 @@ export const useSupabaseCalculations = (userId?: string) => {
       }
       if (calculationData.day_entries !== undefined) {
         updateData.day_entries = calculationData.day_entries as unknown as any;
+      }
+      if (calculationData.night_shift_start !== undefined) {
+        updateData.night_shift_start = calculationData.night_shift_start;
+      }
+      if (calculationData.night_shift_end !== undefined) {
+        updateData.night_shift_end = calculationData.night_shift_end;
+      }
+      if (calculationData.extend_night_hours !== undefined) {
+        updateData.extend_night_hours = calculationData.extend_night_hours;
+      }
+      if (calculationData.apply_night_reduction !== undefined) {
+        updateData.apply_night_reduction = calculationData.apply_night_reduction;
       }
 
       console.log('useSupabaseCalculations - Final updateData:', updateData);

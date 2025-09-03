@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
-import { CalendarIcon, ArrowLeft, Save } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Save, Moon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,12 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
   const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
+  
+  // Campos de horário noturno
+  const [nightShiftStart, setNightShiftStart] = useState('22:00');
+  const [nightShiftEnd, setNightShiftEnd] = useState('05:00');
+  const [extendNightHours, setExtendNightHours] = useState(true);
+  const [applyNightReduction, setApplyNightReduction] = useState(true);
 
   // Remove logs de debug desnecessários
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
@@ -75,7 +82,11 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       end_date: format(endDate, 'yyyy-MM-dd'),
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
-      day_entries: []
+      day_entries: [],
+      night_shift_start: nightShiftStart,
+      night_shift_end: nightShiftEnd,
+      extend_night_hours: extendNightHours,
+      apply_night_reduction: applyNightReduction
     };
 
     try {
@@ -372,6 +383,76 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
                     value={workingHours.rest}
                     onChange={(e) => handleWorkingHourChange('rest', e.target.value)}
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Night Shift Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Moon className="h-5 w-5 mr-2" />
+                Configuração de Horário Noturno
+              </CardTitle>
+              <CardDescription>
+                Configure os parâmetros para cálculo de horas noturnas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">
+                  Entre quais horários você deseja considerar horário noturno para este cálculo?
+                </Label>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nightStart">Hora inicial</Label>
+                    <Input
+                      id="nightStart"
+                      type="time"
+                      value={nightShiftStart}
+                      onChange={(e) => setNightShiftStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nightEnd">Hora final</Label>
+                    <Input
+                      id="nightEnd"
+                      type="time"
+                      value={nightShiftEnd}
+                      onChange={(e) => setNightShiftEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="extendNight"
+                    checked={extendNightHours}
+                    onCheckedChange={(checked) => setExtendNightHours(checked as boolean)}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="extendNight" className="text-sm font-normal cursor-pointer">
+                      Desejo que as horas noturnas sejam prorrogadas em conformidade com a{' '}
+                      <span className="text-blue-600 underline">Súmula 60 do TST</span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      (Caso esta opção não seja marcada serão consideradas horas noturnas apenas o intervalo entre as horas acima informadas.)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="applyReduction"
+                    checked={!applyNightReduction}
+                    onCheckedChange={(checked) => setApplyNightReduction(!(checked as boolean))}
+                  />
+                  <Label htmlFor="applyReduction" className="text-sm font-normal cursor-pointer">
+                    Não desejo aplicar o fator de redução da hora noturna.
+                  </Label>
                 </div>
               </div>
             </CardContent>

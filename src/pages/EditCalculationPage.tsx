@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
-import { CalendarIcon, ArrowLeft, Calculator } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Calculator, Moon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,12 @@ export const EditCalculationPage = () => {
   });
   const [dayEntries, setDayEntries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Campos de horário noturno
+  const [nightShiftStart, setNightShiftStart] = useState('22:00');
+  const [nightShiftEnd, setNightShiftEnd] = useState('05:00');
+  const [extendNightHours, setExtendNightHours] = useState(true);
+  const [applyNightReduction, setApplyNightReduction] = useState(true);
 
   // Load existing data when component mounts
   useEffect(() => {
@@ -80,6 +87,12 @@ export const EditCalculationPage = () => {
           setWorkingHours(data.working_hours as unknown as WorkingHours);
           setOvertimePercentages(data.overtime_percentages as unknown as OvertimePercentages);
           setDayEntries((data.day_entries as any[]) || []);
+          
+          // Carregando campos de horário noturno
+          setNightShiftStart((data as any).night_shift_start || '22:00');
+          setNightShiftEnd((data as any).night_shift_end || '05:00');
+          setExtendNightHours((data as any).extend_night_hours ?? true);
+          setApplyNightReduction((data as any).apply_night_reduction ?? true);
         }
       } catch (error) {
         console.error('Error loading calculation:', error);
@@ -149,7 +162,11 @@ export const EditCalculationPage = () => {
       end_date: formattedEndDate,
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
-      day_entries: dayEntries
+      day_entries: dayEntries,
+      night_shift_start: nightShiftStart,
+      night_shift_end: nightShiftEnd,
+      extend_night_hours: extendNightHours,
+      apply_night_reduction: applyNightReduction
     };
 
     console.log('EditCalculation - Calculation data being sent:', calculationData);
@@ -479,6 +496,76 @@ export const EditCalculationPage = () => {
                     value={workingHours.rest}
                     onChange={(e) => handleWorkingHourChange('rest', e.target.value)}
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Night Shift Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Moon className="h-5 w-5 mr-2" />
+                Configuração de Horário Noturno
+              </CardTitle>
+              <CardDescription>
+                Configure os parâmetros para cálculo de horas noturnas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">
+                  Entre quais horários você deseja considerar horário noturno para este cálculo?
+                </Label>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nightStart">Hora inicial</Label>
+                    <Input
+                      id="nightStart"
+                      type="time"
+                      value={nightShiftStart}
+                      onChange={(e) => setNightShiftStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nightEnd">Hora final</Label>
+                    <Input
+                      id="nightEnd"
+                      type="time"
+                      value={nightShiftEnd}
+                      onChange={(e) => setNightShiftEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="extendNight"
+                    checked={extendNightHours}
+                    onCheckedChange={(checked) => setExtendNightHours(checked as boolean)}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="extendNight" className="text-sm font-normal cursor-pointer">
+                      Desejo que as horas noturnas sejam prorrogadas em conformidade com a{' '}
+                      <span className="text-blue-600 underline">Súmula 60 do TST</span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      (Caso esta opção não seja marcada serão consideradas horas noturnas apenas o intervalo entre as horas acima informadas.)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="applyReduction"
+                    checked={!applyNightReduction}
+                    onCheckedChange={(checked) => setApplyNightReduction(!(checked as boolean))}
+                  />
+                  <Label htmlFor="applyReduction" className="text-sm font-normal cursor-pointer">
+                    Não desejo aplicar o fator de redução da hora noturna.
+                  </Label>
                 </div>
               </div>
             </CardContent>

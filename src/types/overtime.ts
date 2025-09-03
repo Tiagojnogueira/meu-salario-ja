@@ -45,6 +45,11 @@ export interface Calculation {
   dayEntries: DayEntry[];
   createdAt: string;
   updatedAt: string;
+  // Campos de horário noturno
+  nightShiftStart?: string;
+  nightShiftEnd?: string;
+  extendNightHours?: boolean;
+  applyNightReduction?: boolean;
 }
 
 export interface CalculationResult {
@@ -52,6 +57,7 @@ export interface CalculationResult {
   type: string;
   regularHours: number;
   overtimeHours: number;
+  nightHours: number;
   overtimePercentage: number;
   totalValue: number;
 }
