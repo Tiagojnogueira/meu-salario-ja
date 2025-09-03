@@ -2,7 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,15 +14,12 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
-  const { currentUser, calculations, deleteCalculation, logout } = useOvertimeCalculations();
+  const { profile, logout } = useSupabaseAuth();
+  const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
 
-  const handleDelete = (id: string, description: string) => {
+  const handleDelete = async (id: string, description: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o cálculo "${description}"?`)) {
-      if (deleteCalculation(id)) {
-        toast.success('Cálculo excluído com sucesso!');
-      } else {
-        toast.error('Erro ao excluir cálculo');
-      }
+      await deleteCalculation(id);
     }
   };
 
@@ -46,7 +44,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                   Sistema de Horas Extras
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Bem-vindo, {currentUser?.name}
+                  Bem-vindo, {profile?.name}
                 </p>
               </div>
             </div>
@@ -119,23 +117,23 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                             <div>
                               <p className="font-medium">{calculation.description}</p>
                               <p className="text-sm text-muted-foreground">
-                                {calculation.dayEntries.length} dias registrados
+                                {calculation.day_entries.length} dias registrados
                               </p>
                             </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {getDateRange(calculation.startDate, calculation.endDate)}
+                              {getDateRange(calculation.start_date, calculation.end_date)}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {formatDate(calculation.createdAt)}
+                            {formatDate(calculation.created_at)}
                           </TableCell>
                           <TableCell>
                             <Badge 
-                              variant={calculation.dayEntries.length > 0 ? "default" : "secondary"}
+                              variant={calculation.day_entries.length > 0 ? "default" : "secondary"}
                             >
-                              {calculation.dayEntries.length > 0 ? "Concluído" : "Em andamento"}
+                              {calculation.day_entries.length > 0 ? "Concluído" : "Em andamento"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -199,7 +197,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-green-600">
-                    {calculations.filter(c => c.dayEntries.length > 0).length}
+                    {calculations.filter(c => c.day_entries.length > 0).length}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Com horários registrados
@@ -213,7 +211,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-orange-600">
-                    {calculations.filter(c => c.dayEntries.length === 0).length}
+                    {calculations.filter(c => c.day_entries.length === 0).length}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Aguardando registros

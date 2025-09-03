@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { LoginForm } from '@/components/overtime/LoginForm';
 import { Dashboard } from '@/components/overtime/Dashboard';
 import { CreateCalculation } from '@/components/overtime/CreateCalculation';
@@ -8,7 +8,7 @@ import { ResultsPage } from '@/components/overtime/ResultsPage';
 import { CalculationStep } from '@/types/overtime';
 
 const OvertimeCalculatorPage = () => {
-  const { currentUser, loading } = useOvertimeCalculations();
+  const { user, loading } = useSupabaseAuth();
   const [currentStep, setCurrentStep] = useState<CalculationStep>('dashboard');
   const [currentCalculationId, setCurrentCalculationId] = useState<string>('');
   const [editingCalculationId, setEditingCalculationId] = useState<string>('');
@@ -24,7 +24,7 @@ const OvertimeCalculatorPage = () => {
     );
   }
 
-  if (!currentUser) {
+  if (!user) {
     return <LoginForm onLoginSuccess={() => setCurrentStep('dashboard')} />;
   }
 

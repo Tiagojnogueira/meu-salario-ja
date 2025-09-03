@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      calculations: {
+        Row: {
+          created_at: string
+          day_entries: Json
+          description: string
+          end_date: string
+          id: string
+          overtime_percentages: Json
+          start_date: string
+          updated_at: string
+          user_id: string
+          working_hours: Json
+        }
+        Insert: {
+          created_at?: string
+          day_entries?: Json
+          description: string
+          end_date: string
+          id?: string
+          overtime_percentages: Json
+          start_date: string
+          updated_at?: string
+          user_id: string
+          working_hours: Json
+        }
+        Update: {
+          created_at?: string
+          day_entries?: Json
+          description?: string
+          end_date?: string
+          id?: string
+          overtime_percentages?: Json
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+          working_hours?: Json
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

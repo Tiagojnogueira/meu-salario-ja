@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
 
@@ -14,11 +14,11 @@ interface LoginFormProps {
 }
 
 export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
-  const { login, register, forgotPassword } = useOvertimeCalculations();
+  const { login, register, forgotPassword } = useSupabaseAuth();
   
   // Login state
   const [loginData, setLoginData] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -37,23 +37,21 @@ export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!loginData.username || !loginData.password) {
+    if (!loginData.email || !loginData.password) {
       toast.error('Preencha todos os campos');
       return;
     }
 
-    if (login(loginData.username, loginData.password)) {
-      toast.success('Login realizado com sucesso!');
+    const success = await login(loginData.email, loginData.password);
+    if (success) {
       onLoginSuccess();
-    } else {
-      toast.error('Usuário ou senha incorretos');
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!registerData.name || !registerData.email || !registerData.username || 
@@ -74,21 +72,17 @@ export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
 
     const { confirmPassword, ...userData } = registerData;
     
-    if (register(userData)) {
-      toast.success('Usuário cadastrado com sucesso! Faça o login.');
-      setRegisterData({
-        name: '',
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: ''
-      });
-    } else {
-      toast.error('Usuário ou email já existem');
-    }
+    await register(userData);
+    setRegisterData({
+      name: '',
+      email: '',
+      username: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
-  const handleForgotPassword = (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!forgotEmail) {
@@ -96,12 +90,10 @@ export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
       return;
     }
 
-    if (forgotPassword(forgotEmail)) {
-      toast.success('Email de recuperação enviado!');
+    const success = await forgotPassword(forgotEmail);
+    if (success) {
       setForgotPasswordOpen(false);
       setForgotEmail('');
-    } else {
-      toast.error('Email não encontrado');
     }
   };
 
@@ -124,20 +116,20 @@ export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
             {/* Login Tab */}
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Usuário/Email</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="Digite seu usuário ou email"
-                      value={loginData.username}
-                      onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="email">Email</Label>
+                   <div className="relative">
+                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                     <Input
+                       id="email"
+                       type="email"
+                       placeholder="Digite seu email"
+                       value={loginData.email}
+                       onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                       className="pl-10"
+                     />
+                   </div>
+                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
