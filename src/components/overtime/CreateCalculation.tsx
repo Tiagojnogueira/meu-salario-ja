@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
 import { CalendarIcon, ArrowLeft, Save } from 'lucide-react';
@@ -20,31 +21,32 @@ interface CreateCalculationProps {
 }
 
 export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalculationProps) => {
+  const { profile } = useSupabaseAuth();
   const { 
     createCalculation, 
     updateCalculation, 
     getCalculation,
     getDefaultWorkingHours, 
     getDefaultOvertimePercentages 
-  } = useOvertimeCalculations();
+  } = useSupabaseCalculations(profile?.user_id);
 
   // Load existing data if editing
   const existingCalculation = editingId ? getCalculation(editingId) : null;
 
   const [description, setDescription] = useState(existingCalculation?.description || '');
   const [startDate, setStartDate] = useState<Date | undefined>(
-    existingCalculation ? new Date(existingCalculation.startDate) : undefined
+    existingCalculation ? new Date(existingCalculation.start_date) : undefined
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    existingCalculation ? new Date(existingCalculation.endDate) : undefined
+    existingCalculation ? new Date(existingCalculation.end_date) : undefined
   );
   
   const [workingHours, setWorkingHours] = useState<WorkingHours>(
-    existingCalculation?.workingHours || getDefaultWorkingHours()
+    existingCalculation?.working_hours || getDefaultWorkingHours()
   );
   
   const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(
-    existingCalculation?.overtimePercentages || getDefaultOvertimePercentages()
+    existingCalculation?.overtime_percentages || getDefaultOvertimePercentages()
   );
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
@@ -62,7 +64,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!description.trim()) {
@@ -82,25 +84,24 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
 
     const calculationData = {
       description: description.trim(),
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      workingHours,
-      overtimePercentages,
-      dayEntries: existingCalculation?.dayEntries || []
+      start_date: format(startDate, 'yyyy-MM-dd'),
+      end_date: format(endDate, 'yyyy-MM-dd'),
+      working_hours: workingHours,
+      overtime_percentages: overtimePercentages,
+      day_entries: existingCalculation?.day_entries || []
     };
 
     try {
       if (editingId) {
-        if (updateCalculation(editingId, calculationData)) {
-          toast.success('Cálculo atualizado com sucesso!');
+        const success = await updateCalculation(editingId, calculationData);
+        if (success) {
           onContinue(editingId);
-        } else {
-          toast.error('Erro ao atualizar cálculo');
         }
       } else {
-        const newId = createCalculation(calculationData);
-        toast.success('Cálculo criado com sucesso!');
-        onContinue(newId);
+        const newId = await createCalculation(calculationData);
+        if (newId) {
+          onContinue(newId);
+        }
       }
     } catch (error) {
       toast.error('Erro ao salvar cálculo');
@@ -186,33 +187,34 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                   </Popover>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Data Final</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !endDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione a data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        disabled={(date) => startDate ? date < startDate : false}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                 <div className="space-y-2">
+                   <Label>Data Final</Label>
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         className={cn(
+                           "w-full justify-start text-left font-normal",
+                           !endDate && "text-muted-foreground"
+                         )}
+                       >
+                         <CalendarIcon className="mr-2 h-4 w-4" />
+                         {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione a data"}
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <Calendar
+                         mode="single"
+                         selected={endDate}
+                         onSelect={setEndDate}
+                         disabled={(date) => startDate ? date < startDate : false}
+                         defaultMonth={startDate || new Date()}
+                         initialFocus
+                         className="pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+                 </div>
               </div>
             </CardContent>
           </Card>

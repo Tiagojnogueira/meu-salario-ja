@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { DayEntry, WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { ArrowLeft, Printer, Calculator } from 'lucide-react';
-import { format, getDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ResultsPageProps {
@@ -31,7 +32,8 @@ interface DayResult {
 }
 
 export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: ResultsPageProps) => {
-  const { getCalculation } = useOvertimeCalculations();
+  const { profile } = useSupabaseAuth();
+  const { getCalculation } = useSupabaseCalculations(profile?.user_id);
   const calculation = getCalculation(calculationId);
 
   if (!calculation) {
@@ -49,21 +51,14 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
   };
 
   const getContractualHours = (date: string, workingHours: WorkingHours): number => {
-    const dayOfWeek = getDay(new Date(date));
-    const dayMap = {
-      0: workingHours.sunday,    // Sunday
-      1: workingHours.monday,    // Monday
-      2: workingHours.tuesday,   // Tuesday
-      3: workingHours.wednesday, // Wednesday
-      4: workingHours.thursday,  // Thursday
-      5: workingHours.friday,    // Friday
-      6: workingHours.saturday   // Saturday
-    };
-    
-    return timeToMinutes(dayMap[dayOfWeek as keyof typeof dayMap]) / 60;
+    const dayOfWeek = parseISO(date).getDay();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+    const dayName = dayNames[dayOfWeek];
+    const hoursStr = workingHours[dayName] || '00:00';
+    return timeToMinutes(hoursStr) / 60;
   };
 
-  const calculateDayResult = (entry: DayEntry): DayResult => {
+  const calculateDayResult = (entry: DayEntry, workingHours: WorkingHours, overtimePercentages: OvertimePercentages): DayResult => {
     const entryMinutes = timeToMinutes(entry.entry);
     const intervalStartMinutes = timeToMinutes(entry.intervalStart);
     const intervalEndMinutes = timeToMinutes(entry.intervalEnd);
@@ -91,7 +86,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     }
 
     const workedHours = minutesToHours(workedMinutes);
-    const contractualHours = getContractualHours(entry.date, calculation.workingHours);
+    const contractualHours = getContractualHours(entry.date, workingHours);
     
     let regularHours = workedHours;
     
@@ -99,7 +94,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
       // All hours on rest day are overtime at rest day percentage
       overtimeHours = workedHours;
       regularHours = 0;
-      overtimePercentage = calculation.overtimePercentages.restDay;
+      overtimePercentage = overtimePercentages.restDay;
     } else if (entry.type === 'workday' && workedHours > contractualHours) {
       // Calculate overtime based on brackets
       overtimeHours = workedHours - contractualHours;
@@ -107,21 +102,21 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
 
       // Determine overtime percentage based on overtime hours
       if (overtimeHours <= 2) {
-        overtimePercentage = calculation.overtimePercentages.upTo2Hours;
+        overtimePercentage = overtimePercentages.upTo2Hours;
       } else if (overtimeHours <= 3) {
-        overtimePercentage = calculation.overtimePercentages.from2To3Hours;
+        overtimePercentage = overtimePercentages.from2To3Hours;
       } else if (overtimeHours <= 4) {
-        overtimePercentage = calculation.overtimePercentages.from3To4Hours;
+        overtimePercentage = overtimePercentages.from3To4Hours;
       } else if (overtimeHours <= 5) {
-        overtimePercentage = calculation.overtimePercentages.from4To5Hours;
+        overtimePercentage = overtimePercentages.from4To5Hours;
       } else {
-        overtimePercentage = calculation.overtimePercentages.over5Hours;
+        overtimePercentage = overtimePercentages.over5Hours;
       }
     }
 
     return {
       date: entry.date,
-      weekday: format(new Date(entry.date), 'EEEE', { locale: ptBR }),
+      weekday: format(parseISO(entry.date), 'EEEE', { locale: ptBR }),
       type: getTypeLabel(entry.type),
       entry: entry.entry || '-',
       intervalStart: entry.intervalStart || '-',
@@ -155,7 +150,26 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     }
   };
 
-  const results = calculation.dayEntries.map(calculateDayResult);
+  // Process day entries into results
+  const dayResults: DayResult[] = (calculation?.day_entries || []).map((entry: DayEntry): DayResult => {
+    const result = calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages);
+    return {
+      date: entry.date,
+      weekday: format(parseISO(entry.date), 'EEEE', { locale: ptBR }),
+      type: entry.type,
+      entry: entry.entry,
+      intervalStart: entry.intervalStart,
+      intervalEnd: entry.intervalEnd,
+      exit: entry.exit,
+      workedHours: result.workedHours,
+      contractualHours: result.contractualHours,
+      regularHours: result.regularHours,
+      overtimeHours: result.overtimeHours,
+      overtimePercentage: result.overtimePercentage
+    };
+  });
+
+  const results = calculation.day_entries.map(entry => calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages));
   
   const totals = results.reduce((acc, result) => ({
     workedHours: acc.workedHours + result.workedHours,
@@ -183,7 +197,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                   Resultado do Cálculo
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {calculation.description}
+                  {calculation.description} • {format(parseISO(calculation.start_date), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date), 'dd/MM/yyyy')}
                 </p>
               </div>
             </div>
@@ -212,7 +226,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
               {calculation.description}
             </p>
             <p className="text-center text-sm text-muted-foreground">
-              Período: {format(new Date(calculation.startDate), "dd/MM/yyyy")} - {format(new Date(calculation.endDate), "dd/MM/yyyy")}
+              Período: {format(parseISO(calculation.start_date), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date), "dd/MM/yyyy")}
             </p>
           </div>
 
@@ -294,9 +308,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                   <TableBody>
                     {results.map((result) => (
                       <TableRow key={result.date}>
-                        <TableCell>
-                          {format(new Date(result.date), "dd/MM/yyyy")}
-                        </TableCell>
+                        <TableCell>{format(parseISO(result.date), "dd/MM")}</TableCell>
                         <TableCell className="capitalize">
                           {result.weekday}
                         </TableCell>
@@ -376,32 +388,22 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Working Hours */}
-                <div>
-                  <h4 className="font-semibold mb-3">Jornada Contratual</h4>
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div>Seg: {calculation.workingHours.monday}</div>
-                    <div>Ter: {calculation.workingHours.tuesday}</div>
-                    <div>Qua: {calculation.workingHours.wednesday}</div>
-                    <div>Qui: {calculation.workingHours.thursday}</div>
-                    <div>Sex: {calculation.workingHours.friday}</div>
-                    <div>Sab: {calculation.workingHours.saturday}</div>
-                    <div>Dom: {calculation.workingHours.sunday}</div>
-                    <div>Des: {calculation.workingHours.rest}</div>
-                  </div>
+                <div className="space-y-1">
+                  <dt className="font-medium">Horas Contratuais</dt>
+                  <dd>{calculation.working_hours.monday}h (seg-qua-sex)</dd>
+                  <dd>{calculation.working_hours.tuesday}h (ter-qui)</dd>
+                  <dd>{calculation.working_hours.saturday}h (sáb)</dd>
+                  <dd>{calculation.working_hours.sunday}h (dom)</dd>
                 </div>
-
-                {/* Overtime Percentages */}
-                <div>
-                  <h4 className="font-semibold mb-3">Percentuais de Horas Extras</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>Até 2 H.E.: {calculation.overtimePercentages.upTo2Hours}%</div>
-                    <div>De 2 à 3 H.E.: {calculation.overtimePercentages.from2To3Hours}%</div>
-                    <div>De 3 à 4 H.E.: {calculation.overtimePercentages.from3To4Hours}%</div>
-                    <div>De 4 à 5 H.E.: {calculation.overtimePercentages.from4To5Hours}%</div>
-                    <div>+ de 5 H.E.: {calculation.overtimePercentages.over5Hours}%</div>
-                    <div>Na folga: {calculation.overtimePercentages.restDay}%</div>
-                  </div>
+                
+                <div className="space-y-1">
+                  <dt className="font-medium">Percentuais de Hora Extra</dt>
+                  <dd>Até 2h: {calculation.overtime_percentages.upTo2Hours}%</dd>
+                  <dd>2-3h: {calculation.overtime_percentages.from2To3Hours}%</dd>
+                  <dd>3-4h: {calculation.overtime_percentages.from3To4Hours}%</dd>
+                  <dd>4-5h: {calculation.overtime_percentages.from4To5Hours}%</dd>
+                  <dd>+5h: {calculation.overtime_percentages.over5Hours}%</dd>
+                  <dd>Folga: {calculation.overtime_percentages.restDay}%</dd>
                 </div>
               </div>
             </CardContent>

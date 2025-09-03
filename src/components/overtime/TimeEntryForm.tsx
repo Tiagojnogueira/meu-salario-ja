@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useOvertimeCalculations } from '@/hooks/useOvertimeCalculations';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { DayEntry } from '@/types/overtime';
 import { toast } from 'sonner';
 import { ArrowLeft, Calculator, Clock } from 'lucide-react';
-import { format, eachDayOfInterval, getDay } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface TimeEntryFormProps {
@@ -19,7 +20,8 @@ interface TimeEntryFormProps {
 }
 
 export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryFormProps) => {
-  const { getCalculation, updateCalculation } = useOvertimeCalculations();
+  const { profile } = useSupabaseAuth();
+  const { getCalculation, updateCalculation } = useSupabaseCalculations(profile?.user_id);
   const calculation = getCalculation(calculationId);
   
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
@@ -27,13 +29,20 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
   useEffect(() => {
     if (!calculation) return;
 
-    // Generate all days in the range
-    const startDate = new Date(calculation.startDate);
-    const endDate = new Date(calculation.endDate);
-    const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+    // Fix timezone issues by using date-only strings directly
+    const startDate = parseISO(calculation.start_date);
+    const endDate = parseISO(calculation.end_date);
+    
+    // Generate all days in the range without timezone conversion
+    const allDays: Date[] = [];
+    let currentDate = startDate;
+    while (currentDate <= endDate) {
+      allDays.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
+    }
 
     // Create or load existing entries
-    const existingEntries = calculation.dayEntries || [];
+    const existingEntries = calculation.day_entries || [];
     const entries: DayEntry[] = allDays.map(date => {
       const dateString = format(date, 'yyyy-MM-dd');
       const existing = existingEntries.find(entry => entry.date === dateString);
@@ -43,7 +52,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
       }
 
       // Default type based on day of week (Sunday = 0)
-      const dayOfWeek = getDay(date);
+      const dayOfWeek = date.getDay();
       const defaultType = dayOfWeek === 0 ? 'rest' : 'workday';
 
       return {
@@ -69,7 +78,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
     ));
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     // Validate required fields for workdays
     const workdayEntries = dayEntries.filter(entry => entry.type === 'workday');
     const invalidEntries = workdayEntries.filter(entry => 
@@ -81,17 +90,18 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
       return;
     }
 
-    // Save entries to calculation
-    if (updateCalculation(calculationId, { dayEntries })) {
-      toast.success('Horários salvos com sucesso!');
+    // Update calculation with day entries
+    const success = await updateCalculation(calculationId, {
+      day_entries: dayEntries
+    });
+
+    if (success) {
       onCalculate();
-    } else {
-      toast.error('Erro ao salvar horários');
     }
   };
 
   const getWeekdayName = (dateString: string) => {
-    return format(new Date(dateString), 'EEEE', { locale: ptBR });
+    return format(parseISO(dateString), 'EEEE', { locale: ptBR });
   };
 
   const getTypeLabel = (type: DayEntry['type']) => {
@@ -114,6 +124,16 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
     }
   };
 
+  const getRowBackgroundColor = (type: DayEntry['type']) => {
+    switch (type) {
+      case 'workday': return 'bg-green-50 border-green-200';
+      case 'rest': return 'bg-yellow-50 border-yellow-200';
+      case 'justified-absence': return 'bg-yellow-50 border-yellow-200';
+      case 'absence': return 'bg-red-50 border-red-200';
+      default: return 'bg-background border-border';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
@@ -129,7 +149,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
                 Registrar Horários
               </h1>
               <p className="text-sm text-muted-foreground">
-                {calculation.description} • {format(new Date(calculation.startDate), "dd/MM/yyyy")} - {format(new Date(calculation.endDate), "dd/MM/yyyy")}
+                {calculation.description} • {format(parseISO(calculation.start_date), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date), "dd/MM/yyyy")}
               </p>
             </div>
           </div>
@@ -158,89 +178,84 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
             <CardHeader>
               <CardTitle>Horários do Período</CardTitle>
               <CardDescription>
-                Configure os horários e tipo de cada dia
+                Configure os horários e tipo de cada dia. Cores: Verde = Trabalho, Amarelo = Descanso/Falta Justificada, Vermelho = Falta
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-2">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm border-b">
+                  <div className="col-span-2">Data</div>
+                  <div className="col-span-2">Entrada</div>
+                  <div className="col-span-2">Início Intervalo</div>
+                  <div className="col-span-2">Fim Intervalo</div>
+                  <div className="col-span-2">Saída</div>
+                  <div className="col-span-2">Marcar como</div>
+                </div>
+                
                 {dayEntries.map((entry, index) => (
-                  <div key={entry.date} className="grid grid-cols-1 lg:grid-cols-8 gap-4 p-4 border rounded-lg">
+                  <div 
+                    key={entry.date} 
+                    className={`grid grid-cols-12 gap-2 p-3 border rounded-lg items-center ${getRowBackgroundColor(entry.type)}`}
+                  >
                     {/* Date and Weekday */}
-                    <div className="lg:col-span-2 space-y-1">
-                      <div className="font-medium">
-                        {format(new Date(entry.date), "dd/MM/yyyy")}
+                    <div className="col-span-2">
+                      <div className="font-medium text-sm">
+                        {format(parseISO(entry.date), "dd/MM")}
                       </div>
-                      <div className="text-sm text-muted-foreground capitalize">
+                      <div className="text-xs text-muted-foreground capitalize">
                         {getWeekdayName(entry.date)}
                       </div>
-                      <Badge variant={getTypeBadgeVariant(entry.type)} className="text-xs">
-                        {getTypeLabel(entry.type)}
-                      </Badge>
                     </div>
 
                     {/* Time Inputs */}
-                    <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`entry-${index}`} className="text-xs">
-                          Entrada
-                        </Label>
-                        <Input
-                          id={`entry-${index}`}
-                          type="time"
-                          value={entry.entry}
-                          onChange={(e) => handleEntryChange(index, 'entry', e.target.value)}
-                          disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`intervalStart-${index}`} className="text-xs">
-                          Início Intervalo
-                        </Label>
-                        <Input
-                          id={`intervalStart-${index}`}
-                          type="time"
-                          value={entry.intervalStart}
-                          onChange={(e) => handleEntryChange(index, 'intervalStart', e.target.value)}
-                          disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`intervalEnd-${index}`} className="text-xs">
-                          Fim Intervalo
-                        </Label>
-                        <Input
-                          id={`intervalEnd-${index}`}
-                          type="time"
-                          value={entry.intervalEnd}
-                          onChange={(e) => handleEntryChange(index, 'intervalEnd', e.target.value)}
-                          disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`exit-${index}`} className="text-xs">
-                          Saída
-                        </Label>
-                        <Input
-                          id={`exit-${index}`}
-                          type="time"
-                          value={entry.exit}
-                          onChange={(e) => handleEntryChange(index, 'exit', e.target.value)}
-                          disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                        />
-                      </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.entry}
+                        onChange={(e) => handleEntryChange(index, 'entry', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
                     </div>
 
-                    {/* Type Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-xs">Marca como</Label>
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.intervalStart}
+                        onChange={(e) => handleEntryChange(index, 'intervalStart', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.intervalEnd}
+                        onChange={(e) => handleEntryChange(index, 'intervalEnd', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.exit}
+                        onChange={(e) => handleEntryChange(index, 'exit', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+
+                    {/* Type Selection - Moved to the end */}
+                    <div className="col-span-2">
                       <Select
                         value={entry.type}
                         onValueChange={(value) => handleEntryChange(index, 'type', value)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
