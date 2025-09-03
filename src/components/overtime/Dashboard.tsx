@@ -2,10 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface DashboardProps {
   onCreateNew: () => void;
@@ -16,6 +18,16 @@ interface DashboardProps {
 export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
   const { profile, logout } = useSupabaseAuth();
   const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const calculationsPerPage = 10;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(calculations.length / calculationsPerPage);
+  const startIndex = (currentPage - 1) * calculationsPerPage;
+  const endIndex = startIndex + calculationsPerPage;
+  const paginatedCalculations = calculations.slice(startIndex, endIndex);
 
   const handleDelete = async (id: string, description: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o cálculo "${description}"?`)) {
@@ -114,7 +126,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {calculations.map((calculation) => (
+                      {paginatedCalculations.map((calculation) => (
                         <TableRow key={calculation.id}>
                           <TableCell className="font-mono text-sm">
                             {calculation.id.substring(0, 8).toUpperCase()}
@@ -179,6 +191,83 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                       ))}
                     </TableBody>
                   </Table>
+                  
+                  {/* Pagination */}
+                  {calculations.length > calculationsPerPage && (
+                    <div className="mt-6">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage > 1) setCurrentPage(currentPage - 1);
+                              }}
+                              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            if (totalPages <= 7) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPage(page);
+                                    }}
+                                    isActive={currentPage === page}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            
+                            if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPage(page);
+                                    }}
+                                    isActive={currentPage === page}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            
+                            if (page === currentPage - 2 || page === currentPage + 2) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            
+                            return null;
+                          })}
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                              }}
+                              className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
