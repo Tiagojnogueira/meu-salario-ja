@@ -42,10 +42,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   useEffect(() => {
     if (editingId && !loading) {
       const existingCalculation = getCalculation(editingId);
-      console.log('DEBUG - Loading calculation for editing:', existingCalculation);
       if (existingCalculation) {
-        console.log('DEBUG - Setting working hours:', existingCalculation.working_hours);
-        console.log('DEBUG - Setting overtime percentages:', existingCalculation.overtime_percentages);
         setDescription(existingCalculation.description);
         // Fix timezone issue by adding T00:00:00 to ensure local timezone
         setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
@@ -57,28 +54,18 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   }, [editingId, getCalculation, loading]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
-    console.log('DEBUG - Changing working hour:', day, value);
-    setWorkingHours(prev => {
-      const newHours = {
-        ...prev,
-        [day]: value
-      };
-      console.log('DEBUG - New working hours:', newHours);
-      return newHours;
-    });
+    setWorkingHours(prev => ({
+      ...prev,
+      [day]: value
+    }));
   };
 
   const handlePercentageChange = (type: keyof OvertimePercentages, value: string) => {
-    console.log('DEBUG - Changing percentage:', type, value);
     const numValue = parseFloat(value) || 0;
-    setOvertimePercentages(prev => {
-      const newPercentages = {
-        ...prev,
-        [type]: numValue
-      };
-      console.log('DEBUG - New percentages:', newPercentages);
-      return newPercentages;
-    });
+    setOvertimePercentages(prev => ({
+      ...prev,
+      [type]: numValue
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -163,18 +150,14 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                 <Label htmlFor="description">
                   Descrição e datas para este cálculo (máx. 100 caracteres)
                 </Label>
-                <Input
-                  id="description"
-                  type="text"
-                  placeholder="Ex: João Silva - Janeiro 2025"
-                  value={description}
-                  onChange={(e) => {
-                    console.log('DEBUG - Input change detected for description:', e.target.value);
-                    setDescription(e.target.value.slice(0, 100));
-                  }}
-                  maxLength={100}
-                  disabled={loading}
-                />
+                  <Input
+                    id="description"
+                    type="text"
+                    placeholder="Ex: João Silva - Janeiro 2025"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                  />
                 <p className="text-xs text-muted-foreground">
                   {description.length}/100 caracteres
                 </p>
@@ -258,11 +241,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.upTo2Hours}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for upTo2Hours:', e.target.value);
-                      handlePercentageChange('upTo2Hours', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('upTo2Hours', e.target.value)}
                   />
                 </div>
 
@@ -274,11 +253,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.from2To3Hours}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for from2To3Hours:', e.target.value);
-                      handlePercentageChange('from2To3Hours', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('from2To3Hours', e.target.value)}
                   />
                 </div>
 
@@ -290,11 +265,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.from3To4Hours}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for from3To4Hours:', e.target.value);
-                      handlePercentageChange('from3To4Hours', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('from3To4Hours', e.target.value)}
                   />
                 </div>
 
@@ -306,11 +277,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.from4To5Hours}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for from4To5Hours:', e.target.value);
-                      handlePercentageChange('from4To5Hours', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('from4To5Hours', e.target.value)}
                   />
                 </div>
 
@@ -322,11 +289,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.over5Hours}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for over5Hours:', e.target.value);
-                      handlePercentageChange('over5Hours', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('over5Hours', e.target.value)}
                   />
                 </div>
 
@@ -338,11 +301,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.restDay}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for restDay:', e.target.value);
-                      handlePercentageChange('restDay', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handlePercentageChange('restDay', e.target.value)}
                   />
                 </div>
               </div>
@@ -365,11 +324,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="monday"
                     type="time"
                     value={workingHours.monday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for monday:', e.target.value);
-                      handleWorkingHourChange('monday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('monday', e.target.value)}
                   />
                 </div>
 
@@ -379,11 +334,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="tuesday"
                     type="time"
                     value={workingHours.tuesday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for tuesday:', e.target.value);
-                      handleWorkingHourChange('tuesday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('tuesday', e.target.value)}
                   />
                 </div>
 
@@ -393,11 +344,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="wednesday"
                     type="time"
                     value={workingHours.wednesday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for wednesday:', e.target.value);
-                      handleWorkingHourChange('wednesday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('wednesday', e.target.value)}
                   />
                 </div>
 
@@ -407,11 +354,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="thursday"
                     type="time"
                     value={workingHours.thursday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for thursday:', e.target.value);
-                      handleWorkingHourChange('thursday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('thursday', e.target.value)}
                   />
                 </div>
 
@@ -421,11 +364,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="friday"
                     type="time"
                     value={workingHours.friday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for friday:', e.target.value);
-                      handleWorkingHourChange('friday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('friday', e.target.value)}
                   />
                 </div>
 
@@ -435,11 +374,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="saturday"
                     type="time"
                     value={workingHours.saturday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for saturday:', e.target.value);
-                      handleWorkingHourChange('saturday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('saturday', e.target.value)}
                   />
                 </div>
 
@@ -449,11 +384,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="sunday"
                     type="time"
                     value={workingHours.sunday}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for sunday:', e.target.value);
-                      handleWorkingHourChange('sunday', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('sunday', e.target.value)}
                   />
                 </div>
 
@@ -463,11 +394,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     id="rest"
                     type="time"
                     value={workingHours.rest}
-                    onChange={(e) => {
-                      console.log('DEBUG - Input change detected for rest:', e.target.value);
-                      handleWorkingHourChange('rest', e.target.value);
-                    }}
-                    disabled={loading}
+                    onChange={(e) => handleWorkingHourChange('rest', e.target.value)}
                   />
                 </div>
               </div>
