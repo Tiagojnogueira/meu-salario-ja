@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,15 +15,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-interface CreateCalculationProps {
-  onBack: () => void;
-  onContinue: (calculationId: string) => void;
-}
-
-export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps) => {
+export const EditCalculationPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
   const { 
-    createCalculation, 
+    updateCalculation, 
+    getCalculation,
     getDefaultWorkingHours, 
     getDefaultOvertimePercentages,
     loading 
@@ -34,8 +33,26 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
   const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
+  const [dayEntries, setDayEntries] = useState<any[]>([]);
 
-  // Remove logs de debug desnecessários
+  // Load existing data when component mounts
+  useEffect(() => {
+    if (id && !loading) {
+      const existingCalculation = getCalculation(id);
+      if (existingCalculation) {
+        setDescription(existingCalculation.description);
+        setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
+        setEndDate(new Date(existingCalculation.end_date + 'T00:00:00'));
+        setWorkingHours(existingCalculation.working_hours);
+        setOvertimePercentages(existingCalculation.overtime_percentages);
+        setDayEntries(existingCalculation.day_entries || []);
+      } else {
+        toast.error('Cálculo não encontrado');
+        navigate('/horas-extras');
+      }
+    }
+  }, [id, getCalculation, loading, navigate]);
+
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     setWorkingHours(prev => ({
       ...prev,
@@ -53,6 +70,11 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!id) {
+      toast.error('ID do cálculo não encontrado');
+      return;
+    }
 
     if (!description.trim()) {
       toast.error('Informe a descrição do cálculo');
@@ -75,18 +97,27 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       end_date: format(endDate, 'yyyy-MM-dd'),
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
-      day_entries: []
+      day_entries: dayEntries
     };
 
     try {
-      const newId = await createCalculation(calculationData);
-      if (newId) {
-        onContinue(newId);
+      const success = await updateCalculation(id, calculationData);
+      if (success) {
+        toast.success('Cálculo atualizado com sucesso!');
+        navigate('/horas-extras');
       }
     } catch (error) {
-      toast.error('Erro ao salvar cálculo');
+      toast.error('Erro ao atualizar cálculo');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div>Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -94,16 +125,16 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={onBack}>
+            <Button variant="outline" onClick={() => navigate('/horas-extras')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Calcular Horas Extras
+                Editar Cálculo
               </h1>
               <p className="text-sm text-muted-foreground">
-                Configure os parâmetros para o cálculo de horas extras
+                Modifique os parâmetros do cálculo de horas extras
               </p>
             </div>
           </div>
@@ -118,7 +149,7 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
             <CardHeader>
               <CardTitle>Informações Básicas</CardTitle>
               <CardDescription>
-                Defina a descrição e período do cálculo
+                Edite a descrição e período do cálculo
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -126,14 +157,14 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
                 <Label htmlFor="description">
                   Descrição e datas para este cálculo (máx. 100 caracteres)
                 </Label>
-                  <Input
-                    id="description"
-                    type="text"
-                    placeholder="Ex: João Silva - Janeiro 2025"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value.slice(0, 100))}
-                    maxLength={100}
-                  />
+                <Input
+                  id="description"
+                  type="text"
+                  placeholder="Ex: João Silva - Janeiro 2025"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                  maxLength={100}
+                />
                 <p className="text-xs text-muted-foreground">
                   {description.length}/100 caracteres
                 </p>
@@ -155,46 +186,46 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
                         {startDate ? format(startDate, "PPP", { locale: ptBR }) : "Selecione a data"}
                       </Button>
                     </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
                   </Popover>
                 </div>
 
-                 <div className="space-y-2">
-                   <Label>Data Final</Label>
-                   <Popover>
-                     <PopoverTrigger asChild>
-                       <Button
-                         variant="outline"
-                         className={cn(
-                           "w-full justify-start text-left font-normal",
-                           !endDate && "text-muted-foreground"
-                         )}
-                       >
-                         <CalendarIcon className="mr-2 h-4 w-4" />
-                         {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione a data"}
-                       </Button>
-                     </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={setEndDate}
-                          disabled={(date) => startDate ? date < startDate : false}
-                          defaultMonth={startDate || new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                   </Popover>
-                 </div>
+                <div className="space-y-2">
+                  <Label>Data Final</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Selecione a data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        disabled={(date) => startDate ? date < startDate : false}
+                        defaultMonth={startDate || new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -208,7 +239,7 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
               </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="upTo2Hours">Até 2 H.E. (%)</Label>
                   <Input
@@ -378,10 +409,13 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-4">
+            <Button type="button" variant="outline" onClick={() => navigate('/horas-extras')}>
+              Cancelar
+            </Button>
             <Button type="submit" size="lg" className="px-8">
               <Save className="h-4 w-4 mr-2" />
-              Gravar / Continuar
+              Salvar Alterações
             </Button>
           </div>
         </form>

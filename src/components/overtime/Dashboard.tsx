@@ -4,15 +4,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
-import { Plus, Eye, Trash2, LogOut, Calculator } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DashboardProps {
   onCreateNew: () => void;
   onViewCalculation: (id: string) => void;
+  onEditCalculation: (id: string) => void;
 }
 
-export const Dashboard = ({ onCreateNew, onViewCalculation }: DashboardProps) => {
+export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
   const { profile, logout } = useSupabaseAuth();
   const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
 
@@ -150,6 +151,14 @@ export const Dashboard = ({ onCreateNew, onViewCalculation }: DashboardProps) =>
                                  title="Visualizar"
                                >
                                  <Eye className="h-4 w-4" />
+                               </Button>
+                               <Button
+                                 variant="secondary"
+                                 size="sm"
+                                 onClick={() => onEditCalculation(calculation.id)}
+                                 title="Editar"
+                               >
+                                 <Edit className="h-4 w-4" />
                                </Button>
                                <Button
                                  variant="outline"

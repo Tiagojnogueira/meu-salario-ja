@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { LoginForm } from '@/components/overtime/LoginForm';
 import { Dashboard } from '@/components/overtime/Dashboard';
@@ -71,6 +72,7 @@ const OvertimeCalculatorPage = () => {
         <Dashboard 
           onCreateNew={handleCreateNew}
           onViewCalculation={handleViewCalculation}
+          onEditCalculation={handleEditCalculation}
         />
       );
     
@@ -113,6 +115,7 @@ const OvertimeCalculatorPage = () => {
         <Dashboard 
           onCreateNew={handleCreateNew}
           onViewCalculation={handleViewCalculation}
+          onEditCalculation={handleEditCalculation}
         />
       );
   }
