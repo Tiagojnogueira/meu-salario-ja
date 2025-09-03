@@ -62,39 +62,64 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const nightStartMinutes = timeToMinutes(nightShiftStart);
     const nightEndMinutes = timeToMinutes(nightShiftEnd);
 
-    let nightHours = 0;
+    console.log('Calculating night hours for:', {
+      entry: entry.entry,
+      exit: entry.exit,
+      nightStart: nightShiftStart,
+      nightEnd: nightShiftEnd,
+      entryMinutes,
+      exitMinutes,
+      nightStartMinutes,
+      nightEndMinutes
+    });
+
+    let nightMinutes = 0;
     let workStart = entryMinutes;
     let workEnd = exitMinutes;
 
-    // Handle midnight crossing for work hours
+    // Se o trabalho cruza meia-noite (ex: 22:00 às 05:00)
     if (workEnd < workStart) {
-      workEnd += 24 * 60;
+      workEnd += 24 * 60; // Adiciona 24 horas para trabalhar com minutos contínuos
     }
 
-    // Handle midnight crossing for night hours (e.g., 22:00 to 05:00)
+    // Se o período noturno cruza meia-noite (ex: 22:00 às 05:00)
     if (nightEndMinutes < nightStartMinutes) {
-      // Night period crosses midnight
-      // Check overlap with night period (22:00-24:00)
-      if (workStart <= nightStartMinutes + 24 * 60 && workEnd >= nightStartMinutes) {
+      // Período noturno: 22:00 às 24:00 + 00:00 às 05:00
+      
+      // Primeira parte: das 22:00 às 24:00 (ou 1440 minutos)
+      const firstNightEnd = 24 * 60; // 24:00 em minutos
+      if (workStart < firstNightEnd && workEnd > nightStartMinutes) {
         const overlapStart = Math.max(workStart, nightStartMinutes);
-        const overlapEnd = Math.min(workEnd, 24 * 60);
-        nightHours += Math.max(0, overlapEnd - overlapStart);
+        const overlapEnd = Math.min(workEnd, firstNightEnd);
+        nightMinutes += Math.max(0, overlapEnd - overlapStart);
       }
       
-      // Check overlap with night period (00:00-05:00)
-      if (workStart <= nightEndMinutes + 24 * 60 && workEnd >= 0) {
+      // Segunda parte: das 00:00 às 05:00
+      // Para trabalho que cruza meia-noite, precisamos verificar a segunda parte
+      if (workEnd > 24 * 60) {
+        // O trabalho continua no dia seguinte
+        const nextDayWorkEnd = workEnd - 24 * 60;
+        const overlapStart = 0; // 00:00
+        const overlapEnd = Math.min(nextDayWorkEnd, nightEndMinutes);
+        nightMinutes += Math.max(0, overlapEnd - overlapStart);
+      } else if (workStart < nightEndMinutes) {
+        // Trabalho normal dentro do mesmo dia na faixa 00:00-05:00
         const overlapStart = Math.max(workStart, 0);
         const overlapEnd = Math.min(workEnd, nightEndMinutes);
-        nightHours += Math.max(0, overlapEnd - overlapStart);
+        nightMinutes += Math.max(0, overlapEnd - overlapStart);
       }
+      
     } else {
-      // Night period is within same day
+      // Período noturno não cruza meia-noite
       const overlapStart = Math.max(workStart, nightStartMinutes);
       const overlapEnd = Math.min(workEnd, nightEndMinutes);
-      nightHours += Math.max(0, overlapEnd - overlapStart);
+      nightMinutes = Math.max(0, overlapEnd - overlapStart);
     }
 
-    return nightHours / 60; // Convert to hours
+    const nightHours = nightMinutes / 60;
+    console.log('Night hours calculated:', nightHours);
+    
+    return nightHours;
   };
 
   const getContractualHours = (date: string, workingHours: WorkingHours): number => {
@@ -136,8 +161,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const contractualHours = getContractualHours(entry.date, workingHours);
     
     // Calculate night hours
-    const nightShiftStart = (calculation as any).night_shift_start || '22:00';
-    const nightShiftEnd = (calculation as any).night_shift_end || '05:00';
+    const nightShiftStart = (calculation as any).night_shift_start?.replace(':00', '') || '22:00';
+    const nightShiftEnd = (calculation as any).night_shift_end?.replace(':00', '') || '05:00';
     const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd);
     
     let regularHours = workedHours;
