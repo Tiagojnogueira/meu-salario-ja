@@ -54,6 +54,13 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return minutes / 60;
   };
 
+  const formatHoursToTime = (hours: number): string => {
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h}:${m.toString().padStart(2, '0')}`;
+  };
+
   const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false, applyNightReduction: boolean = true): number => {
     if (entry.type === 'absence' || entry.type === 'justified-absence' || !entry.entry || !entry.exit) {
       return 0;
@@ -186,7 +193,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       }
     }
 
-    const workedHours = minutesToHours(workedMinutes);
+    // Horas trabalhadas no relógio (para "Total Trabalhado")
+    const clockWorkedHours = minutesToHours(workedMinutes);
     const contractualHours = getContractualHours(entry.date, workingHours);
     
     // Calculate night hours
@@ -197,24 +205,26 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd, extendNightHours, applyNightReduction);
     
     // Calculate regular and overtime hours considering night hours
-    let regularHours = Math.min(workedHours, contractualHours);
+    let regularHours = Math.min(clockWorkedHours, contractualHours);
     
     if (entry.type === 'rest') {
       // All hours on rest day are overtime at rest day percentage
-      overtimeHours = workedHours;
+      // Para dias de descanso, use as horas efetivas para cálculo de extras
+      const effectiveHours = Math.max(clockWorkedHours, nightHours);
+      overtimeHours = effectiveHours;
       regularHours = 0;
       overtimePercentage = overtimePercentages.restDay;
       
       // All overtime hours on rest day are night hours if they worked at night
       if (nightHours > 0) {
         overtimeNightHours = nightHours;
-        overtimeDayHours = Math.max(0, overtimeHours - nightHours);
+        overtimeDayHours = Math.max(0, effectiveHours - nightHours);
       } else {
-        overtimeDayHours = overtimeHours;
+        overtimeDayHours = effectiveHours;
       }
     } else if (entry.type === 'workday') {
       // For workdays, consider the effective total hours (including night hour reduction benefit)
-      const effectiveTotalHours = Math.max(workedHours, nightHours);
+      const effectiveTotalHours = Math.max(clockWorkedHours, nightHours);
       
       if (effectiveTotalHours > contractualHours) {
         overtimeHours = effectiveTotalHours - contractualHours;
@@ -248,7 +258,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
     console.log('Day result calculated:', {
       date: entry.date,
-      workedHours,
+      clockWorkedHours,
       nightHours,
       contractualHours,
       overtimeHours,
@@ -264,7 +274,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       intervalStart: entry.intervalStart || '-',
       intervalEnd: entry.intervalEnd || '-',
       exit: entry.exit || '-',
-      workedHours,
+      workedHours: clockWorkedHours,
       contractualHours,
       regularHours,
       overtimeHours,
@@ -542,7 +552,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-primary">
-                  {totals.workedHours.toFixed(2)}h
+                  {formatHoursToTime(totals.workedHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Horas totais trabalhadas
