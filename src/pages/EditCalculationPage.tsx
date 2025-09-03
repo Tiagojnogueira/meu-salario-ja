@@ -146,7 +146,8 @@ export const EditCalculationPage = () => {
       const success = await updateCalculation(id, calculationData);
       if (success) {
         toast.success('Cálculo atualizado com sucesso!');
-        navigate('/horas-extras');
+        // Não navegar para dashboard, apenas mostrar mensagem de sucesso
+        // para permitir continuar editando
       }
     } catch (error) {
       toast.error('Erro ao atualizar cálculo');
@@ -291,9 +292,11 @@ export const EditCalculationPage = () => {
                     id="upTo2Hours"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.upTo2Hours}
-                    onChange={(e) => handlePercentageChange('upTo2Hours', e.target.value)}
+                    onChange={(e) => handlePercentageChange('upTo2Hours', e.target.value.slice(0, 3))}
                   />
                 </div>
 
@@ -303,9 +306,11 @@ export const EditCalculationPage = () => {
                     id="from2To3Hours"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.from2To3Hours}
-                    onChange={(e) => handlePercentageChange('from2To3Hours', e.target.value)}
+                    onChange={(e) => handlePercentageChange('from2To3Hours', e.target.value.slice(0, 3))}
                   />
                 </div>
 
@@ -315,9 +320,11 @@ export const EditCalculationPage = () => {
                     id="from3To4Hours"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.from3To4Hours}
-                    onChange={(e) => handlePercentageChange('from3To4Hours', e.target.value)}
+                    onChange={(e) => handlePercentageChange('from3To4Hours', e.target.value.slice(0, 3))}
                   />
                 </div>
 
@@ -327,9 +334,11 @@ export const EditCalculationPage = () => {
                     id="from4To5Hours"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.from4To5Hours}
-                    onChange={(e) => handlePercentageChange('from4To5Hours', e.target.value)}
+                    onChange={(e) => handlePercentageChange('from4To5Hours', e.target.value.slice(0, 3))}
                   />
                 </div>
 
@@ -339,9 +348,11 @@ export const EditCalculationPage = () => {
                     id="over5Hours"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.over5Hours}
-                    onChange={(e) => handlePercentageChange('over5Hours', e.target.value)}
+                    onChange={(e) => handlePercentageChange('over5Hours', e.target.value.slice(0, 3))}
                   />
                 </div>
 
@@ -351,9 +362,11 @@ export const EditCalculationPage = () => {
                     id="restDay"
                     type="number"
                     min="0"
+                    max="999"
                     step="1"
+                    maxLength={3}
                     value={overtimePercentages.restDay}
-                    onChange={(e) => handlePercentageChange('restDay', e.target.value)}
+                    onChange={(e) => handlePercentageChange('restDay', e.target.value.slice(0, 3))}
                   />
                 </div>
               </div>
@@ -460,7 +473,7 @@ export const EditCalculationPage = () => {
             </Button>
             <Button type="submit" size="lg" className="px-8">
               <Save className="h-4 w-4 mr-2" />
-              Salvar Alterações
+              Salvar e Continuar Editando
             </Button>
           </div>
         </form>

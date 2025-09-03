@@ -91,6 +91,7 @@ const OvertimeCalculatorPage = () => {
           calculationId={currentCalculationId}
           onBack={() => setCurrentStep('time-entry')}
           onBackToDashboard={handleBackToDashboard}
+          onEdit={() => navigate('/horas-extras/editar/' + currentCalculationId)}
         />
       );
     
