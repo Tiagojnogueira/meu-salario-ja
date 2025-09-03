@@ -12,7 +12,7 @@ const OvertimeCalculatorPage = () => {
   const { user, loading } = useSupabaseAuth();
   const [currentStep, setCurrentStep] = useState<CalculationStep>('dashboard');
   const [currentCalculationId, setCurrentCalculationId] = useState<string>('');
-  const [editingCalculationId, setEditingCalculationId] = useState<string>('');
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -30,7 +30,6 @@ const OvertimeCalculatorPage = () => {
   }
 
   const handleCreateNew = () => {
-    setEditingCalculationId('');
     setCurrentCalculationId('');
     setCurrentStep('create');
   };
@@ -41,9 +40,8 @@ const OvertimeCalculatorPage = () => {
   };
 
   const handleEditCalculation = (id: string) => {
-    setEditingCalculationId(id);
-    setCurrentCalculationId(id);
-    setCurrentStep('edit');
+    console.log('OvertimeCalculatorPage - Navigating to edit with database ID:', id);
+    navigate('/horas-extras/editar/' + id);
   };
 
   const handleContinueToTimeEntry = (calculationId: string) => {
@@ -54,16 +52,10 @@ const OvertimeCalculatorPage = () => {
   const handleBackToDashboard = () => {
     setCurrentStep('dashboard');
     setCurrentCalculationId('');
-    setEditingCalculationId('');
   };
 
   const handleCalculateResults = () => {
     setCurrentStep('results');
-  };
-
-  const handleEditFromResults = () => {
-    setEditingCalculationId(currentCalculationId);
-    setCurrentStep('edit');
   };
 
   switch (currentStep) {
@@ -83,20 +75,12 @@ const OvertimeCalculatorPage = () => {
           onContinue={handleContinueToTimeEntry}
         />
       );
-
-    case 'edit':
-      return (
-        <CreateCalculation 
-          onBack={handleBackToDashboard}
-          onContinue={handleContinueToTimeEntry}
-        />
-      );
     
     case 'time-entry':
       return (
         <TimeEntryForm 
           calculationId={currentCalculationId}
-          onBack={() => setCurrentStep(editingCalculationId ? 'edit' : 'create')}
+          onBack={() => setCurrentStep('create')}
           onCalculate={handleCalculateResults}
         />
       );

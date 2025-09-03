@@ -152,12 +152,16 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                >
                                  <Eye className="h-4 w-4" />
                                </Button>
-                               <Button
-                                 variant="secondary"
-                                 size="sm"
-                                 onClick={() => onEditCalculation(calculation.id)}
-                                 title="Editar"
-                               >
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    console.log('Dashboard - Edit clicked. Real ID from database:', calculation.id);
+                                    console.log('Dashboard - Calculation data:', calculation);
+                                    onEditCalculation(calculation.id);
+                                  }}
+                                  title="Editar"
+                                >
                                  <Edit className="h-4 w-4" />
                                </Button>
                                <Button

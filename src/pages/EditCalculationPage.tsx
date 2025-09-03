@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 export const EditCalculationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  console.log('EditCalculationPage - Received ID from URL:', id);
   const { profile } = useSupabaseAuth();
   const { updateCalculation } = useSupabaseCalculations(profile?.user_id);
 
