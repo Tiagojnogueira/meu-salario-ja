@@ -8,6 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
+import { supabase } from '@/integrations/supabase/client';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
 import { CalendarIcon, ArrowLeft, Save } from 'lucide-react';
@@ -19,42 +20,76 @@ export const EditCalculationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
-  const { 
-    updateCalculation, 
-    getCalculation,
-    getDefaultWorkingHours, 
-    getDefaultOvertimePercentages,
-    loading 
-  } = useSupabaseCalculations(profile?.user_id);
+  const { updateCalculation } = useSupabaseCalculations(profile?.user_id);
 
   // Initialize states with defaults
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
-  const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
+  const [workingHours, setWorkingHours] = useState<WorkingHours>({
+    monday: '08:00',
+    tuesday: '08:00',
+    wednesday: '08:00',
+    thursday: '08:00',
+    friday: '08:00',
+    saturday: '04:00',
+    sunday: '00:00',
+    rest: '00:00'
+  });
+  const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>({
+    upTo2Hours: 50,
+    from2To3Hours: 70,
+    from3To4Hours: 70,
+    from4To5Hours: 70,
+    over5Hours: 70,
+    restDay: 100
+  });
   const [dayEntries, setDayEntries] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load existing data when component mounts
   useEffect(() => {
-    console.log('EditCalculation - useEffect triggered', { id, loading });
-    if (id && !loading) {
-      const existingCalculation = getCalculation(id);
-      console.log('EditCalculation - Loaded calculation:', existingCalculation);
-      if (existingCalculation) {
-        console.log('EditCalculation - Setting form data');
-        setDescription(existingCalculation.description);
-        setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
-        setEndDate(new Date(existingCalculation.end_date + 'T00:00:00'));
-        setWorkingHours(existingCalculation.working_hours);
-        setOvertimePercentages(existingCalculation.overtime_percentages);
-        setDayEntries(existingCalculation.day_entries || []);
-      } else {
-        toast.error('Cálculo não encontrado');
+    const loadCalculation = async () => {
+      if (!id || !profile?.user_id) return;
+
+      console.log('EditCalculation - Loading calculation with ID:', id);
+      setIsLoading(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('calculations')
+          .select('*')
+          .eq('id', id)
+          .eq('user_id', profile.user_id)
+          .single();
+
+        if (error) {
+          console.error('Error loading calculation:', error);
+          toast.error('Cálculo não encontrado');
+          navigate('/horas-extras');
+          return;
+        }
+
+        if (data) {
+          console.log('EditCalculation - Loaded calculation:', data);
+          setDescription(data.description);
+          setStartDate(new Date(data.start_date + 'T00:00:00'));
+          setEndDate(new Date(data.end_date + 'T00:00:00'));
+          setWorkingHours(data.working_hours as unknown as WorkingHours);
+          setOvertimePercentages(data.overtime_percentages as unknown as OvertimePercentages);
+          setDayEntries((data.day_entries as any[]) || []);
+        }
+      } catch (error) {
+        console.error('Error loading calculation:', error);
+        toast.error('Erro ao carregar cálculo');
         navigate('/horas-extras');
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [id, getCalculation, loading, navigate]);
+    };
+
+    loadCalculation();
+  }, [id, profile?.user_id, navigate]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     console.log('EditCalculation - Working hour change:', day, value);
@@ -116,7 +151,7 @@ export const EditCalculationPage = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
         <div>Carregando...</div>
