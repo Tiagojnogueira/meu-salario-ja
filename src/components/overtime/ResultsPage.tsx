@@ -312,21 +312,19 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       <header className="border-b bg-background/80 backdrop-blur-sm print:hidden">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Resultado do Cálculo
+              </h1>
+               <p className="text-sm text-muted-foreground">
+                {calculation.description} • {format(parseISO(calculation.start_date + 'T00:00:00'), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date + 'T00:00:00'), 'dd/MM/yyyy')}
+              </p>
+            </div>
+            <div className="flex space-x-2">
               <Button variant="dashboard" onClick={onBackToDashboard}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Dashboard
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Resultado do Cálculo
-                </h1>
-                 <p className="text-sm text-muted-foreground">
-                   {calculation.description} • {format(parseISO(calculation.start_date + 'T00:00:00'), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date + 'T00:00:00'), 'dd/MM/yyyy')}
-                 </p>
-              </div>
-            </div>
-            <div className="flex space-x-2">
               {onEdit && (
                 <Button variant="outline" onClick={onEdit}>
                   <Edit className="h-4 w-4 mr-2" />
