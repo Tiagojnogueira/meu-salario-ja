@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import { DayEntry } from '@/types/overtime';
 import { toast } from 'sonner';
-import { ArrowLeft, Calculator, Clock, Save } from 'lucide-react';
+import { ArrowLeft, Calculator, Clock } from 'lucide-react';
 import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -114,14 +113,18 @@ export const EditTimeEntriesPage = () => {
     }
   };
 
-  const getTypeBadgeVariant = (type: string) => {
+  const getRowBackgroundColor = (type: DayEntry['type']) => {
     switch (type) {
-      case 'workday': return 'default' as const;
-      case 'rest': return 'secondary' as const;
-      case 'absence': return 'destructive' as const;
-      case 'justified-absence': return 'outline' as const;
-      default: return 'default' as const;
+      case 'workday': return 'bg-green-50 border-green-200';
+      case 'rest': return 'bg-yellow-50 border-yellow-200';
+      case 'justified-absence': return 'bg-yellow-50 border-yellow-200';
+      case 'absence': return 'bg-red-50 border-red-200';
+      default: return 'bg-background border-border';
     }
+  };
+
+  const getWeekdayName = (dateString: string) => {
+    return format(parseISO(dateString + 'T00:00:00'), 'EEEE', { locale: ptBR });
   };
 
   const handleSave = async () => {
@@ -202,91 +205,119 @@ export const EditTimeEntriesPage = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-4">
-          {dayEntries.map((entry, index) => (
-            <Card key={entry.date}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {format(parseISO(entry.date + 'T00:00:00'), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                    </CardTitle>
-                    <CardDescription>
-                      {format(parseISO(entry.date + 'T00:00:00'), 'dd/MM/yyyy')}
-                    </CardDescription>
-                  </div>
-                  <Badge variant={getTypeBadgeVariant(entry.type)}>
-                    {getTypeLabel(entry.type)}
-                  </Badge>
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Instructions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Clock className="h-5 w-5 mr-2" />
+                Instruções
+              </CardTitle>
+              <CardDescription>
+                Edite os horários para cada dia do período selecionado. 
+                Os domingos são marcados como "Dia de Descanso" por padrão.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* Time Entries */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Horários do Período</CardTitle>
+              <CardDescription>
+                Digite os horários e marque cada dia.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm border-b">
+                  <div className="col-span-2">Data</div>
+                  <div className="col-span-2">Entrada</div>
+                  <div className="col-span-2">Início Intervalo</div>
+                  <div className="col-span-2">Fim Intervalo</div>
+                  <div className="col-span-2">Saída</div>
+                  <div className="col-span-2">Marcar como</div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`type-${index}`}>Tipo do Dia</Label>
-                    <Select 
-                      value={entry.type} 
-                      onValueChange={(value: DayEntry['type']) => updateDayEntry(index, 'type', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="workday">Dia de Trabalho</SelectItem>
-                        <SelectItem value="rest">Dia de Descanso</SelectItem>
-                        <SelectItem value="absence">Falta</SelectItem>
-                        <SelectItem value="justified-absence">Falta Justificada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                
+                {dayEntries.map((entry, index) => (
+                  <div 
+                    key={entry.date} 
+                    className={`grid grid-cols-12 gap-2 p-3 border rounded-lg items-center ${getRowBackgroundColor(entry.type)}`}
+                  >
+                    {/* Date and Weekday */}
+                    <div className="col-span-2">
+                      <div className="font-medium text-sm">
+                        {format(parseISO(entry.date + 'T00:00:00'), "dd/MM")}
+                      </div>
+                      <div className="text-xs text-muted-foreground capitalize">
+                        {getWeekdayName(entry.date)}
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`entry-${index}`}>Entrada</Label>
-                    <Input
-                      id={`entry-${index}`}
-                      type="time"
-                      value={entry.entry}
-                      onChange={(e) => updateDayEntry(index, 'entry', e.target.value)}
-                      disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                    />
-                  </div>
+                    {/* Time Inputs */}
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.entry}
+                        onChange={(e) => updateDayEntry(index, 'entry', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`intervalStart-${index}`}>Início Intervalo</Label>
-                    <Input
-                      id={`intervalStart-${index}`}
-                      type="time"
-                      value={entry.intervalStart}
-                      onChange={(e) => updateDayEntry(index, 'intervalStart', e.target.value)}
-                      disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                    />
-                  </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.intervalStart}
+                        onChange={(e) => updateDayEntry(index, 'intervalStart', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`intervalEnd-${index}`}>Fim Intervalo</Label>
-                    <Input
-                      id={`intervalEnd-${index}`}
-                      type="time"
-                      value={entry.intervalEnd}
-                      onChange={(e) => updateDayEntry(index, 'intervalEnd', e.target.value)}
-                      disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                    />
-                  </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.intervalEnd}
+                        onChange={(e) => updateDayEntry(index, 'intervalEnd', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`exit-${index}`}>Saída</Label>
-                    <Input
-                      id={`exit-${index}`}
-                      type="time"
-                      value={entry.exit}
-                      onChange={(e) => updateDayEntry(index, 'exit', e.target.value)}
-                      disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
-                    />
+                    <div className="col-span-2">
+                      <Input
+                        type="time"
+                        value={entry.exit}
+                        onChange={(e) => updateDayEntry(index, 'exit', e.target.value)}
+                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+
+                    {/* Type Selection */}
+                    <div className="col-span-2">
+                      <Select
+                        value={entry.type}
+                        onValueChange={(value: DayEntry['type']) => updateDayEntry(index, 'type', value)}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="workday">Dia de Trabalho</SelectItem>
+                          <SelectItem value="rest">Dia de Descanso</SelectItem>
+                          <SelectItem value="absence">Falta</SelectItem>
+                          <SelectItem value="justified-absence">Falta Justificada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-6">
