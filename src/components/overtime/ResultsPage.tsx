@@ -78,28 +78,24 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     let workStart = entryMinutes;
     let workEnd = exitMinutes;
 
-    // Se o trabalho cruza meia-noite (ex: 22:00 às 05:00)
+    // Se o trabalho cruza meia-noite (ex: 22:00 às 06:00)
     if (workEnd < workStart) {
       workEnd += 24 * 60; // Adiciona 24 horas para trabalhar com minutos contínuos
     }
 
-    // Aplicar Súmula 60 do TST: se extend_night_hours estiver marcado,
-    // as horas noturnas se estendem até o horário de saída
-    if (extendNightHours && workStart >= nightStartMinutes) {
-      // Se o trabalho começou no período noturno, considera até a saída
-      if (nightEndMinutes < nightStartMinutes) {
-        // Período noturno cruza meia-noite
-        if (workEnd > 24 * 60) {
-          // Trabalho cruza meia-noite também
-          nightMinutes = workEnd - workStart;
-        } else {
-          // Trabalho não cruza meia-noite, mas começou no período noturno
-          nightMinutes = Math.min(workEnd, 24 * 60) - workStart;
-        }
-      } else {
-        // Período noturno não cruza meia-noite
-        nightMinutes = workEnd - Math.max(workStart, nightStartMinutes);
-      }
+    // Calcular total de horas trabalhadas
+    const totalWorkedMinutes = workEnd - workStart;
+
+    // Aplicar Súmula 60 do TST: se extend_night_hours estiver marcado E
+    // o trabalho começou dentro do período noturno
+    const workStartsInNightPeriod = (nightEndMinutes < nightStartMinutes) 
+      ? (workStart >= nightStartMinutes || workStart <= nightEndMinutes)
+      : (workStart >= nightStartMinutes && workStart <= nightEndMinutes);
+
+    if (extendNightHours && workStartsInNightPeriod) {
+      // Com Súmula 60: TODAS as horas trabalhadas são noturnas quando o trabalho inicia no período noturno
+      nightMinutes = totalWorkedMinutes;
+      console.log('Aplicando Súmula 60 - todas as horas são noturnas:', nightMinutes / 60);
     } else {
       // Lógica original: considera apenas o período configurado
       if (nightEndMinutes < nightStartMinutes) {
@@ -128,6 +124,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
         const overlapEnd = Math.min(workEnd, nightEndMinutes);
         nightMinutes = Math.max(0, overlapEnd - overlapStart);
       }
+      console.log('Sem Súmula 60 - apenas período configurado:', nightMinutes / 60);
     }
 
     const nightHours = nightMinutes / 60;
