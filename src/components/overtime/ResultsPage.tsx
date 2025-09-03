@@ -313,9 +313,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={onBack}>
+              <Button variant="outline" onClick={onBackToDashboard}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+                Dashboard
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
@@ -336,9 +336,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               <Button variant="outline" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimir
-              </Button>
-              <Button onClick={onBackToDashboard}>
-                Dashboard
               </Button>
             </div>
           </div>
