@@ -256,15 +256,67 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
         overtimeHours = effectiveTotalHours - contractualHours;
         regularHours = contractualHours;
 
-        // Calculate how much of overtime is night vs day
-        if (nightHours > contractualHours) {
-          // Night hours exceed contractual hours - some night hours are overtime
-          overtimeNightHours = nightHours - contractualHours;
+        // Calculate overtime hours during night period
+        // We need to determine how much of the overtime occurred during night hours
+        const totalWorkedMinutes = timeToMinutes(effectiveExitTime) - timeToMinutes(effectiveEntryTime);
+        
+        // Apply interval logic for minutes calculation
+        let actualWorkedMinutes = totalWorkedMinutes;
+        if (entry.intervalStart && entry.intervalEnd && entry.exit) {
+          const intervalMinutes = timeToMinutes(entry.intervalEnd) - timeToMinutes(entry.intervalStart);
+          actualWorkedMinutes -= intervalMinutes;
+        }
+        
+        // Calculate night period intersection with work period
+        const nightStart = timeToMinutes(nightShiftStart);
+        const nightEnd = timeToMinutes(nightShiftEnd);
+        const workStart = timeToMinutes(effectiveEntryTime);
+        const workEnd = timeToMinutes(effectiveExitTime);
+        
+        // Calculate how many overtime minutes occurred during night period
+        const contractualMinutes = contractualHours * 60;
+        const overtimeMinutes = (effectiveTotalHours - contractualHours) * 60;
+        
+        // Find the overlap between work period and night period
+        let nightWorkMinutes = 0;
+        
+        if (nightStart > nightEnd) { // Night crosses midnight (22:00 to 05:00)
+          // Night period: 22:00-24:00 + 00:00-05:00
+          if (workEnd > nightStart || workStart < nightEnd) {
+            // Calculate intersection with 22:00-24:00
+            if (workEnd > nightStart) {
+              const nightEnd1 = 24 * 60; // End of day
+              nightWorkMinutes += Math.min(workEnd, nightEnd1) - Math.max(workStart, nightStart);
+            }
+            // Calculate intersection with 00:00-05:00 (if work extends to next day)
+            if (workStart < nightEnd && workEnd > 24 * 60) {
+              const nightStart2 = 0; // Start of day
+              nightWorkMinutes += Math.min(workEnd - 24 * 60, nightEnd) - Math.max(nightStart2, workStart - 24 * 60);
+            }
+          }
+        } else { // Normal night period
+          if (workEnd > nightStart && workStart < nightEnd) {
+            nightWorkMinutes = Math.min(workEnd, nightEnd) - Math.max(workStart, nightStart);
+          }
+        }
+        
+        // Now calculate how much of the overtime occurred during night
+        if (actualWorkedMinutes > contractualMinutes) {
+          const totalOvertimeMinutes = actualWorkedMinutes - contractualMinutes;
+          
+          // If we have night work, calculate what portion of overtime is night
+          if (nightWorkMinutes > 0) {
+            // If night work exceeds contractual hours, some night work is overtime
+            if (nightWorkMinutes > contractualMinutes) {
+              overtimeNightHours = Math.min(totalOvertimeMinutes, nightWorkMinutes - contractualMinutes) / 60;
+            } else {
+              // Calculate proportion of overtime that occurred during night
+              const nightProportion = nightWorkMinutes / actualWorkedMinutes;
+              overtimeNightHours = (totalOvertimeMinutes * nightProportion) / 60;
+            }
+          }
+          
           overtimeDayHours = overtimeHours - overtimeNightHours;
-        } else {
-          // Night hours don't exceed contractual - overtime is from day hours
-          overtimeDayHours = overtimeHours;
-          overtimeNightHours = 0;
         }
 
         // For display purposes, we'll show the average percentage
