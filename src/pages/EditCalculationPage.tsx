@@ -157,7 +157,6 @@ export const EditCalculationPage = () => {
     try {
       const success = await updateCalculation(id, calculationData);
       if (success) {
-        toast.success('Dados salvos com sucesso!');
         // Navegar para a tela de edição de horários
         navigate(`/horas-extras/editar-horarios/${id}`);
       }
