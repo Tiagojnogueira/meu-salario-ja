@@ -60,6 +60,11 @@ const OvertimeCalculatorPage = () => {
     setCurrentStep('results');
   };
 
+  const handleEditFromResults = () => {
+    setEditingCalculationId(currentCalculationId);
+    setCurrentStep('edit');
+  };
+
   switch (currentStep) {
     case 'dashboard':
       return (
@@ -102,6 +107,7 @@ const OvertimeCalculatorPage = () => {
           calculationId={currentCalculationId}
           onBack={() => setCurrentStep('time-entry')}
           onBackToDashboard={handleBackToDashboard}
+          onEdit={handleEditFromResults}
         />
       );
     

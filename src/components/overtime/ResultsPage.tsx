@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { DayEntry, WorkingHours, OvertimePercentages } from '@/types/overtime';
-import { ArrowLeft, Printer, Calculator } from 'lucide-react';
+import { ArrowLeft, Printer, Calculator, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -14,6 +14,7 @@ interface ResultsPageProps {
   calculationId: string;
   onBack: () => void;
   onBackToDashboard: () => void;
+  onEdit?: () => void;
 }
 
 interface DayResult {
@@ -31,7 +32,7 @@ interface DayResult {
   overtimePercentage: number;
 }
 
-export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: ResultsPageProps) => {
+export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }: ResultsPageProps) => {
   const { profile } = useSupabaseAuth();
   const { getCalculation } = useSupabaseCalculations(profile?.user_id);
   const calculation = getCalculation(calculationId);
@@ -294,6 +295,13 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     overtimeHours: acc.overtimeHours + result.overtimeHours
   }), { workedHours: 0, regularHours: 0, overtimeHours: 0 });
 
+  // Count absences
+  const absenceCounts = calculation.day_entries.reduce((acc, entry) => {
+    if (entry.type === 'absence') acc.unjustified++;
+    else if (entry.type === 'justified-absence') acc.justified++;
+    return acc;
+  }, { unjustified: 0, justified: 0 });
+
   const handlePrint = () => {
     window.print();
   };
@@ -319,6 +327,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
               </div>
             </div>
             <div className="flex space-x-2">
+              {onEdit && (
+                <Button variant="outline" onClick={onEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              )}
               <Button variant="outline" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimir
@@ -346,6 +360,35 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                Período: {format(parseISO(calculation.start_date + 'T00:00:00'), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date + 'T00:00:00'), "dd/MM/yyyy")}
              </p>
           </div>
+
+          {/* Absence Information */}
+          {(absenceCounts.unjustified > 0 || absenceCounts.justified > 0) && (
+            <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-yellow-800 dark:text-yellow-200">Informações de Faltas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {absenceCounts.unjustified}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Faltas Injustificadas
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {absenceCounts.justified}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Faltas Justificadas
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
