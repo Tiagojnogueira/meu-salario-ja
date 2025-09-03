@@ -37,9 +37,12 @@ export const EditCalculationPage = () => {
 
   // Load existing data when component mounts
   useEffect(() => {
+    console.log('EditCalculation - useEffect triggered', { id, loading });
     if (id && !loading) {
       const existingCalculation = getCalculation(id);
+      console.log('EditCalculation - Loaded calculation:', existingCalculation);
       if (existingCalculation) {
+        console.log('EditCalculation - Setting form data');
         setDescription(existingCalculation.description);
         setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
         setEndDate(new Date(existingCalculation.end_date + 'T00:00:00'));
@@ -54,6 +57,7 @@ export const EditCalculationPage = () => {
   }, [id, getCalculation, loading, navigate]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
+    console.log('EditCalculation - Working hour change:', day, value);
     setWorkingHours(prev => ({
       ...prev,
       [day]: value
@@ -61,6 +65,7 @@ export const EditCalculationPage = () => {
   };
 
   const handlePercentageChange = (type: keyof OvertimePercentages, value: string) => {
+    console.log('EditCalculation - Percentage change:', type, value);
     const numValue = parseFloat(value) || 0;
     setOvertimePercentages(prev => ({
       ...prev,
@@ -162,7 +167,10 @@ export const EditCalculationPage = () => {
                   type="text"
                   placeholder="Ex: João Silva - Janeiro 2025"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                  onChange={(e) => {
+                    console.log('EditCalculation - Description change:', e.target.value);
+                    setDescription(e.target.value.slice(0, 100));
+                  }}
                   maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground">
