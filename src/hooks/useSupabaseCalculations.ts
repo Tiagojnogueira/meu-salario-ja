@@ -190,10 +190,10 @@ export const useSupabaseCalculations = (userId?: string) => {
 
   const getDefaultOvertimePercentages = (): OvertimePercentages => ({
     upTo2Hours: 50,
-    from2To3Hours: 75,
-    from3To4Hours: 100,
-    from4To5Hours: 100,
-    over5Hours: 100,
+    from2To3Hours: 70,
+    from3To4Hours: 70,
+    from4To5Hours: 70,
+    over5Hours: 70,
     restDay: 100
   });
 

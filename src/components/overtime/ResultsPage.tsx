@@ -231,7 +231,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Total Trabalhado</CardTitle>
@@ -271,6 +271,52 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                 <p className="text-sm text-muted-foreground">
                   Excedente da jornada
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">H.E. por Percentual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>50%:</span>
+                    <span className="font-mono">{(() => {
+                      const he50 = results.reduce((acc, result) => {
+                        if (result.overtimePercentage === 50) {
+                          return acc + result.overtimeHours;
+                        }
+                        return acc;
+                      }, 0);
+                      return he50.toFixed(2);
+                    })()}h</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>70%:</span>
+                    <span className="font-mono">{(() => {
+                      const he70 = results.reduce((acc, result) => {
+                        if (result.overtimePercentage === 70) {
+                          return acc + result.overtimeHours;
+                        }
+                        return acc;
+                      }, 0);
+                      return he70.toFixed(2);
+                    })()}h</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>100%:</span>
+                    <span className="font-mono">{(() => {
+                      const he100 = results.reduce((acc, result) => {
+                        if (result.overtimePercentage === 100) {
+                          return acc + result.overtimeHours;
+                        }
+                        return acc;
+                      }, 0);
+                      return he100.toFixed(2);
+                    })()}h</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -355,7 +401,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
               <Separator className="my-6" />
 
               {/* Totals Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total Trabalhado</p>
                   <p className="text-2xl font-bold text-primary">
@@ -373,6 +419,47 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                   <p className="text-2xl font-bold text-orange-600">
                     {totals.overtimeHours.toFixed(2)}h
                   </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">H.E. por %</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>50%:</span>
+                      <span className="font-mono">{(() => {
+                        const he50 = results.reduce((acc, result) => {
+                          if (result.overtimePercentage === 50) {
+                            return acc + result.overtimeHours;
+                          }
+                          return acc;
+                        }, 0);
+                        return he50.toFixed(2);
+                      })()}h</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>70%:</span>
+                      <span className="font-mono">{(() => {
+                        const he70 = results.reduce((acc, result) => {
+                          if (result.overtimePercentage === 70) {
+                            return acc + result.overtimeHours;
+                          }
+                          return acc;
+                        }, 0);
+                        return he70.toFixed(2);
+                      })()}h</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>100%:</span>
+                      <span className="font-mono">{(() => {
+                        const he100 = results.reduce((acc, result) => {
+                          if (result.overtimePercentage === 100) {
+                            return acc + result.overtimeHours;
+                          }
+                          return acc;
+                        }, 0);
+                        return he100.toFixed(2);
+                      })()}h</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
