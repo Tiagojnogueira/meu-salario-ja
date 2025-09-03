@@ -117,7 +117,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                       {calculations.map((calculation) => (
                         <TableRow key={calculation.id}>
                           <TableCell className="font-mono text-sm">
-                            #{String(calculations.length - calculations.findIndex(c => c.id === calculation.id)).padStart(3, '0')}
+                            {calculation.id.substring(0, 8).toUpperCase()}
                           </TableCell>
                           <TableCell>
                             <div>
