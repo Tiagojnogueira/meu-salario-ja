@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
-import { CalendarIcon, ArrowLeft, Save, Moon } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Save, Moon, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -436,7 +437,28 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
                   <div className="space-y-1">
                     <Label htmlFor="extendNight" className="text-sm font-normal cursor-pointer">
                       Desejo que as horas noturnas sejam prorrogadas em conformidade com a{' '}
-                      <span className="text-blue-600 underline">Súmula 60 do TST</span>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button 
+                            type="button"
+                            className="text-blue-600 underline hover:text-blue-800 inline-flex items-center gap-1"
+                          >
+                            Súmula 60 do TST
+                            <Info className="h-3 w-3" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Súmula 60 do TST</DialogTitle>
+                          </DialogHeader>
+                          <div className="pt-4">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              "Cumprida integralmente a jornada no período noturno e prorrogada esta, 
+                              devido é também o adicional quanto às horas prorrogadas."
+                            </p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       (Caso esta opção não seja marcada serão consideradas horas noturnas apenas o intervalo entre as horas acima informadas.)
