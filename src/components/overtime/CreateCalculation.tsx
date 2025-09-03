@@ -42,10 +42,14 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   useEffect(() => {
     if (editingId && !loading) {
       const existingCalculation = getCalculation(editingId);
+      console.log('DEBUG - Loading calculation for editing:', existingCalculation);
       if (existingCalculation) {
+        console.log('DEBUG - Setting working hours:', existingCalculation.working_hours);
+        console.log('DEBUG - Setting overtime percentages:', existingCalculation.overtime_percentages);
         setDescription(existingCalculation.description);
-        setStartDate(new Date(existingCalculation.start_date));
-        setEndDate(new Date(existingCalculation.end_date));
+        // Fix timezone issue by adding T00:00:00 to ensure local timezone
+        setStartDate(new Date(existingCalculation.start_date + 'T00:00:00'));
+        setEndDate(new Date(existingCalculation.end_date + 'T00:00:00'));
         setWorkingHours(existingCalculation.working_hours);
         setOvertimePercentages(existingCalculation.overtime_percentages);
       }
@@ -53,18 +57,28 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   }, [editingId, getCalculation, loading]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
-    setWorkingHours(prev => ({
-      ...prev,
-      [day]: value
-    }));
+    console.log('DEBUG - Changing working hour:', day, value);
+    setWorkingHours(prev => {
+      const newHours = {
+        ...prev,
+        [day]: value
+      };
+      console.log('DEBUG - New working hours:', newHours);
+      return newHours;
+    });
   };
 
   const handlePercentageChange = (type: keyof OvertimePercentages, value: string) => {
+    console.log('DEBUG - Changing percentage:', type, value);
     const numValue = parseFloat(value) || 0;
-    setOvertimePercentages(prev => ({
-      ...prev,
-      [type]: numValue
-    }));
+    setOvertimePercentages(prev => {
+      const newPercentages = {
+        ...prev,
+        [type]: numValue
+      };
+      console.log('DEBUG - New percentages:', newPercentages);
+      return newPercentages;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -51,7 +51,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
   };
 
   const getContractualHours = (date: string, workingHours: WorkingHours): number => {
-    const dayOfWeek = parseISO(date).getDay();
+    const dayOfWeek = parseISO(date + 'T00:00:00').getDay();
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
     const dayName = dayNames[dayOfWeek];
     const hoursStr = workingHours[dayName] || '00:00';
@@ -117,7 +117,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
 
     return {
       date: entry.date,
-      weekday: format(parseISO(entry.date), 'EEEE', { locale: ptBR }),
+      weekday: format(parseISO(entry.date + 'T00:00:00'), 'EEEE', { locale: ptBR }),
       type: getTypeLabel(entry.type),
       entry: entry.entry || '-',
       intervalStart: entry.intervalStart || '-',
@@ -156,7 +156,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     const result = calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages);
     return {
       date: entry.date,
-      weekday: format(parseISO(entry.date), 'EEEE', { locale: ptBR }),
+      weekday: format(parseISO(entry.date + 'T00:00:00'), 'EEEE', { locale: ptBR }),
       type: entry.type,
       entry: entry.entry,
       intervalStart: entry.intervalStart,
@@ -313,9 +313,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                 <h1 className="text-2xl font-bold text-foreground">
                   Resultado do Cálculo
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  {calculation.description} • {format(parseISO(calculation.start_date), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date), 'dd/MM/yyyy')}
-                </p>
+                 <p className="text-sm text-muted-foreground">
+                   {calculation.description} • {format(parseISO(calculation.start_date + 'T00:00:00'), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date + 'T00:00:00'), 'dd/MM/yyyy')}
+                 </p>
               </div>
             </div>
             <div className="flex space-x-2">
@@ -342,9 +342,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
             <p className="text-center text-muted-foreground">
               Funcionário: {getEmployeeName(calculation.description)}
             </p>
-            <p className="text-center text-sm text-muted-foreground">
-              Período: {format(parseISO(calculation.start_date), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date), "dd/MM/yyyy")}
-            </p>
+             <p className="text-center text-sm text-muted-foreground">
+               Período: {format(parseISO(calculation.start_date + 'T00:00:00'), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date + 'T00:00:00'), "dd/MM/yyyy")}
+             </p>
           </div>
 
           {/* Summary Cards */}
@@ -441,13 +441,13 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                       <TableHead className="text-right">H. Contr.</TableHead>
                       <TableHead className="text-right">H. Normais</TableHead>
                       <TableHead className="text-right">H. Extras</TableHead>
-                      <TableHead>Breakdown H.E.</TableHead>
+                      <TableHead>Discriminação H.E.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {results.map((result) => (
                       <TableRow key={result.date}>
-                        <TableCell>{format(parseISO(result.date), "dd/MM")}</TableCell>
+                        <TableCell>{format(parseISO(result.date + 'T00:00:00'), "dd/MM")}</TableCell>
                         <TableCell className="capitalize">
                           {result.weekday}
                         </TableCell>

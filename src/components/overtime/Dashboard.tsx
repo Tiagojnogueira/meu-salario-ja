@@ -24,7 +24,9 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    // Use parseISO to avoid timezone issues
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('pt-BR');
   };
 
   const getDateRange = (startDate: string, endDate: string) => {
@@ -111,7 +113,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                       {calculations.map((calculation) => (
                         <TableRow key={calculation.id}>
                           <TableCell className="font-mono text-sm">
-                            #{calculation.id.slice(-6)}
+                            #{String(calculations.length - calculations.findIndex(c => c.id === calculation.id)).padStart(3, '0')}
                           </TableCell>
                           <TableCell>
                             <div>
