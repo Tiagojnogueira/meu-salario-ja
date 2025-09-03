@@ -11,7 +11,7 @@ import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { toast } from 'sonner';
-import { CalendarIcon, ArrowLeft, Save } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -157,9 +157,9 @@ export const EditCalculationPage = () => {
     try {
       const success = await updateCalculation(id, calculationData);
       if (success) {
-        toast.success('Cálculo atualizado com sucesso!');
-        // Navegar para a tela de edição de horários
-        navigate(`/horas-extras/editar-horarios/${id}`);
+        toast.success('Dados salvos com sucesso!');
+        // Navegar para os resultados
+        navigate(`/horas-extras/resultados/${id}`);
       }
     } catch (error) {
       console.error('EditCalculation - Update error:', error);
@@ -491,8 +491,8 @@ export const EditCalculationPage = () => {
               Cancelar
             </Button>
             <Button type="submit" size="lg" className="px-8">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar e Continuar Editando
+              <Calculator className="h-4 w-4 mr-2" />
+              Calcular Resultados
             </Button>
           </div>
         </form>

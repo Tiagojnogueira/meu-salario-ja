@@ -141,8 +141,22 @@ export const EditTimeEntriesPage = () => {
     }
   };
 
-  const handleCalculateResults = () => {
-    navigate(`/horas-extras/resultados/${id}`);
+  const handleCalculateResults = async () => {
+    if (!id || !calculation) return;
+
+    try {
+      const success = await updateCalculation(id, {
+        ...calculation,
+        day_entries: dayEntries
+      });
+      
+      if (success) {
+        toast.success('Dados salvos com sucesso!');
+        navigate(`/horas-extras/resultados/${id}`);
+      }
+    } catch (error) {
+      toast.error('Erro ao salvar dados');
+    }
   };
 
   if (isLoading) {
@@ -181,16 +195,6 @@ export const EditTimeEntriesPage = () => {
                   {calculation.description} • {format(parseISO(calculation.start_date + 'T00:00:00'), 'dd/MM/yyyy')} - {format(parseISO(calculation.end_date + 'T00:00:00'), 'dd/MM/yyyy')}
                 </p>
               </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
-              </Button>
-              <Button onClick={handleCalculateResults}>
-                <Calculator className="h-4 w-4 mr-2" />
-                Calcular Resultados
-              </Button>
             </div>
           </div>
         </div>
@@ -290,16 +294,10 @@ export const EditTimeEntriesPage = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar aos Parâmetros
             </Button>
-            <div className="flex space-x-4">
-              <Button variant="outline" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Dados
-              </Button>
-              <Button onClick={handleCalculateResults} size="lg">
-                <Calculator className="h-4 w-4 mr-2" />
-                Calcular Resultados
-              </Button>
-            </div>
+            <Button onClick={handleCalculateResults} size="lg">
+              <Calculator className="h-4 w-4 mr-2" />
+              Calcular Resultados
+            </Button>
           </div>
         </div>
       </main>
