@@ -52,7 +52,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return minutes / 60;
   };
 
-  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false): number => {
+  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false, applyNightReduction: boolean = true): number => {
     if (entry.type === 'absence' || entry.type === 'justified-absence' || !entry.entry || !entry.exit) {
       return 0;
     }
@@ -68,6 +68,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       nightStart: nightShiftStart,
       nightEnd: nightShiftEnd,
       extendNightHours,
+      applyNightReduction,
       entryMinutes,
       exitMinutes,
       nightStartMinutes,
@@ -127,8 +128,21 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       console.log('Sem Súmula 60 - apenas período configurado:', nightMinutes / 60);
     }
 
-    const nightHours = nightMinutes / 60;
-    console.log('Night hours calculated:', nightHours);
+    // Converter minutos para horas (sem redução ainda)
+    let nightHours = nightMinutes / 60;
+
+    // Aplicar fator de redução da hora noturna se habilitado
+    if (applyNightReduction && nightHours > 0) {
+      // Cada hora noturna no relógio equivale a 52,5 minutos
+      // Fórmula: horas_relógio × 60 ÷ 52,5 = horas_noturnas_efetivas
+      const effectiveNightHours = (nightHours * 60) / 52.5;
+      console.log(`Aplicando fator de redução: ${nightHours}h relógio → ${effectiveNightHours.toFixed(2)}h noturnas`);
+      nightHours = effectiveNightHours;
+    } else if (!applyNightReduction && nightHours > 0) {
+      console.log('Fator de redução desabilitado - mantendo horas do relógio:', nightHours);
+    }
+
+    console.log('Night hours calculated (final):', nightHours);
     
     return nightHours;
   };
@@ -175,7 +189,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const nightShiftStart = (calculation as any).night_shift_start?.replace(':00', '') || '22:00';
     const nightShiftEnd = (calculation as any).night_shift_end?.replace(':00', '') || '05:00';
     const extendNightHours = (calculation as any).extend_night_hours ?? false;
-    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd, extendNightHours);
+    const applyNightReduction = (calculation as any).apply_night_reduction ?? true;
+    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd, extendNightHours, applyNightReduction);
     
     let regularHours = workedHours;
     
