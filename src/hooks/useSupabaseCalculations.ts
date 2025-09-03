@@ -106,6 +106,12 @@ export const useSupabaseCalculations = (userId?: string) => {
     calculationData: Partial<Omit<Calculation, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
   ) => {
     try {
+      console.log('useSupabaseCalculations - updateCalculation called with:', {
+        id,
+        calculationData,
+        userId
+      });
+
       const updateData: any = {};
       
       if (calculationData.description !== undefined) {
@@ -127,11 +133,16 @@ export const useSupabaseCalculations = (userId?: string) => {
         updateData.day_entries = calculationData.day_entries as unknown as any;
       }
 
-      const { error } = await supabase
+      console.log('useSupabaseCalculations - Final updateData:', updateData);
+
+      const { data, error } = await supabase
         .from('calculations')
         .update(updateData)
         .eq('id', id)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
+
+      console.log('useSupabaseCalculations - Supabase response:', { data, error });
 
       if (error) {
         console.error('Error updating calculation:', error);
@@ -140,7 +151,6 @@ export const useSupabaseCalculations = (userId?: string) => {
       }
 
       await fetchCalculations();
-      toast.success('Cálculo atualizado com sucesso!');
       return true;
     } catch (error) {
       console.error('Update calculation error:', error);
