@@ -92,7 +92,6 @@ export const useSupabaseCalculations = (userId?: string) => {
       }
 
       await fetchCalculations();
-      toast.success('Cálculo criado com sucesso!');
       return data.id;
     } catch (error) {
       console.error('Create calculation error:', error);
