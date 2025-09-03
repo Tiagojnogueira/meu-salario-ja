@@ -61,19 +61,19 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return `${h}:${m.toString().padStart(2, '0')}`;
   };
 
-  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false, applyNightReduction: boolean = true): number => {
-    if (entry.type === 'absence' || entry.type === 'justified-absence' || !entry.entry || !entry.exit) {
+  const calculateNightHours = (effectiveEntry: string, effectiveExit: string, entryType: DayEntry['type'], nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false, applyNightReduction: boolean = true): number => {
+    if (entryType === 'absence' || entryType === 'justified-absence' || !effectiveEntry || !effectiveExit) {
       return 0;
     }
 
-    const entryMinutes = timeToMinutes(entry.entry);
-    const exitMinutes = timeToMinutes(entry.exit);
+    const entryMinutes = timeToMinutes(effectiveEntry);
+    const exitMinutes = timeToMinutes(effectiveExit);
     const nightStartMinutes = timeToMinutes(nightShiftStart);
     let nightEndMinutes = timeToMinutes(nightShiftEnd);
 
     console.log('Calculating night hours for:', {
-      entry: entry.entry,
-      exit: entry.exit,
+      entry: effectiveEntry,
+      exit: effectiveExit,
       nightStart: nightShiftStart,
       nightEnd: nightShiftEnd,
       extendNightHours,
@@ -210,12 +210,25 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const clockWorkedHours = minutesToHours(workedMinutes);
     const contractualHours = getContractualHours(entry.date, workingHours);
     
-    // Calculate night hours
+    // Calculate effective entry and exit times for night hours calculation
+    let effectiveEntryTime = entry.entry;
+    let effectiveExitTime = entry.exit;
+    
+    // Apply the same logic for effective exit time as used in worked hours calculation
+    if (entryMinutes && intervalStartMinutes && !intervalEndMinutes && !exitMinutes) {
+      // Cenário 1: Entrada + início intervalo, sem fim intervalo e sem saída
+      effectiveExitTime = entry.intervalStart;
+    } else if (entryMinutes && intervalStartMinutes && intervalEndMinutes && !exitMinutes) {
+      // Cenário 2: Entrada + início intervalo + fim intervalo, sem saída
+      effectiveExitTime = entry.intervalStart;
+    }
+    
+    // Calculate night hours using effective times
     const nightShiftStart = (calculation as any).night_shift_start?.replace(':00', '') || '22:00';
     const nightShiftEnd = (calculation as any).night_shift_end?.replace(':00', '') || '05:00';
     const extendNightHours = (calculation as any).extend_night_hours ?? false;
     const applyNightReduction = (calculation as any).apply_night_reduction ?? true;
-    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd, extendNightHours, applyNightReduction);
+    const nightHours = calculateNightHours(effectiveEntryTime, effectiveExitTime, entry.type, nightShiftStart, nightShiftEnd, extendNightHours, applyNightReduction);
     
     // Calculate regular and overtime hours considering night hours
     let regularHours = Math.min(clockWorkedHours, contractualHours);
