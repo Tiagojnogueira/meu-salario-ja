@@ -592,7 +592,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-600">
-                  {totals.regularHours.toFixed(2)}h
+                  {formatHoursToTime(totals.regularHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Dentro da jornada contratual
@@ -606,7 +606,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-orange-600">
-                  {totals.overtimeDayHours.toFixed(2)}h
+                  {formatHoursToTime(totals.overtimeDayHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Horas extras diurnas
@@ -620,7 +620,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-purple-600">
-                  {totals.overtimeNightHours.toFixed(2)}h
+                  {formatHoursToTime(totals.overtimeNightHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Horas extras noturnas
@@ -634,7 +634,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-orange-600">
-                  {totals.overtimeHours.toFixed(2)}h
+                  {formatHoursToTime(totals.overtimeHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Excedente da jornada
@@ -647,20 +647,20 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 <CardTitle className="text-lg">H.E. por Percentual</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>50%:</span>
-                    <span className="font-mono">{progressiveHours.he50.toFixed(2)}h</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>70%:</span>
-                    <span className="font-mono">{progressiveHours.he70.toFixed(2)}h</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>100%:</span>
-                    <span className="font-mono">{progressiveHours.he100.toFixed(2)}h</span>
-                  </div>
-                </div>
+                 <div className="space-y-1">
+                   <div className="flex justify-between text-sm">
+                     <span>50%:</span>
+                     <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
+                   </div>
+                   <div className="flex justify-between text-sm">
+                     <span>70%:</span>
+                     <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
+                   </div>
+                   <div className="flex justify-between text-sm">
+                     <span>100%:</span>
+                     <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
             <Card>
@@ -669,7 +669,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-600">
-                  {totals.nightHours.toFixed(2)}h
+                  {formatHoursToTime(totals.nightHours)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Horário noturno trabalhado
@@ -727,51 +727,51 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                         <TableCell>{result.intervalStart}</TableCell>
                         <TableCell>{result.intervalEnd}</TableCell>
                         <TableCell>{result.exit}</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.workedHours.toFixed(2)}h
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.contractualHours.toFixed(2)}h
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.regularHours.toFixed(2)}h
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.overtimeHours > 0 ? (
-                            <span className="text-orange-600 font-semibold">
-                              {result.overtimeHours.toFixed(2)}h
-                            </span>
-                          ) : (
-                            '0.00h'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.overtimeDayHours > 0 ? (
-                            <span className="text-orange-600 font-semibold">
-                              {result.overtimeDayHours.toFixed(2)}h
-                            </span>
-                          ) : (
-                            '0.00h'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.overtimeNightHours > 0 ? (
-                            <span className="text-purple-600 font-semibold">
-                              {result.overtimeNightHours.toFixed(2)}h
-                            </span>
-                          ) : (
-                            '0.00h'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {result.nightHours > 0 ? (
-                            <span className="text-blue-600 font-semibold">
-                              {result.nightHours.toFixed(2)}h
-                            </span>
-                          ) : (
-                            '0.00h'
-                          )}
-                        </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.workedHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.contractualHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.regularHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.overtimeHours > 0 ? (
+                             <span className="text-orange-600 font-semibold">
+                               {formatHoursToTime(result.overtimeHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.overtimeDayHours > 0 ? (
+                             <span className="text-orange-600 font-semibold">
+                               {formatHoursToTime(result.overtimeDayHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.overtimeNightHours > 0 ? (
+                             <span className="text-purple-600 font-semibold">
+                               {formatHoursToTime(result.overtimeNightHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.nightHours > 0 ? (
+                             <span className="text-blue-600 font-semibold">
+                               {formatHoursToTime(result.nightHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
                         <TableCell>
                           <div className="text-xs font-mono">
                             {calculateDayOvertimeBreakdown(
@@ -791,58 +791,58 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
               {/* Totals Row */}
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Total Trabalhado</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {totals.workedHours.toFixed(2)}h
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Horas Normais</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {totals.regularHours.toFixed(2)}h
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Horas Extras</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {totals.overtimeHours.toFixed(2)}h
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {totals.overtimeDayHours.toFixed(2)}h
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {totals.overtimeNightHours.toFixed(2)}h
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Horas Noturnas</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {totals.nightHours.toFixed(2)}h
-                  </p>
-                </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">Total Trabalhado</p>
+                   <p className="text-2xl font-bold text-primary">
+                     {formatHoursToTime(totals.workedHours)}
+                   </p>
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">Horas Normais</p>
+                   <p className="text-2xl font-bold text-green-600">
+                     {formatHoursToTime(totals.regularHours)}
+                   </p>
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">Horas Extras</p>
+                   <p className="text-2xl font-bold text-orange-600">
+                     {formatHoursToTime(totals.overtimeHours)}
+                   </p>
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
+                   <p className="text-2xl font-bold text-orange-600">
+                     {formatHoursToTime(totals.overtimeDayHours)}
+                   </p>
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
+                   <p className="text-2xl font-bold text-purple-600">
+                     {formatHoursToTime(totals.overtimeNightHours)}
+                   </p>
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">Horas Noturnas</p>
+                   <p className="text-2xl font-bold text-blue-600">
+                     {formatHoursToTime(totals.nightHours)}
+                   </p>
+                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">H.E. por %</p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>50%:</span>
-                      <span className="font-mono">{progressiveHours.he50.toFixed(2)}h</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span>70%:</span>
-                      <span className="font-mono">{progressiveHours.he70.toFixed(2)}h</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span>100%:</span>
-                      <span className="font-mono">{progressiveHours.he100.toFixed(2)}h</span>
-                    </div>
-                  </div>
+                   <div className="space-y-1">
+                     <div className="flex justify-between text-xs">
+                       <span>50%:</span>
+                       <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
+                     </div>
+                     <div className="flex justify-between text-xs">
+                       <span>70%:</span>
+                       <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
+                     </div>
+                     <div className="flex justify-between text-xs">
+                       <span>100%:</span>
+                       <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
+                     </div>
+                   </div>
                 </div>
               </div>
             </CardContent>
