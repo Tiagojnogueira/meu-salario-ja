@@ -79,18 +79,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
   };
 
   const handleCalculate = async () => {
-    // Validate required fields for workdays
-    const workdayEntries = dayEntries.filter(entry => entry.type === 'workday');
-    const invalidEntries = workdayEntries.filter(entry => 
-      !entry.entry || !entry.exit
-    );
-
-    if (invalidEntries.length > 0) {
-      toast.error('Preencha pelo menos os horários de entrada e saída para os dias de trabalho');
-      return;
-    }
-
-    // Update calculation with day entries
+    // Update calculation with day entries (no validation required)
     const success = await updateCalculation(calculationId, {
       day_entries: dayEntries
     });
