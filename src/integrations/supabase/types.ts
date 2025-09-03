@@ -16,11 +16,15 @@ export type Database = {
     Tables: {
       calculations: {
         Row: {
+          apply_night_reduction: boolean | null
           created_at: string
           day_entries: Json
           description: string
           end_date: string
+          extend_night_hours: boolean | null
           id: string
+          night_shift_end: string | null
+          night_shift_start: string | null
           overtime_percentages: Json
           start_date: string
           updated_at: string
@@ -28,11 +32,15 @@ export type Database = {
           working_hours: Json
         }
         Insert: {
+          apply_night_reduction?: boolean | null
           created_at?: string
           day_entries?: Json
           description: string
           end_date: string
+          extend_night_hours?: boolean | null
           id?: string
+          night_shift_end?: string | null
+          night_shift_start?: string | null
           overtime_percentages: Json
           start_date: string
           updated_at?: string
@@ -40,11 +48,15 @@ export type Database = {
           working_hours: Json
         }
         Update: {
+          apply_night_reduction?: boolean | null
           created_at?: string
           day_entries?: Json
           description?: string
           end_date?: string
+          extend_night_hours?: boolean | null
           id?: string
+          night_shift_end?: string | null
+          night_shift_start?: string | null
           overtime_percentages?: Json
           start_date?: string
           updated_at?: string

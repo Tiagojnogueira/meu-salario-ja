@@ -29,6 +29,7 @@ interface DayResult {
   contractualHours: number;
   regularHours: number;
   overtimeHours: number;
+  nightHours: number;
   overtimePercentage: number;
 }
 
@@ -49,6 +50,51 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
   const minutesToHours = (minutes: number): number => {
     return minutes / 60;
+  };
+
+  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string): number => {
+    if (entry.type === 'absence' || entry.type === 'justified-absence' || !entry.entry || !entry.exit) {
+      return 0;
+    }
+
+    const entryMinutes = timeToMinutes(entry.entry);
+    const exitMinutes = timeToMinutes(entry.exit);
+    const nightStartMinutes = timeToMinutes(nightShiftStart);
+    const nightEndMinutes = timeToMinutes(nightShiftEnd);
+
+    let nightHours = 0;
+    let workStart = entryMinutes;
+    let workEnd = exitMinutes;
+
+    // Handle midnight crossing for work hours
+    if (workEnd < workStart) {
+      workEnd += 24 * 60;
+    }
+
+    // Handle midnight crossing for night hours (e.g., 22:00 to 05:00)
+    if (nightEndMinutes < nightStartMinutes) {
+      // Night period crosses midnight
+      // Check overlap with night period (22:00-24:00)
+      if (workStart <= nightStartMinutes + 24 * 60 && workEnd >= nightStartMinutes) {
+        const overlapStart = Math.max(workStart, nightStartMinutes);
+        const overlapEnd = Math.min(workEnd, 24 * 60);
+        nightHours += Math.max(0, overlapEnd - overlapStart);
+      }
+      
+      // Check overlap with night period (00:00-05:00)
+      if (workStart <= nightEndMinutes + 24 * 60 && workEnd >= 0) {
+        const overlapStart = Math.max(workStart, 0);
+        const overlapEnd = Math.min(workEnd, nightEndMinutes);
+        nightHours += Math.max(0, overlapEnd - overlapStart);
+      }
+    } else {
+      // Night period is within same day
+      const overlapStart = Math.max(workStart, nightStartMinutes);
+      const overlapEnd = Math.min(workEnd, nightEndMinutes);
+      nightHours += Math.max(0, overlapEnd - overlapStart);
+    }
+
+    return nightHours / 60; // Convert to hours
   };
 
   const getContractualHours = (date: string, workingHours: WorkingHours): number => {
@@ -89,6 +135,11 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const workedHours = minutesToHours(workedMinutes);
     const contractualHours = getContractualHours(entry.date, workingHours);
     
+    // Calculate night hours
+    const nightShiftStart = (calculation as any).night_shift_start || '22:00';
+    const nightShiftEnd = (calculation as any).night_shift_end || '05:00';
+    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd);
+    
     let regularHours = workedHours;
     
     if (entry.type === 'rest') {
@@ -128,6 +179,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       contractualHours,
       regularHours,
       overtimeHours,
+      nightHours,
       overtimePercentage
     };
   };
@@ -167,6 +219,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       contractualHours: result.contractualHours,
       regularHours: result.regularHours,
       overtimeHours: result.overtimeHours,
+      nightHours: result.nightHours,
       overtimePercentage: result.overtimePercentage
     };
   });
@@ -292,8 +345,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
   const totals = results.reduce((acc, result) => ({
     workedHours: acc.workedHours + result.workedHours,
     regularHours: acc.regularHours + result.regularHours,
-    overtimeHours: acc.overtimeHours + result.overtimeHours
-  }), { workedHours: 0, regularHours: 0, overtimeHours: 0 });
+    overtimeHours: acc.overtimeHours + result.overtimeHours,
+    nightHours: acc.nightHours + result.nightHours
+  }), { workedHours: 0, regularHours: 0, overtimeHours: 0, nightHours: 0 });
 
   // Count absences
   const absenceCounts = calculation.day_entries.reduce((acc, entry) => {
@@ -386,7 +440,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           )}
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Total Trabalhado</CardTitle>
@@ -450,6 +504,19 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 </div>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Horas Noturnas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-600">
+                  {totals.nightHours.toFixed(2)}h
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Horário noturno trabalhado
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Detailed Results Table */}
@@ -479,6 +546,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                       <TableHead className="text-right">H. Contr.</TableHead>
                       <TableHead className="text-right">H. Normais</TableHead>
                       <TableHead className="text-right">H. Extras</TableHead>
+                      <TableHead className="text-right">H. Noturnas</TableHead>
                       <TableHead>Discriminação H.E.</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -516,6 +584,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                             '0.00h'
                           )}
                         </TableCell>
+                        <TableCell className="text-right font-mono">
+                          {result.nightHours > 0 ? (
+                            <span className="text-blue-600 font-semibold">
+                              {result.nightHours.toFixed(2)}h
+                            </span>
+                          ) : (
+                            '0.00h'
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="text-xs font-mono">
                             {calculateDayOvertimeBreakdown(
@@ -534,7 +611,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               <Separator className="my-6" />
 
               {/* Totals Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total Trabalhado</p>
                   <p className="text-2xl font-bold text-primary">
@@ -551,6 +628,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                   <p className="text-sm text-muted-foreground">Horas Extras</p>
                   <p className="text-2xl font-bold text-orange-600">
                     {totals.overtimeHours.toFixed(2)}h
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Horas Noturnas</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {totals.nightHours.toFixed(2)}h
                   </p>
                 </div>
                 <div className="text-center">
