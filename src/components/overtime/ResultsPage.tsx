@@ -52,7 +52,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return minutes / 60;
   };
 
-  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string): number => {
+  const calculateNightHours = (entry: DayEntry, nightShiftStart: string, nightShiftEnd: string, extendNightHours: boolean = false): number => {
     if (entry.type === 'absence' || entry.type === 'justified-absence' || !entry.entry || !entry.exit) {
       return 0;
     }
@@ -60,13 +60,14 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const entryMinutes = timeToMinutes(entry.entry);
     const exitMinutes = timeToMinutes(entry.exit);
     const nightStartMinutes = timeToMinutes(nightShiftStart);
-    const nightEndMinutes = timeToMinutes(nightShiftEnd);
+    let nightEndMinutes = timeToMinutes(nightShiftEnd);
 
     console.log('Calculating night hours for:', {
       entry: entry.entry,
       exit: entry.exit,
       nightStart: nightShiftStart,
       nightEnd: nightShiftEnd,
+      extendNightHours,
       entryMinutes,
       exitMinutes,
       nightStartMinutes,
@@ -82,38 +83,51 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       workEnd += 24 * 60; // Adiciona 24 horas para trabalhar com minutos contínuos
     }
 
-    // Se o período noturno cruza meia-noite (ex: 22:00 às 05:00)
-    if (nightEndMinutes < nightStartMinutes) {
-      // Período noturno: 22:00 às 24:00 + 00:00 às 05:00
-      
-      // Primeira parte: das 22:00 às 24:00 (ou 1440 minutos)
-      const firstNightEnd = 24 * 60; // 24:00 em minutos
-      if (workStart < firstNightEnd && workEnd > nightStartMinutes) {
-        const overlapStart = Math.max(workStart, nightStartMinutes);
-        const overlapEnd = Math.min(workEnd, firstNightEnd);
-        nightMinutes += Math.max(0, overlapEnd - overlapStart);
+    // Aplicar Súmula 60 do TST: se extend_night_hours estiver marcado,
+    // as horas noturnas se estendem até o horário de saída
+    if (extendNightHours && workStart >= nightStartMinutes) {
+      // Se o trabalho começou no período noturno, considera até a saída
+      if (nightEndMinutes < nightStartMinutes) {
+        // Período noturno cruza meia-noite
+        if (workEnd > 24 * 60) {
+          // Trabalho cruza meia-noite também
+          nightMinutes = workEnd - workStart;
+        } else {
+          // Trabalho não cruza meia-noite, mas começou no período noturno
+          nightMinutes = Math.min(workEnd, 24 * 60) - workStart;
+        }
+      } else {
+        // Período noturno não cruza meia-noite
+        nightMinutes = workEnd - Math.max(workStart, nightStartMinutes);
       }
-      
-      // Segunda parte: das 00:00 às 05:00
-      // Para trabalho que cruza meia-noite, precisamos verificar a segunda parte
-      if (workEnd > 24 * 60) {
-        // O trabalho continua no dia seguinte
-        const nextDayWorkEnd = workEnd - 24 * 60;
-        const overlapStart = 0; // 00:00
-        const overlapEnd = Math.min(nextDayWorkEnd, nightEndMinutes);
-        nightMinutes += Math.max(0, overlapEnd - overlapStart);
-      } else if (workStart < nightEndMinutes) {
-        // Trabalho normal dentro do mesmo dia na faixa 00:00-05:00
-        const overlapStart = Math.max(workStart, 0);
-        const overlapEnd = Math.min(workEnd, nightEndMinutes);
-        nightMinutes += Math.max(0, overlapEnd - overlapStart);
-      }
-      
     } else {
-      // Período noturno não cruza meia-noite
-      const overlapStart = Math.max(workStart, nightStartMinutes);
-      const overlapEnd = Math.min(workEnd, nightEndMinutes);
-      nightMinutes = Math.max(0, overlapEnd - overlapStart);
+      // Lógica original: considera apenas o período configurado
+      if (nightEndMinutes < nightStartMinutes) {
+        // Primeira parte: das 22:00 às 24:00
+        const firstNightEnd = 24 * 60;
+        if (workStart < firstNightEnd && workEnd > nightStartMinutes) {
+          const overlapStart = Math.max(workStart, nightStartMinutes);
+          const overlapEnd = Math.min(workEnd, firstNightEnd);
+          nightMinutes += Math.max(0, overlapEnd - overlapStart);
+        }
+        
+        // Segunda parte: das 00:00 às 05:00
+        if (workEnd > 24 * 60) {
+          const nextDayWorkEnd = workEnd - 24 * 60;
+          const overlapStart = 0;
+          const overlapEnd = Math.min(nextDayWorkEnd, nightEndMinutes);
+          nightMinutes += Math.max(0, overlapEnd - overlapStart);
+        } else if (workStart < nightEndMinutes) {
+          const overlapStart = Math.max(workStart, 0);
+          const overlapEnd = Math.min(workEnd, nightEndMinutes);
+          nightMinutes += Math.max(0, overlapEnd - overlapStart);
+        }
+      } else {
+        // Período noturno não cruza meia-noite
+        const overlapStart = Math.max(workStart, nightStartMinutes);
+        const overlapEnd = Math.min(workEnd, nightEndMinutes);
+        nightMinutes = Math.max(0, overlapEnd - overlapStart);
+      }
     }
 
     const nightHours = nightMinutes / 60;
@@ -163,7 +177,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     // Calculate night hours
     const nightShiftStart = (calculation as any).night_shift_start?.replace(':00', '') || '22:00';
     const nightShiftEnd = (calculation as any).night_shift_end?.replace(':00', '') || '05:00';
-    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd);
+    const extendNightHours = (calculation as any).extend_night_hours ?? false;
+    const nightHours = calculateNightHours(entry, nightShiftStart, nightShiftEnd, extendNightHours);
     
     let regularHours = workedHours;
     
@@ -708,6 +723,19 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                   <dd>4-5h: {calculation.overtime_percentages.from4To5Hours}%</dd>
                   <dd>+5h: {calculation.overtime_percentages.over5Hours}%</dd>
                   <dd>Folga: {calculation.overtime_percentages.restDay}%</dd>
+                </div>
+                
+                <div className="space-y-1 md:col-span-2">
+                  <dt className="font-medium">Configuração de Horário Noturno</dt>
+                  <dd>
+                    <strong>Período:</strong> {((calculation as any).night_shift_start?.replace(':00', '') || '22:00')} às {((calculation as any).night_shift_end?.replace(':00', '') || '05:00')}
+                  </dd>
+                  <dd>
+                    <strong>Prorrogação (Súmula 60 TST):</strong> {((calculation as any).extend_night_hours ?? true) ? 'Sim' : 'Não'}
+                  </dd>
+                  <dd>
+                    <strong>Fator de redução aplicado:</strong> {((calculation as any).apply_night_reduction ?? true) ? 'Sim' : 'Não'}
+                  </dd>
                 </div>
               </div>
             </CardContent>
