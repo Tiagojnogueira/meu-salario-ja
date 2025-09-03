@@ -246,13 +246,16 @@ export const EditCalculationPage = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
+                       <Calendar
+                         mode="single"
+                         selected={startDate}
+                         onSelect={(date) => {
+                           console.log('EditCalculation - Start date changed:', date);
+                           setStartDate(date);
+                         }}
+                         initialFocus
+                         className="pointer-events-auto"
+                       />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -273,11 +276,14 @@ export const EditCalculationPage = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        disabled={(date) => startDate ? date < startDate : false}
+                       <Calendar
+                         mode="single"
+                         selected={endDate}
+                         onSelect={(date) => {
+                           console.log('EditCalculation - End date changed:', date);
+                           setEndDate(date);
+                         }}
+                         disabled={(date) => startDate ? date < startDate : false}
                         defaultMonth={startDate || new Date()}
                         initialFocus
                         className="pointer-events-auto"
