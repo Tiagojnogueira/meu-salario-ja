@@ -133,14 +133,26 @@ export const EditCalculationPage = () => {
       return;
     }
 
+    const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+    const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+    
+    console.log('EditCalculation - Saving dates:', {
+      originalStartDate: startDate,
+      originalEndDate: endDate,
+      formattedStartDate,
+      formattedEndDate
+    });
+
     const calculationData = {
       description: description.trim(),
-      start_date: format(startDate, 'yyyy-MM-dd'),
-      end_date: format(endDate, 'yyyy-MM-dd'),
+      start_date: formattedStartDate,
+      end_date: formattedEndDate,
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
       day_entries: dayEntries
     };
+
+    console.log('EditCalculation - Calculation data being sent:', calculationData);
 
     try {
       const success = await updateCalculation(id, calculationData);
@@ -150,6 +162,7 @@ export const EditCalculationPage = () => {
         navigate(`/horas-extras/editar-horarios/${id}`);
       }
     } catch (error) {
+      console.error('EditCalculation - Update error:', error);
       toast.error('Erro ao atualizar cálculo');
     }
   };
