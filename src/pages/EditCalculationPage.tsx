@@ -146,8 +146,8 @@ export const EditCalculationPage = () => {
       const success = await updateCalculation(id, calculationData);
       if (success) {
         toast.success('Cálculo atualizado com sucesso!');
-        // Não navegar para dashboard, apenas mostrar mensagem de sucesso
-        // para permitir continuar editando
+        // Navegar para a tela de edição de horários
+        navigate(`/horas-extras/editar-horarios/${id}`);
       }
     } catch (error) {
       toast.error('Erro ao atualizar cálculo');

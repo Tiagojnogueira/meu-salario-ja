@@ -8,6 +8,8 @@ import SalaryCalculatorPage from "./pages/SalaryCalculatorPage";
 import UnemploymentSimulatorPage from "./pages/UnemploymentSimulatorPage";
 import OvertimeCalculatorPage from "./pages/OvertimeCalculatorPage";
 import { EditCalculationPage } from "./pages/EditCalculationPage";
+import { EditTimeEntriesPage } from "./pages/EditTimeEntriesPage";
+import { EditResultsPage } from "./pages/EditResultsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/simulador-seguro-desemprego" element={<UnemploymentSimulatorPage />} />
           <Route path="/horas-extras" element={<OvertimeCalculatorPage />} />
           <Route path="/horas-extras/editar/:id" element={<EditCalculationPage />} />
+          <Route path="/horas-extras/editar-horarios/:id" element={<EditTimeEntriesPage />} />
+          <Route path="/horas-extras/resultados/:id" element={<EditResultsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
