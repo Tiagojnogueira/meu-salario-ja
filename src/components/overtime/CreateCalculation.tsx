@@ -54,18 +54,28 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
   }, [editingId, getCalculation, loading]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
-    setWorkingHours(prev => ({
-      ...prev,
-      [day]: value
-    }));
+    console.log('WORKING HOUR CHANGE:', day, value);
+    setWorkingHours(prev => {
+      const newValue = {
+        ...prev,
+        [day]: value
+      };
+      console.log('NEW WORKING HOURS STATE:', newValue);
+      return newValue;
+    });
   };
 
   const handlePercentageChange = (type: keyof OvertimePercentages, value: string) => {
+    console.log('PERCENTAGE CHANGE HANDLER:', type, value);
     const numValue = parseFloat(value) || 0;
-    setOvertimePercentages(prev => ({
-      ...prev,
-      [type]: numValue
-    }));
+    setOvertimePercentages(prev => {
+      const newValue = {
+        ...prev,
+        [type]: numValue
+      };
+      console.log('NEW PERCENTAGE STATE:', newValue);
+      return newValue;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,7 +165,12 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     type="text"
                     placeholder="Ex: João Silva - Janeiro 2025"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                    onChange={(e) => {
+                      console.log('DESCRIPTION CHANGE:', e.target.value);
+                      setDescription(e.target.value.slice(0, 100));
+                    }}
+                    onFocus={() => console.log('DESCRIPTION FOCUSED')}
+                    onClick={() => console.log('DESCRIPTION CLICKED')}
                     maxLength={100}
                   />
                 <p className="text-xs text-muted-foreground">
@@ -241,7 +256,12 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
                     min="0"
                     step="1"
                     value={overtimePercentages.upTo2Hours}
-                    onChange={(e) => handlePercentageChange('upTo2Hours', e.target.value)}
+                    onChange={(e) => {
+                      console.log('PERCENTAGE CHANGE upTo2Hours:', e.target.value);
+                      handlePercentageChange('upTo2Hours', e.target.value);
+                    }}
+                    onFocus={() => console.log('PERCENTAGE FOCUSED upTo2Hours')}
+                    onClick={() => console.log('PERCENTAGE CLICKED upTo2Hours')}
                   />
                 </div>
 
