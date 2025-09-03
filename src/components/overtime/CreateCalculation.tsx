@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,27 +27,30 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
     updateCalculation, 
     getCalculation,
     getDefaultWorkingHours, 
-    getDefaultOvertimePercentages 
+    getDefaultOvertimePercentages,
+    loading 
   } = useSupabaseCalculations(profile?.user_id);
 
-  // Load existing data if editing
-  const existingCalculation = editingId ? getCalculation(editingId) : null;
+  // Initialize states with defaults
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
+  const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
 
-  const [description, setDescription] = useState(existingCalculation?.description || '');
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    existingCalculation ? new Date(existingCalculation.start_date) : undefined
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    existingCalculation ? new Date(existingCalculation.end_date) : undefined
-  );
-  
-  const [workingHours, setWorkingHours] = useState<WorkingHours>(
-    existingCalculation?.working_hours || getDefaultWorkingHours()
-  );
-  
-  const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(
-    existingCalculation?.overtime_percentages || getDefaultOvertimePercentages()
-  );
+  // Load existing data when editing and data becomes available
+  useEffect(() => {
+    if (editingId && !loading) {
+      const existingCalculation = getCalculation(editingId);
+      if (existingCalculation) {
+        setDescription(existingCalculation.description);
+        setStartDate(new Date(existingCalculation.start_date));
+        setEndDate(new Date(existingCalculation.end_date));
+        setWorkingHours(existingCalculation.working_hours);
+        setOvertimePercentages(existingCalculation.overtime_percentages);
+      }
+    }
+  }, [editingId, getCalculation, loading]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     setWorkingHours(prev => ({
@@ -88,7 +91,7 @@ export const CreateCalculation = ({ onBack, onContinue, editingId }: CreateCalcu
       end_date: format(endDate, 'yyyy-MM-dd'),
       working_hours: workingHours,
       overtime_percentages: overtimePercentages,
-      day_entries: existingCalculation?.day_entries || []
+      day_entries: editingId ? getCalculation(editingId)?.day_entries || [] : []
     };
 
     try {
