@@ -96,11 +96,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
       regularHours = 0;
       overtimePercentage = overtimePercentages.restDay;
     } else if (entry.type === 'workday' && workedHours > contractualHours) {
-      // Calculate overtime based on brackets
+      // Calculate overtime progressively
       overtimeHours = workedHours - contractualHours;
       regularHours = contractualHours;
 
-      // Determine overtime percentage based on overtime hours
+      // For display purposes, we'll show the average percentage
+      // The actual progressive calculation will be done separately
       if (overtimeHours <= 2) {
         overtimePercentage = overtimePercentages.upTo2Hours;
       } else if (overtimeHours <= 3) {
@@ -169,7 +170,76 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     };
   });
 
+  // Calculate progressive overtime hours by percentage
+  const calculateProgressiveOvertimeHours = (results: DayResult[], overtimePercentages: OvertimePercentages) => {
+    let he50 = 0, he70 = 0, he100 = 0;
+    
+    results.forEach(result => {
+      if (result.type === 'Dia de Descanso') {
+        // Rest day overtime is always 100%
+        he100 += result.overtimeHours;
+      } else if (result.overtimeHours > 0) {
+        // Progressive calculation for workdays
+        let remainingOvertimeHours = result.overtimeHours;
+        
+        // First 2 hours at upTo2Hours percentage
+        if (remainingOvertimeHours > 0) {
+          const hoursAt50 = Math.min(remainingOvertimeHours, 2);
+          if (overtimePercentages.upTo2Hours === 50) he50 += hoursAt50;
+          else if (overtimePercentages.upTo2Hours === 70) he70 += hoursAt50;
+          else if (overtimePercentages.upTo2Hours === 100) he100 += hoursAt50;
+          remainingOvertimeHours -= hoursAt50;
+        }
+        
+        // Next hour (2-3) at from2To3Hours percentage
+        if (remainingOvertimeHours > 0) {
+          const hoursAt2To3 = Math.min(remainingOvertimeHours, 1);
+          if (overtimePercentages.from2To3Hours === 50) he50 += hoursAt2To3;
+          else if (overtimePercentages.from2To3Hours === 70) he70 += hoursAt2To3;
+          else if (overtimePercentages.from2To3Hours === 100) he100 += hoursAt2To3;
+          remainingOvertimeHours -= hoursAt2To3;
+        }
+        
+        // Next hour (3-4) at from3To4Hours percentage
+        if (remainingOvertimeHours > 0) {
+          const hoursAt3To4 = Math.min(remainingOvertimeHours, 1);
+          if (overtimePercentages.from3To4Hours === 50) he50 += hoursAt3To4;
+          else if (overtimePercentages.from3To4Hours === 70) he70 += hoursAt3To4;
+          else if (overtimePercentages.from3To4Hours === 100) he100 += hoursAt3To4;
+          remainingOvertimeHours -= hoursAt3To4;
+        }
+        
+        // Next hour (4-5) at from4To5Hours percentage
+        if (remainingOvertimeHours > 0) {
+          const hoursAt4To5 = Math.min(remainingOvertimeHours, 1);
+          if (overtimePercentages.from4To5Hours === 50) he50 += hoursAt4To5;
+          else if (overtimePercentages.from4To5Hours === 70) he70 += hoursAt4To5;
+          else if (overtimePercentages.from4To5Hours === 100) he100 += hoursAt4To5;
+          remainingOvertimeHours -= hoursAt4To5;
+        }
+        
+        // Remaining hours (5+) at over5Hours percentage
+        if (remainingOvertimeHours > 0) {
+          if (overtimePercentages.over5Hours === 50) he50 += remainingOvertimeHours;
+          else if (overtimePercentages.over5Hours === 70) he70 += remainingOvertimeHours;
+          else if (overtimePercentages.over5Hours === 100) he100 += remainingOvertimeHours;
+        }
+      }
+    });
+    
+    return { he50, he70, he100 };
+  };
+
+  // Extract employee name from description (first part before " - ")
+  const getEmployeeName = (description: string): string => {
+    const parts = description.split(' - ');
+    return parts[0] || 'Funcionário';
+  };
+
   const results = calculation.day_entries.map(entry => calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages));
+  
+  // Calculate progressive overtime hours
+  const progressiveHours = calculateProgressiveOvertimeHours(results, calculation.overtime_percentages);
   
   const totals = results.reduce((acc, result) => ({
     workedHours: acc.workedHours + result.workedHours,
@@ -223,7 +293,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
               Sistema de Horas Extras - Resultado do Cálculo
             </h1>
             <p className="text-center text-muted-foreground">
-              {calculation.description}
+              Funcionário: {getEmployeeName(calculation.description)}
             </p>
             <p className="text-center text-sm text-muted-foreground">
               Período: {format(parseISO(calculation.start_date), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date), "dd/MM/yyyy")}
@@ -282,39 +352,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>50%:</span>
-                    <span className="font-mono">{(() => {
-                      const he50 = results.reduce((acc, result) => {
-                        if (result.overtimePercentage === 50) {
-                          return acc + result.overtimeHours;
-                        }
-                        return acc;
-                      }, 0);
-                      return he50.toFixed(2);
-                    })()}h</span>
+                    <span className="font-mono">{progressiveHours.he50.toFixed(2)}h</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>70%:</span>
-                    <span className="font-mono">{(() => {
-                      const he70 = results.reduce((acc, result) => {
-                        if (result.overtimePercentage === 70) {
-                          return acc + result.overtimeHours;
-                        }
-                        return acc;
-                      }, 0);
-                      return he70.toFixed(2);
-                    })()}h</span>
+                    <span className="font-mono">{progressiveHours.he70.toFixed(2)}h</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>100%:</span>
-                    <span className="font-mono">{(() => {
-                      const he100 = results.reduce((acc, result) => {
-                        if (result.overtimePercentage === 100) {
-                          return acc + result.overtimeHours;
-                        }
-                        return acc;
-                      }, 0);
-                      return he100.toFixed(2);
-                    })()}h</span>
+                    <span className="font-mono">{progressiveHours.he100.toFixed(2)}h</span>
                   </div>
                 </div>
               </CardContent>
@@ -348,7 +394,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                       <TableHead className="text-right">H. Contr.</TableHead>
                       <TableHead className="text-right">H. Normais</TableHead>
                       <TableHead className="text-right">H. Extras</TableHead>
-                      <TableHead className="text-right">% Extra</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -385,13 +430,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                             '0.00h'
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {result.overtimePercentage > 0 && (
-                            <Badge variant="outline">
-                              {result.overtimePercentage}%
-                            </Badge>
-                          )}
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -425,39 +463,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
                       <span>50%:</span>
-                      <span className="font-mono">{(() => {
-                        const he50 = results.reduce((acc, result) => {
-                          if (result.overtimePercentage === 50) {
-                            return acc + result.overtimeHours;
-                          }
-                          return acc;
-                        }, 0);
-                        return he50.toFixed(2);
-                      })()}h</span>
+                      <span className="font-mono">{progressiveHours.he50.toFixed(2)}h</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span>70%:</span>
-                      <span className="font-mono">{(() => {
-                        const he70 = results.reduce((acc, result) => {
-                          if (result.overtimePercentage === 70) {
-                            return acc + result.overtimeHours;
-                          }
-                          return acc;
-                        }, 0);
-                        return he70.toFixed(2);
-                      })()}h</span>
+                      <span className="font-mono">{progressiveHours.he70.toFixed(2)}h</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span>100%:</span>
-                      <span className="font-mono">{(() => {
-                        const he100 = results.reduce((acc, result) => {
-                          if (result.overtimePercentage === 100) {
-                            return acc + result.overtimeHours;
-                          }
-                          return acc;
-                        }, 0);
-                        return he100.toFixed(2);
-                      })()}h</span>
+                      <span className="font-mono">{progressiveHours.he100.toFixed(2)}h</span>
                     </div>
                   </div>
                 </div>
