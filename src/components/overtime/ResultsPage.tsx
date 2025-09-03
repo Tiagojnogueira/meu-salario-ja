@@ -230,6 +230,53 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
     return { he50, he70, he100 };
   };
 
+  // Calculate progressive overtime breakdown for a single day
+  const calculateDayOvertimeBreakdown = (overtimeHours: number, overtimePercentages: OvertimePercentages, isRestDay: boolean = false): string => {
+    if (overtimeHours <= 0) return '-';
+    
+    if (isRestDay) {
+      return `${overtimeHours.toFixed(2)}h (100%)`;
+    }
+    
+    const breakdown: string[] = [];
+    let remainingHours = overtimeHours;
+    
+    // First 2 hours at upTo2Hours percentage
+    if (remainingHours > 0) {
+      const hoursAt50 = Math.min(remainingHours, 2);
+      breakdown.push(`${hoursAt50.toFixed(2)}h (${overtimePercentages.upTo2Hours}%)`);
+      remainingHours -= hoursAt50;
+    }
+    
+    // Next hour (2-3) at from2To3Hours percentage
+    if (remainingHours > 0) {
+      const hoursAt2To3 = Math.min(remainingHours, 1);
+      breakdown.push(`${hoursAt2To3.toFixed(2)}h (${overtimePercentages.from2To3Hours}%)`);
+      remainingHours -= hoursAt2To3;
+    }
+    
+    // Next hour (3-4) at from3To4Hours percentage
+    if (remainingHours > 0) {
+      const hoursAt3To4 = Math.min(remainingHours, 1);
+      breakdown.push(`${hoursAt3To4.toFixed(2)}h (${overtimePercentages.from3To4Hours}%)`);
+      remainingHours -= hoursAt3To4;
+    }
+    
+    // Next hour (4-5) at from4To5Hours percentage
+    if (remainingHours > 0) {
+      const hoursAt4To5 = Math.min(remainingHours, 1);
+      breakdown.push(`${hoursAt4To5.toFixed(2)}h (${overtimePercentages.from4To5Hours}%)`);
+      remainingHours -= hoursAt4To5;
+    }
+    
+    // Remaining hours (5+) at over5Hours percentage
+    if (remainingHours > 0) {
+      breakdown.push(`${remainingHours.toFixed(2)}h (${overtimePercentages.over5Hours}%)`);
+    }
+    
+    return breakdown.join(' + ');
+  };
+
   // Extract employee name from description (first part before " - ")
   const getEmployeeName = (description: string): string => {
     const parts = description.split(' - ');
@@ -394,6 +441,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                       <TableHead className="text-right">H. Contr.</TableHead>
                       <TableHead className="text-right">H. Normais</TableHead>
                       <TableHead className="text-right">H. Extras</TableHead>
+                      <TableHead>Breakdown H.E.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -429,6 +477,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard }: Result
                           ) : (
                             '0.00h'
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-xs font-mono">
+                            {calculateDayOvertimeBreakdown(
+                              result.overtimeHours, 
+                              calculation.overtime_percentages,
+                              result.type === 'Dia de Descanso'
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
