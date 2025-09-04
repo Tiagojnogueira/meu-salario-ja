@@ -507,21 +507,19 @@ export const EditCalculationPage = () => {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Auto Fill Configuration */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="auto-fill"
-                  checked={autoFillEnabled}
-                  onCheckedChange={handleAutoFill}
-                />
-                <Label htmlFor="auto-fill" className="text-sm">
-                  Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
-                </Label>
+              
+              {/* Auto Fill Option */}
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="auto-fill"
+                    checked={autoFillEnabled}
+                    onCheckedChange={handleAutoFill}
+                  />
+                  <Label htmlFor="auto-fill" className="text-sm">
+                    Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
+                  </Label>
+                </div>
               </div>
             </CardContent>
           </Card>
