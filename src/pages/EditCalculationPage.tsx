@@ -8,6 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import WorkingHoursConfig from '@/components/overtime/WorkingHoursConfig';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,6 +52,7 @@ export const EditCalculationPage = () => {
   const [dayEntries, setDayEntries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [autoFillEnabled, setAutoFillEnabled] = useState(false);
+  const [showWorkingHoursConfig, setShowWorkingHoursConfig] = useState(false);
   
   // Campos de horário noturno
   const [nightShiftStart, setNightShiftStart] = useState('22:00');
@@ -126,7 +128,26 @@ export const EditCalculationPage = () => {
   };
 
   const handleAutoFill = (enabled: boolean) => {
-    setAutoFillEnabled(enabled);
+    if (enabled) {
+      setShowWorkingHoursConfig(true);
+    } else {
+      setAutoFillEnabled(false);
+    }
+  };
+
+  const handleWorkingHoursConfigSave = (configuredHours: any) => {
+    // A configuração detalhada de horários será usada na próxima tela
+    setAutoFillEnabled(true);
+    setShowWorkingHoursConfig(false);
+    toast.success('Configuração de horários salva!');
+  };
+
+  const handleWorkingHoursConfigClose = () => {
+    setShowWorkingHoursConfig(false);
+    // Se o modal for fechado sem salvar, desmarca o checkbox
+    if (!autoFillEnabled) {
+      setAutoFillEnabled(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -626,6 +647,13 @@ export const EditCalculationPage = () => {
             </Button>
           </div>
         </form>
+        
+        {/* Working Hours Configuration Modal */}
+        <WorkingHoursConfig
+          open={showWorkingHoursConfig}
+          onClose={handleWorkingHoursConfigClose}
+          onSave={handleWorkingHoursConfigSave}
+        />
       </main>
     </div>
   );
