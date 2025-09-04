@@ -47,7 +47,7 @@ export const EditTimeEntriesPage = () => {
           return;
         }
 
-        if (data) {
+          console.log('Loading data from database:', data);
           setCalculation(data);
           
           // Generate day entries
@@ -87,22 +87,29 @@ export const EditTimeEntriesPage = () => {
           setDayEntries(entries);
 
           // Aplicar preenchimento automático se existir configuração detalhada
-          const detailedHours = (data as any).detailed_working_hours;
-          const autoFillEnabled = (data as any).auto_fill_enabled;
+          const detailedHours = data.detailed_working_hours;
+          const autoFillEnabled = data.auto_fill_enabled;
           
           console.log('Loading auto fill configuration:', {
             detailedHours,
-            autoFillEnabled
+            autoFillEnabled,
+            hasDetailedHours: !!detailedHours,
+            detailedHoursType: typeof detailedHours
           });
           
-          if (autoFillEnabled && detailedHours) {
-            console.log('Applying detailed auto fill');
+          if (autoFillEnabled && detailedHours && typeof detailedHours === 'object') {
+            console.log('Applying detailed auto fill with data:', detailedHours);
             applyDetailedAutoFill(entries, detailedHours);
-          } else if (autoFillEnabled) {
-            console.log('Applying basic auto fill');
+          } else if (autoFillEnabled && data.working_hours) {
+            console.log('Applying basic auto fill with working hours:', data.working_hours);
             applyAutoFill(entries, data.working_hours);
+          } else {
+            console.log('No auto fill applied - conditions not met:', {
+              autoFillEnabled,
+              hasDetailedHours: !!detailedHours,
+              hasWorkingHours: !!data.working_hours
+            });
           }
-        }
       } catch (error) {
         console.error('Error loading calculation:', error);
         toast.error('Erro ao carregar cálculo');
@@ -161,6 +168,8 @@ export const EditTimeEntriesPage = () => {
   };
 
   const applyDetailedAutoFill = (entries: DayEntry[], detailedHours: any) => {
+    console.log('applyDetailedAutoFill called with:', { detailedHours, entriesLength: entries.length });
+    
     const getDayOfWeekKey = (date: Date) => {
       const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       return days[date.getDay()];
@@ -172,19 +181,23 @@ export const EditTimeEntriesPage = () => {
         const dayKey = getDayOfWeekKey(date);
         const dayHours = detailedHours[dayKey];
         
-        if (dayHours && dayHours.entry) {
+        console.log(`Processing ${entry.date} (${dayKey}):`, { dayHours });
+        
+        if (dayHours && (dayHours.entry || dayHours.exit)) {
+          console.log(`Applying hours for ${dayKey}:`, dayHours);
           return {
             ...entry,
-            entry: dayHours.entry,
-            intervalStart: dayHours.intervalStart,
-            intervalEnd: dayHours.intervalEnd,
-            exit: dayHours.exit
+            entry: dayHours.entry || '',
+            intervalStart: dayHours.intervalStart || '',
+            intervalEnd: dayHours.intervalEnd || '',
+            exit: dayHours.exit || ''
           };
         }
       }
       return entry;
     });
 
+    console.log('Updated entries after detailed auto fill:', updatedEntries);
     setDayEntries(updatedEntries);
   };
 
