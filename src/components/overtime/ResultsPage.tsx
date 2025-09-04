@@ -801,15 +801,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                          <TableCell className="text-right font-mono">
                            {formatHoursToTime(result.regularHours)}
                          </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {result.overtimeHours > 0 ? (
-                             <span className="text-orange-600 font-semibold">
-                               {formatHoursToTime(result.overtimeHours)}
-                             </span>
-                           ) : (
-                             '00:00'
-                           )}
-                         </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {(result.overtimeDayHours + result.overtimeNightHours) > 0 ? (
+                              <span className="text-orange-600 font-semibold">
+                                {formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}
+                              </span>
+                            ) : (
+                              '00:00'
+                            )}
+                          </TableCell>
                          <TableCell className="text-right font-mono">
                            {result.overtimeDayHours > 0 ? (
                              <span className="text-orange-600 font-semibold">
