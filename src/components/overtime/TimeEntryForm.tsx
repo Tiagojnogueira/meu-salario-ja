@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { DayEntry } from '@/types/overtime';
@@ -25,6 +26,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
   const calculation = getCalculation(calculationId);
   
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
+  const [autoFillEnabled, setAutoFillEnabled] = useState(false);
   
   useEffect(() => {
     if (!calculation) return;
@@ -71,6 +73,57 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
   if (!calculation) {
     return <div>Cálculo não encontrado</div>;
   }
+
+  const handleAutoFill = (enabled: boolean) => {
+    if (!calculation || !enabled) {
+      setAutoFillEnabled(enabled);
+      return;
+    }
+
+    setAutoFillEnabled(enabled);
+
+    const workingHours = calculation.working_hours;
+    const getDayOfWeekKey = (date: Date) => {
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      return days[date.getDay()];
+    };
+
+    // Calcula os horários baseados nas horas de trabalho
+    const calculateTimes = (dayKey: string) => {
+      const dailyHours = parseFloat(workingHours[dayKey] || '8');
+      
+      // Horários padrão: entrada 08:00, intervalo 12:00-13:00
+      const entryTime = '08:00';
+      const intervalStart = '12:00';
+      const intervalEnd = '13:00';
+      
+      // Calcula a saída baseado nas horas de trabalho + 1 hora de intervalo
+      const entryHour = 8;
+      const exitHour = entryHour + dailyHours + 1; // +1 para o intervalo
+      const exitTime = `${String(Math.floor(exitHour)).padStart(2, '0')}:${String((exitHour % 1) * 60).padStart(2, '0')}`;
+      
+      return {
+        entry: entryTime,
+        intervalStart,
+        intervalEnd,
+        exit: exitTime
+      };
+    };
+
+    setDayEntries(prev => prev.map(entry => {
+      if (entry.type === 'workday') {
+        const date = parseISO(entry.date);
+        const dayKey = getDayOfWeekKey(date);
+        const times = calculateTimes(dayKey);
+        
+        return {
+          ...entry,
+          ...times
+        };
+      }
+      return entry;
+    }));
+  };
 
   const handleEntryChange = (index: number, field: keyof DayEntry, value: string) => {
     setDayEntries(prev => prev.map((entry, i) => 
@@ -161,6 +214,22 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
                 Os domingos são marcados como "Dia de Descanso" por padrão.
               </CardDescription>
             </CardHeader>
+          </Card>
+
+          {/* Auto Fill Option */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="auto-fill"
+                  checked={autoFillEnabled}
+                  onCheckedChange={handleAutoFill}
+                />
+                <Label htmlFor="auto-fill" className="text-sm">
+                  Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
+                </Label>
+              </div>
+            </CardContent>
           </Card>
 
           {/* Time Entries */}
