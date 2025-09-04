@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,13 +18,14 @@ import { ptBR } from 'date-fns/locale';
 export const EditTimeEntriesPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile } = useSupabaseAuth();
   const { updateCalculation } = useSupabaseCalculations(profile?.user_id);
   
   const [calculation, setCalculation] = useState<any>(null);
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [autoFillEnabled, setAutoFillEnabled] = useState(false);
+  const [autoFillEnabled, setAutoFillEnabled] = useState(location.state?.autoFillEnabled || false);
 
   // Load calculation data
   useEffect(() => {
@@ -86,6 +87,11 @@ export const EditTimeEntriesPage = () => {
           });
 
           setDayEntries(entries);
+
+          // Aplicar preenchimento automático se habilitado
+          if (autoFillEnabled || location.state?.autoFillEnabled) {
+            applyAutoFill(entries, data.working_hours);
+          }
         }
       } catch (error) {
         console.error('Error loading calculation:', error);
@@ -99,15 +105,7 @@ export const EditTimeEntriesPage = () => {
     loadCalculation();
   }, [id, profile?.user_id, navigate]);
 
-  const handleAutoFill = (enabled: boolean) => {
-    if (!calculation || !enabled) {
-      setAutoFillEnabled(enabled);
-      return;
-    }
-
-    setAutoFillEnabled(enabled);
-
-    const workingHours = calculation.working_hours;
+  const applyAutoFill = (entries: DayEntry[], workingHours: any) => {
     const getDayOfWeekKey = (date: Date) => {
       const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       return days[date.getDay()];
@@ -135,9 +133,9 @@ export const EditTimeEntriesPage = () => {
       };
     };
 
-    setDayEntries(prev => prev.map(entry => {
+    const updatedEntries = entries.map(entry => {
       if (entry.type === 'workday') {
-        const date = parseISO(entry.date);
+        const date = parseISO(entry.date + 'T00:00:00');
         const dayKey = getDayOfWeekKey(date);
         const times = calculateTimes(dayKey);
         
@@ -147,7 +145,17 @@ export const EditTimeEntriesPage = () => {
         };
       }
       return entry;
-    }));
+    });
+
+    setDayEntries(updatedEntries);
+  };
+
+  const handleAutoFill = (enabled: boolean) => {
+    setAutoFillEnabled(enabled);
+    
+    if (enabled && calculation) {
+      applyAutoFill(dayEntries, calculation.working_hours);
+    }
   };
 
   const updateDayEntry = (index: number, field: keyof DayEntry, value: string) => {

@@ -50,6 +50,7 @@ export const EditCalculationPage = () => {
   });
   const [dayEntries, setDayEntries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [autoFillEnabled, setAutoFillEnabled] = useState(false);
   
   // Campos de horário noturno
   const [nightShiftStart, setNightShiftStart] = useState('22:00');
@@ -124,6 +125,10 @@ export const EditCalculationPage = () => {
     }));
   };
 
+  const handleAutoFill = (enabled: boolean) => {
+    setAutoFillEnabled(enabled);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -167,7 +172,8 @@ export const EditCalculationPage = () => {
       night_shift_start: nightShiftStart,
       night_shift_end: nightShiftEnd,
       extend_night_hours: extendNightHours,
-      apply_night_reduction: applyNightReduction
+      apply_night_reduction: applyNightReduction,
+      auto_fill_enabled: autoFillEnabled
     };
 
     console.log('EditCalculation - Calculation data being sent:', calculationData);
@@ -175,8 +181,10 @@ export const EditCalculationPage = () => {
     try {
       const success = await updateCalculation(id, calculationData);
       if (success) {
-        // Navegar para a tela de edição de horários
-        navigate(`/horas-extras/editar-horarios/${id}`);
+        // Navegar para a tela de edição de horários com estado de preenchimento automático
+        navigate(`/horas-extras/editar-horarios/${id}`, { 
+          state: { autoFillEnabled } 
+        });
       }
     } catch (error) {
       console.error('EditCalculation - Update error:', error);
@@ -498,6 +506,22 @@ export const EditCalculationPage = () => {
                     onChange={(e) => handleWorkingHourChange('rest', e.target.value)}
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Auto Fill Configuration */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="auto-fill"
+                  checked={autoFillEnabled}
+                  onCheckedChange={handleAutoFill}
+                />
+                <Label htmlFor="auto-fill" className="text-sm">
+                  Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
+                </Label>
               </div>
             </CardContent>
           </Card>
