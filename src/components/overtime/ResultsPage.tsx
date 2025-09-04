@@ -320,8 +320,19 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               }
             }
             
-            overtimeNightHours = Math.min(nightOvertimeMinutes / 60, overtimeHours);
-            overtimeDayHours = overtimeHours - overtimeNightHours;
+            let nightOvertimeHours = Math.min(nightOvertimeMinutes / 60, overtimeHours);
+            
+            // Apply night reduction factor to night overtime hours if enabled
+            if (applyNightReduction && nightOvertimeHours > 0) {
+              // Each night hour on clock equals 52.5 minutes
+              // Formula: clock_hours × 60 ÷ 52.5 = effective_night_hours
+              nightOvertimeHours = (nightOvertimeHours * 60) / 52.5;
+              console.log(`Applying night reduction to overtime: ${Math.min(nightOvertimeMinutes / 60, overtimeHours)}h clock → ${nightOvertimeHours.toFixed(2)}h effective`);
+            }
+            
+            overtimeNightHours = nightOvertimeHours;
+            // For day hours, we need to recalculate based on basic overtime minus night overtime (before reduction)
+            overtimeDayHours = overtimeHours - Math.min(nightOvertimeMinutes / 60, overtimeHours);
           } else {
             overtimeDayHours = overtimeHours;
             overtimeNightHours = 0;
@@ -698,9 +709,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 <CardTitle className="text-lg">Horas Extras</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-orange-600">
-                  {formatHoursToTime(totals.overtimeHours)}
-                </div>
+                 <div className="text-3xl font-bold text-orange-600">
+                   {formatHoursToTime(totals.overtimeDayHours + totals.overtimeNightHours)}
+                 </div>
                 <p className="text-sm text-muted-foreground">
                   Excedente da jornada
                 </p>
@@ -871,7 +882,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                  <div className="text-center">
                    <p className="text-sm text-muted-foreground">Horas Extras</p>
                    <p className="text-2xl font-bold text-orange-600">
-                     {formatHoursToTime(totals.overtimeHours)}
+                     {formatHoursToTime(totals.overtimeDayHours + totals.overtimeNightHours)}
                    </p>
                  </div>
                  <div className="text-center">
