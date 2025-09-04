@@ -53,6 +53,7 @@ export const EditCalculationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autoFillEnabled, setAutoFillEnabled] = useState(false);
   const [showWorkingHoursConfig, setShowWorkingHoursConfig] = useState(false);
+  const [detailedWorkingHours, setDetailedWorkingHours] = useState<any>(null);
   
   // Campos de horário noturno
   const [nightShiftStart, setNightShiftStart] = useState('22:00');
@@ -97,6 +98,10 @@ export const EditCalculationPage = () => {
           setNightShiftEnd((data as any).night_shift_end || '05:00');
           setExtendNightHours((data as any).extend_night_hours ?? true);
           setApplyNightReduction((data as any).apply_night_reduction ?? true);
+          
+          // Carregando configurações de preenchimento automático
+          setAutoFillEnabled((data as any).auto_fill_enabled || false);
+          setDetailedWorkingHours((data as any).detailed_working_hours || null);
         }
       } catch (error) {
         console.error('Error loading calculation:', error);
@@ -136,7 +141,8 @@ export const EditCalculationPage = () => {
   };
 
   const handleWorkingHoursConfigSave = (configuredHours: any) => {
-    // A configuração detalhada de horários será usada na próxima tela
+    // Salva as configurações detalhadas de horários
+    setDetailedWorkingHours(configuredHours);
     setAutoFillEnabled(true);
     setShowWorkingHoursConfig(false);
     toast.success('Configuração de horários salva!');
@@ -194,7 +200,8 @@ export const EditCalculationPage = () => {
       night_shift_end: nightShiftEnd,
       extend_night_hours: extendNightHours,
       apply_night_reduction: applyNightReduction,
-      auto_fill_enabled: autoFillEnabled
+      auto_fill_enabled: autoFillEnabled,
+      detailed_working_hours: detailedWorkingHours
     };
 
     console.log('EditCalculation - Calculation data being sent:', calculationData);
@@ -202,10 +209,8 @@ export const EditCalculationPage = () => {
     try {
       const success = await updateCalculation(id, calculationData);
       if (success) {
-        // Navegar para a tela de edição de horários com estado de preenchimento automático
-        navigate(`/horas-extras/editar-horarios/${id}`, { 
-          state: { autoFillEnabled } 
-        });
+        // Navegar para a tela de edição de horários 
+        navigate(`/horas-extras/editar-horarios/${id}`);
       }
     } catch (error) {
       console.error('EditCalculation - Update error:', error);

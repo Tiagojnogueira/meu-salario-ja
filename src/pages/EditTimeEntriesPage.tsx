@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +24,6 @@ export const EditTimeEntriesPage = () => {
   const [calculation, setCalculation] = useState<any>(null);
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [autoFillEnabled, setAutoFillEnabled] = useState(location.state?.autoFillEnabled || false);
 
   // Load calculation data
   useEffect(() => {
@@ -88,8 +86,11 @@ export const EditTimeEntriesPage = () => {
 
           setDayEntries(entries);
 
-          // Aplicar preenchimento automático se habilitado
-          if (autoFillEnabled || location.state?.autoFillEnabled) {
+          // Aplicar preenchimento automático se existir configuração detalhada
+          const detailedHours = (data as any).detailed_working_hours;
+          if (detailedHours) {
+            applyDetailedAutoFill(entries, detailedHours);
+          } else if ((data as any).auto_fill_enabled) {
             applyAutoFill(entries, data.working_hours);
           }
         }
@@ -150,12 +151,32 @@ export const EditTimeEntriesPage = () => {
     setDayEntries(updatedEntries);
   };
 
-  const handleAutoFill = (enabled: boolean) => {
-    setAutoFillEnabled(enabled);
-    
-    if (enabled && calculation) {
-      applyAutoFill(dayEntries, calculation.working_hours);
-    }
+  const applyDetailedAutoFill = (entries: DayEntry[], detailedHours: any) => {
+    const getDayOfWeekKey = (date: Date) => {
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      return days[date.getDay()];
+    };
+
+    const updatedEntries = entries.map(entry => {
+      if (entry.type === 'workday') {
+        const date = parseISO(entry.date + 'T00:00:00');
+        const dayKey = getDayOfWeekKey(date);
+        const dayHours = detailedHours[dayKey];
+        
+        if (dayHours && dayHours.entry) {
+          return {
+            ...entry,
+            entry: dayHours.entry,
+            intervalStart: dayHours.intervalStart,
+            intervalEnd: dayHours.intervalEnd,
+            exit: dayHours.exit
+          };
+        }
+      }
+      return entry;
+    });
+
+    setDayEntries(updatedEntries);
   };
 
   const updateDayEntry = (index: number, field: keyof DayEntry, value: string) => {
@@ -279,22 +300,6 @@ export const EditTimeEntriesPage = () => {
                 Os domingos são marcados como "Dia de Descanso" por padrão.
               </CardDescription>
             </CardHeader>
-          </Card>
-
-          {/* Auto Fill Option */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="auto-fill"
-                  checked={autoFillEnabled}
-                  onCheckedChange={handleAutoFill}
-                />
-                <Label htmlFor="auto-fill" className="text-sm">
-                  Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
-                </Label>
-              </div>
-            </CardContent>
           </Card>
 
           {/* Time Entries */}
