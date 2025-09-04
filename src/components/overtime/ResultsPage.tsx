@@ -243,8 +243,17 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       
       // All overtime hours on rest day are night hours if they worked at night
       if (nightHours > 0) {
-        overtimeNightHours = nightHours;
-        overtimeDayHours = Math.max(0, effectiveHours - nightHours);
+        // Calculate night overtime hours (in clock hours first)
+        const nightOvertimeClockHours = Math.min(nightHours, effectiveHours);
+        
+        // Apply night reduction factor to night overtime hours if enabled
+        if (applyNightReduction && nightOvertimeClockHours > 0) {
+          overtimeNightHours = (nightOvertimeClockHours * 60) / 52.5;
+        } else {
+          overtimeNightHours = nightOvertimeClockHours;
+        }
+        
+        overtimeDayHours = Math.max(0, effectiveHours - nightOvertimeClockHours);
       } else {
         overtimeDayHours = effectiveHours;
       }
