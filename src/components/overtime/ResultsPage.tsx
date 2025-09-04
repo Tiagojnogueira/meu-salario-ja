@@ -490,47 +490,49 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
   };
 
   // Calculate progressive overtime breakdown for a single day
-  const calculateDayOvertimeBreakdown = (overtimeHours: number, overtimePercentages: OvertimePercentages, isRestDay: boolean = false): string => {
-    if (overtimeHours <= 0) return '-';
+  const calculateDayOvertimeBreakdown = (overtimeDayHours: number, overtimeNightHours: number, overtimePercentages: OvertimePercentages, isRestDay: boolean = false): string => {
+    const totalOvertimeHours = overtimeDayHours + overtimeNightHours;
+    
+    if (totalOvertimeHours <= 0) return '-';
     
     if (isRestDay) {
-      return `${overtimeHours.toFixed(2)}h (100%)`;
+      return `${formatHoursToTime(totalOvertimeHours)} (100%)`;
     }
     
     const breakdown: string[] = [];
-    let remainingHours = overtimeHours;
+    let remainingHours = totalOvertimeHours;
     
     // First 2 hours at upTo2Hours percentage
     if (remainingHours > 0) {
       const hoursAt50 = Math.min(remainingHours, 2);
-      breakdown.push(`${hoursAt50.toFixed(2)}h (${overtimePercentages.upTo2Hours}%)`);
+      breakdown.push(`${formatHoursToTime(hoursAt50)} (${overtimePercentages.upTo2Hours}%)`);
       remainingHours -= hoursAt50;
     }
     
     // Next hour (2-3) at from2To3Hours percentage
     if (remainingHours > 0) {
       const hoursAt2To3 = Math.min(remainingHours, 1);
-      breakdown.push(`${hoursAt2To3.toFixed(2)}h (${overtimePercentages.from2To3Hours}%)`);
+      breakdown.push(`${formatHoursToTime(hoursAt2To3)} (${overtimePercentages.from2To3Hours}%)`);
       remainingHours -= hoursAt2To3;
     }
     
     // Next hour (3-4) at from3To4Hours percentage
     if (remainingHours > 0) {
       const hoursAt3To4 = Math.min(remainingHours, 1);
-      breakdown.push(`${hoursAt3To4.toFixed(2)}h (${overtimePercentages.from3To4Hours}%)`);
+      breakdown.push(`${formatHoursToTime(hoursAt3To4)} (${overtimePercentages.from3To4Hours}%)`);
       remainingHours -= hoursAt3To4;
     }
     
     // Next hour (4-5) at from4To5Hours percentage
     if (remainingHours > 0) {
       const hoursAt4To5 = Math.min(remainingHours, 1);
-      breakdown.push(`${hoursAt4To5.toFixed(2)}h (${overtimePercentages.from4To5Hours}%)`);
+      breakdown.push(`${formatHoursToTime(hoursAt4To5)} (${overtimePercentages.from4To5Hours}%)`);
       remainingHours -= hoursAt4To5;
     }
     
     // Remaining hours (5+) at over5Hours percentage
     if (remainingHours > 0) {
-      breakdown.push(`${remainingHours.toFixed(2)}h (${overtimePercentages.over5Hours}%)`);
+      breakdown.push(`${formatHoursToTime(remainingHours)} (${overtimePercentages.over5Hours}%)`);
     }
     
     return breakdown.join(' + ');
@@ -850,11 +852,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                          </TableCell>
                         <TableCell>
                           <div className="text-xs font-mono">
-                            {calculateDayOvertimeBreakdown(
-                              result.overtimeHours, 
-                              calculation.overtime_percentages,
-                              result.type === 'Dia de Descanso'
-                            )}
+                             {calculateDayOvertimeBreakdown(
+                               result.overtimeDayHours,
+                               result.overtimeNightHours, 
+                               calculation.overtime_percentages,
+                               result.type === 'Dia de Descanso'
+                             )}
                           </div>
                         </TableCell>
                       </TableRow>
