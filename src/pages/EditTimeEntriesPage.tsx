@@ -87,8 +87,8 @@ export const EditTimeEntriesPage = () => {
           setDayEntries(entries);
 
           // Aplicar preenchimento automático se existir configuração detalhada
-          const detailedHours = data.detailed_working_hours;
-          const autoFillEnabled = data.auto_fill_enabled;
+          const detailedHours = (data as any).detailed_working_hours;
+          const autoFillEnabled = (data as any).auto_fill_enabled;
           
           console.log('Loading auto fill configuration:', {
             detailedHours,

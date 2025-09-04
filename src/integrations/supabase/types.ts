@@ -17,9 +17,11 @@ export type Database = {
       calculations: {
         Row: {
           apply_night_reduction: boolean | null
+          auto_fill_enabled: boolean | null
           created_at: string
           day_entries: Json
           description: string
+          detailed_working_hours: Json | null
           end_date: string
           extend_night_hours: boolean | null
           id: string
@@ -33,9 +35,11 @@ export type Database = {
         }
         Insert: {
           apply_night_reduction?: boolean | null
+          auto_fill_enabled?: boolean | null
           created_at?: string
           day_entries?: Json
           description: string
+          detailed_working_hours?: Json | null
           end_date: string
           extend_night_hours?: boolean | null
           id?: string
@@ -49,9 +53,11 @@ export type Database = {
         }
         Update: {
           apply_night_reduction?: boolean | null
+          auto_fill_enabled?: boolean | null
           created_at?: string
           day_entries?: Json
           description?: string
+          detailed_working_hours?: Json | null
           end_date?: string
           extend_night_hours?: boolean | null
           id?: string
