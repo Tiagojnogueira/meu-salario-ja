@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, User, Lock, ArrowLeft } from 'lucide-react';
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
@@ -15,6 +16,7 @@ interface LoginFormProps {
 
 export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
   const { login, register, forgotPassword } = useSupabaseAuth();
+  const navigate = useNavigate();
   
   // Login state
   const [loginData, setLoginData] = useState({
@@ -100,7 +102,16 @@ export const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="absolute left-0 top-0 flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
           <CardTitle className="text-2xl font-bold">Sistema de Horas Extras</CardTitle>
           <CardDescription>
             Faça login ou cadastre-se para acessar o sistema
