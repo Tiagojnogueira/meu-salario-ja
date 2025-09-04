@@ -150,8 +150,8 @@ export const EditCalculationPage = () => {
 
   const handleWorkingHoursConfigClose = () => {
     setShowWorkingHoursConfig(false);
-    // Se o modal for fechado sem salvar, desmarca o checkbox
-    if (!autoFillEnabled) {
+    // Se o modal for fechado sem salvar e não tinha configuração prévia, desmarca o checkbox
+    if (!detailedWorkingHours) {
       setAutoFillEnabled(false);
     }
   };
