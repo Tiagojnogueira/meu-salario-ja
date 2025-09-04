@@ -45,7 +45,7 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
     thursday: { entry: '', intervalStart: '', intervalEnd: '', exit: '' },
     friday: { entry: '', intervalStart: '', intervalEnd: '', exit: '' },
     saturday: { entry: '', intervalStart: '', intervalEnd: '', exit: '' },
-    rest: { entry: '', intervalStart: '', intervalEnd: '', exit: '' },
+    rest: { entry: '00:00', intervalStart: '00:00', intervalEnd: '00:00', exit: '00:00' },
   });
 
   const dayLabels: Record<DayOfWeek, string> = {
@@ -59,7 +59,7 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
     rest: 'Feriados',
   };
 
-  const dayOrder: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'rest'];
+  const dayOrder: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'rest'];
 
   const handleInputChange = (day: DayOfWeek, field: 'entry' | 'intervalStart' | 'intervalEnd' | 'exit', value: string) => {
     setLocalWorkingHours(prev => ({
@@ -72,15 +72,15 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
   };
 
   const handleAutoRepeat = () => {
-    const sundayHours = localWorkingHours.sunday;
+    const mondayHours = localWorkingHours.monday;
     const updatedHours = { ...localWorkingHours };
     
-    // Aplica os horários de domingo para os dias que estão em branco
+    // Aplica os horários de segunda-feira para os dias que estão em branco
     dayOrder.forEach(day => {
-      if (day !== 'sunday') {
+      if (day !== 'monday') {
         const dayHours = updatedHours[day];
         if (!dayHours.entry && !dayHours.intervalStart && !dayHours.intervalEnd && !dayHours.exit) {
-          updatedHours[day] = { ...sundayHours };
+          updatedHours[day] = { ...mondayHours };
         }
       }
     });
@@ -88,10 +88,10 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
     setLocalWorkingHours(updatedHours);
   };
 
-  const handleClearSunday = () => {
+  const handleClearDay = (dayToClear: DayOfWeek) => {
     setLocalWorkingHours(prev => ({
       ...prev,
-      sunday: {
+      [dayToClear]: {
         entry: '',
         intervalStart: '',
         intervalEnd: '',
@@ -181,30 +181,28 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
                             <TooltipContent>
                               <p>Auto repetir</p>
                               <p className="text-sm text-muted-foreground">
-                                Repetir os horários de domingo para os demais dias que estão com os campos em branco.
+                                Repetir os horários de segunda-feira para os demais dias que estão com os campos em branco.
                               </p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
 
-                        {/* Menu de Opções */}
-                        {day === 'sunday' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="p-2">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onClick={handleClearSunday}>
-                                Apagar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleClearSunday}>
-                                Limpar os horários de domingo
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                        {/* Menu de Opções - Para todos os dias */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="p-2">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleClearDay(day)}>
+                              Apagar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleClearDay(day)}>
+                              Limpar os horários de {dayLabels[day].toLowerCase()}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>

@@ -85,7 +85,9 @@ export const useSupabaseCalculations = (userId?: string) => {
         night_shift_start: calculationData.night_shift_start,
         night_shift_end: calculationData.night_shift_end,
         extend_night_hours: calculationData.extend_night_hours,
-        apply_night_reduction: calculationData.apply_night_reduction
+        apply_night_reduction: calculationData.apply_night_reduction,
+        auto_fill_enabled: (calculationData as any).auto_fill_enabled,
+        detailed_working_hours: (calculationData as any).detailed_working_hours
       };
 
       const { data, error } = await supabase
@@ -151,6 +153,12 @@ export const useSupabaseCalculations = (userId?: string) => {
       }
       if (calculationData.apply_night_reduction !== undefined) {
         updateData.apply_night_reduction = calculationData.apply_night_reduction;
+      }
+      if ((calculationData as any).auto_fill_enabled !== undefined) {
+        updateData.auto_fill_enabled = (calculationData as any).auto_fill_enabled;
+      }
+      if ((calculationData as any).detailed_working_hours !== undefined) {
+        updateData.detailed_working_hours = (calculationData as any).detailed_working_hours;
       }
 
       console.log('useSupabaseCalculations - Final updateData:', updateData);

@@ -7,6 +7,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import WorkingHoursConfig from '@/components/overtime/WorkingHoursConfig';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { WorkingHours, OvertimePercentages } from '@/types/overtime';
@@ -36,6 +38,9 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [workingHours, setWorkingHours] = useState<WorkingHours>(getDefaultWorkingHours());
   const [overtimePercentages, setOvertimePercentages] = useState<OvertimePercentages>(getDefaultOvertimePercentages());
+  const [autoFillEnabled, setAutoFillEnabled] = useState(false);
+  const [showWorkingHoursConfig, setShowWorkingHoursConfig] = useState(false);
+  const [detailedWorkingHours, setDetailedWorkingHours] = useState<any>(null);
   
   // Campos de horário noturno
   const [nightShiftStart, setNightShiftStart] = useState('22:00');
@@ -57,6 +62,30 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       ...prev,
       [type]: numValue
     }));
+  };
+
+  const handleAutoFill = (enabled: boolean) => {
+    if (enabled) {
+      setShowWorkingHoursConfig(true);
+    } else {
+      setAutoFillEnabled(false);
+    }
+  };
+
+  const handleWorkingHoursConfigSave = (configuredHours: any) => {
+    // Salva as configurações detalhadas de horários
+    setDetailedWorkingHours(configuredHours);
+    setAutoFillEnabled(true);
+    setShowWorkingHoursConfig(false);
+    toast.success('Configuração de horários salva!');
+  };
+
+  const handleWorkingHoursConfigClose = () => {
+    setShowWorkingHoursConfig(false);
+    // Se o modal for fechado sem salvar e não tinha configuração prévia, desmarca o checkbox
+    if (!detailedWorkingHours) {
+      setAutoFillEnabled(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +116,9 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       night_shift_start: nightShiftStart,
       night_shift_end: nightShiftEnd,
       extend_night_hours: extendNightHours,
-      apply_night_reduction: applyNightReduction
+      apply_night_reduction: applyNightReduction,
+      auto_fill_enabled: autoFillEnabled,
+      detailed_working_hours: detailedWorkingHours
     };
 
     try {
@@ -386,6 +417,20 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
                   />
                 </div>
               </div>
+              
+              {/* Auto Fill Option */}
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="auto-fill-create"
+                    checked={autoFillEnabled}
+                    onCheckedChange={handleAutoFill}
+                  />
+                  <Label htmlFor="auto-fill-create" className="text-sm">
+                    Desejo preencher automaticamente os mesmos horários de entrada, intervalo e saída para todo período, de acordo com cada dia da semana.
+                  </Label>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -488,6 +533,13 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
             </Button>
           </div>
         </form>
+        
+        {/* Working Hours Configuration Modal */}
+        <WorkingHoursConfig
+          open={showWorkingHoursConfig}
+          onClose={handleWorkingHoursConfigClose}
+          onSave={handleWorkingHoursConfigSave}
+        />
       </main>
     </div>
   );

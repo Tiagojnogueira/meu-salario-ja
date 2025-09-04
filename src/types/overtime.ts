@@ -50,6 +50,9 @@ export interface Calculation {
   nightShiftEnd?: string;
   extendNightHours?: boolean;
   applyNightReduction?: boolean;
+  // Campos de preenchimento automático
+  autoFillEnabled?: boolean;
+  detailedWorkingHours?: any;
 }
 
 export interface CalculationResult {
