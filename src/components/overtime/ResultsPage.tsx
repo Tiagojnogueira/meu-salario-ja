@@ -530,7 +530,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return { he50, he60, he70, he80, he90, he100 };
   };
 
-  // Calculate progressive overtime breakdown for a single day
+  // Calculate progressive overtime breakdown for a single day with grouped percentages
   const calculateDayOvertimeBreakdown = (overtimeDayHours: number, overtimeNightHours: number, overtimePercentages: OvertimePercentages, isRestDay: boolean = false): string => {
     const totalOvertimeHours = overtimeDayHours + overtimeNightHours;
     
@@ -540,40 +540,54 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       return `${formatHoursToTime(totalOvertimeHours)} (${overtimePercentages.restDay}%)`;
     }
     
-    const breakdown: string[] = [];
+    // Group hours by percentage
+    const hoursGroupedByPercentage = new Map<number, number>();
     let remainingHours = totalOvertimeHours;
     
     // First 2 hours at upTo2Hours percentage
     if (remainingHours > 0) {
       const hoursAt50 = Math.min(remainingHours, 2);
-      breakdown.push(`${formatHoursToTime(hoursAt50)} (${overtimePercentages.upTo2Hours}%)`);
+      const currentHours = hoursGroupedByPercentage.get(overtimePercentages.upTo2Hours) || 0;
+      hoursGroupedByPercentage.set(overtimePercentages.upTo2Hours, currentHours + hoursAt50);
       remainingHours -= hoursAt50;
     }
     
     // Next hour (2-3) at from2To3Hours percentage
     if (remainingHours > 0) {
       const hoursAt2To3 = Math.min(remainingHours, 1);
-      breakdown.push(`${formatHoursToTime(hoursAt2To3)} (${overtimePercentages.from2To3Hours}%)`);
+      const currentHours = hoursGroupedByPercentage.get(overtimePercentages.from2To3Hours) || 0;
+      hoursGroupedByPercentage.set(overtimePercentages.from2To3Hours, currentHours + hoursAt2To3);
       remainingHours -= hoursAt2To3;
     }
     
     // Next hour (3-4) at from3To4Hours percentage
     if (remainingHours > 0) {
       const hoursAt3To4 = Math.min(remainingHours, 1);
-      breakdown.push(`${formatHoursToTime(hoursAt3To4)} (${overtimePercentages.from3To4Hours}%)`);
+      const currentHours = hoursGroupedByPercentage.get(overtimePercentages.from3To4Hours) || 0;
+      hoursGroupedByPercentage.set(overtimePercentages.from3To4Hours, currentHours + hoursAt3To4);
       remainingHours -= hoursAt3To4;
     }
     
     // Next hour (4-5) at from4To5Hours percentage
     if (remainingHours > 0) {
       const hoursAt4To5 = Math.min(remainingHours, 1);
-      breakdown.push(`${formatHoursToTime(hoursAt4To5)} (${overtimePercentages.from4To5Hours}%)`);
+      const currentHours = hoursGroupedByPercentage.get(overtimePercentages.from4To5Hours) || 0;
+      hoursGroupedByPercentage.set(overtimePercentages.from4To5Hours, currentHours + hoursAt4To5);
       remainingHours -= hoursAt4To5;
     }
     
     // Remaining hours (5+) at over5Hours percentage
     if (remainingHours > 0) {
-      breakdown.push(`${formatHoursToTime(remainingHours)} (${overtimePercentages.over5Hours}%)`);
+      const currentHours = hoursGroupedByPercentage.get(overtimePercentages.over5Hours) || 0;
+      hoursGroupedByPercentage.set(overtimePercentages.over5Hours, currentHours + remainingHours);
+    }
+    
+    // Convert grouped hours to breakdown string
+    const breakdown: string[] = [];
+    for (const [percentage, hours] of hoursGroupedByPercentage.entries()) {
+      if (hours > 0) {
+        breakdown.push(`${formatHoursToTime(hours)} (${percentage}%)`);
+      }
     }
     
     return breakdown.join(' + ');
