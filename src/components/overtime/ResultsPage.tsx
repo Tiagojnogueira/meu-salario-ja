@@ -919,15 +919,20 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 </CardHeader>
                 <CardContent>
                    <div className="space-y-1">
-                     {configuredPercentages.map(percentage => {
-                       const hours = getHoursForPercentage(percentage, progressiveHours);
-                       return (
-                         <div key={percentage} className="flex justify-between text-sm">
-                           <span>{percentage}%:</span>
-                           <span className="font-mono">{formatHoursToTime(hours)}</span>
-                         </div>
-                       );
-                     })}
+                     {configuredPercentages
+                       .filter(percentage => {
+                         const hours = getHoursForPercentage(percentage, progressiveHours);
+                         return hours > 0;
+                       })
+                       .map(percentage => {
+                         const hours = getHoursForPercentage(percentage, progressiveHours);
+                         return (
+                           <div key={percentage} className="flex justify-between text-sm">
+                             <span>{percentage}%:</span>
+                             <span className="font-mono">{formatHoursToTime(hours)}</span>
+                           </div>
+                         );
+                       })}
                    </div>
                 </CardContent>
               </Card>
@@ -1002,15 +1007,20 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                         <div className="text-center p-3 bg-muted/50 rounded-lg">
                           <p className="text-sm text-muted-foreground">H.E. por %</p>
                           <div className="space-y-1">
-                            {configuredPercentages.map(percentage => {
-                              const hours = getHoursForPercentage(percentage, monthProgressiveHours);
-                              return (
-                                <div key={percentage} className="flex justify-between text-xs">
-                                  <span>{percentage}%:</span>
-                                  <span className="font-mono">{formatHoursToTime(hours)}</span>
-                                </div>
-                              );
-                            })}
+                            {configuredPercentages
+                              .filter(percentage => {
+                                const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                                return hours > 0;
+                              })
+                              .map(percentage => {
+                                const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                                return (
+                                  <div key={percentage} className="flex justify-between text-xs">
+                                    <span>{percentage}%:</span>
+                                    <span className="font-mono">{formatHoursToTime(hours)}</span>
+                                  </div>
+                                );
+                              })}
                           </div>
                         </div>
                     </div>
@@ -1312,16 +1322,21 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
                 {/* Progressive Hours as Cards */}
                 <div className="print-summary-grid" style={{ marginBottom: '15px' }}>
-                  {configuredPercentages.map(percentage => {
-                    const hours = getHoursForPercentage(percentage, monthProgressiveHours);
-                    const color = getColorForPercentage(percentage);
-                    return (
-                      <div key={percentage} className="print-summary-card">
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. {percentage}%</div>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color }}>{formatHoursToTime(hours)}</div>
-                      </div>
-                    );
-                  })}
+                  {configuredPercentages
+                    .filter(percentage => {
+                      const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                      return hours > 0;
+                    })
+                    .map(percentage => {
+                      const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                      const color = getColorForPercentage(percentage);
+                      return (
+                        <div key={percentage} className="print-summary-card">
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. {percentage}%</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color }}>{formatHoursToTime(hours)}</div>
+                        </div>
+                      );
+                    })}
                 </div>
 
                 {/* Detailed Table */}
