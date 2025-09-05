@@ -946,8 +946,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </Card>
           </div>
 
-          {/* Monthly Results */}
-          {Object.entries(resultsByMonth)
+          {/* Monthly Results - Only show when multiple months */}
+          {Object.keys(resultsByMonth).length > 1 && Object.entries(resultsByMonth)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([monthKey, monthResults]) => {
               const monthTotals = calculateMonthTotals(monthResults);
