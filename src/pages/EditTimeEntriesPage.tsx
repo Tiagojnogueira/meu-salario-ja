@@ -202,9 +202,22 @@ export const EditTimeEntriesPage = () => {
   };
 
   const updateDayEntry = (index: number, field: keyof DayEntry, value: string) => {
-    setDayEntries(prev => prev.map((entry, i) => 
-      i === index ? { ...entry, [field]: value } : entry
-    ));
+    setDayEntries(prev => prev.map((entry, i) => {
+      if (i === index) {
+        const updatedEntry = { ...entry, [field]: value };
+        
+        // Clear time fields when day type is changed to non-work types
+        if (field === 'type' && (value === 'rest' || value === 'absence' || value === 'justified-absence')) {
+          updatedEntry.entry = '';
+          updatedEntry.intervalStart = '';
+          updatedEntry.intervalEnd = '';
+          updatedEntry.exit = '';
+        }
+        
+        return updatedEntry;
+      }
+      return entry;
+    }));
   };
 
   const getTypeLabel = (type: DayEntry['type']) => {
@@ -365,7 +378,7 @@ export const EditTimeEntriesPage = () => {
                         type="time"
                         value={entry.entry}
                         onChange={(e) => updateDayEntry(index, 'entry', e.target.value)}
-                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        disabled={entry.type === 'rest' || entry.type === 'absence' || entry.type === 'justified-absence'}
                         className="h-8 text-sm"
                       />
                     </div>
@@ -375,7 +388,7 @@ export const EditTimeEntriesPage = () => {
                         type="time"
                         value={entry.intervalStart}
                         onChange={(e) => updateDayEntry(index, 'intervalStart', e.target.value)}
-                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        disabled={entry.type === 'rest' || entry.type === 'absence' || entry.type === 'justified-absence'}
                         className="h-8 text-sm"
                       />
                     </div>
@@ -385,7 +398,7 @@ export const EditTimeEntriesPage = () => {
                         type="time"
                         value={entry.intervalEnd}
                         onChange={(e) => updateDayEntry(index, 'intervalEnd', e.target.value)}
-                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        disabled={entry.type === 'rest' || entry.type === 'absence' || entry.type === 'justified-absence'}
                         className="h-8 text-sm"
                       />
                     </div>
@@ -395,7 +408,7 @@ export const EditTimeEntriesPage = () => {
                         type="time"
                         value={entry.exit}
                         onChange={(e) => updateDayEntry(index, 'exit', e.target.value)}
-                        disabled={entry.type === 'absence' || entry.type === 'justified-absence'}
+                        disabled={entry.type === 'rest' || entry.type === 'absence' || entry.type === 'justified-absence'}
                         className="h-8 text-sm"
                       />
                     </div>
