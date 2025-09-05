@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
-import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -32,6 +32,22 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   const handleDelete = async (id: string, description: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o cálculo "${description}"?`)) {
       await deleteCalculation(id);
+    }
+  };
+
+  const handlePrint = (calculationId: string) => {
+    // Open the results page in a new window for printing
+    const printUrl = `/horas-extras/resultados/${calculationId}`;
+    const printWindow = window.open(printUrl, '_blank');
+    
+    if (printWindow) {
+      // Wait for the page to load and then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 1000);
+      };
     }
   };
 
@@ -114,17 +130,17 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">ID</TableHead>
-                        <TableHead>Identificação (Nome)</TableHead>
-                        <TableHead>Período</TableHead>
-                        <TableHead>Data de Criação</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Opções</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <Table className="[&>tbody>tr:nth-child(odd)]:bg-muted/50">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">ID</TableHead>
+                          <TableHead>Identificação (Nome)</TableHead>
+                          <TableHead>Período</TableHead>
+                          <TableHead>Data de Criação</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Opções</TableHead>
+                        </TableRow>
+                      </TableHeader>
                     <TableBody>
                       {paginatedCalculations.map((calculation) => (
                         <TableRow key={calculation.id}>
@@ -154,39 +170,48 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                               {calculation.day_entries.length > 0 ? "Concluído" : "Em andamento"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
-                             <div className="flex justify-end space-x-2">
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => onViewCalculation(calculation.id)}
-                                 title="Visualizar"
-                               >
-                                 <Eye className="h-4 w-4" />
-                               </Button>
+                           <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
                                 <Button
-                                  variant="secondary"
+                                  variant="outline"
                                   size="sm"
-                                  onClick={() => {
-                                    console.log('Dashboard - Edit clicked. Real ID from database:', calculation.id);
-                                    console.log('Dashboard - Calculation data:', calculation);
-                                    onEditCalculation(calculation.id);
-                                  }}
-                                  title="Editar"
+                                  onClick={() => onViewCalculation(calculation.id)}
+                                  title="Visualizar"
                                 >
-                                 <Edit className="h-4 w-4" />
-                               </Button>
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => handleDelete(calculation.id, calculation.description)}
-                                 className="text-destructive hover:text-destructive"
-                                 title="Excluir"
-                               >
-                                 <Trash2 className="h-4 w-4" />
-                               </Button>
-                             </div>
-                          </TableCell>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePrint(calculation.id)}
+                                  title="Imprimir"
+                                  disabled={calculation.day_entries.length === 0}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                                 <Button
+                                   variant="secondary"
+                                   size="sm"
+                                   onClick={() => {
+                                     console.log('Dashboard - Edit clicked. Real ID from database:', calculation.id);
+                                     console.log('Dashboard - Calculation data:', calculation);
+                                     onEditCalculation(calculation.id);
+                                   }}
+                                   title="Editar"
+                                 >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(calculation.id, calculation.description)}
+                                  className="text-destructive hover:text-destructive"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

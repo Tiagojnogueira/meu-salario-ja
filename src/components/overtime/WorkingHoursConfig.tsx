@@ -127,7 +127,7 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
               </thead>
               <tbody>
                 {dayOrder.map((day, index) => (
-                  <tr key={day} className="hover:bg-muted/50">
+                  <tr key={day} className={`hover:bg-muted/50 ${index % 2 === 1 ? 'bg-muted/30' : ''}`}>
                     <td className="border border-border p-3 font-medium">
                       {dayLabels[day]}
                     </td>

@@ -712,7 +712,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               font-size: 9px;
               margin: 15px 0;
             }
-            
+
             .print-table th,
             .print-table td {
               border: 1px solid #ddd;
@@ -720,6 +720,10 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               text-align: left;
             }
             
+            .print-table tbody tr:nth-child(odd) {
+              background-color: #f9f9f9;
+            }
+
             .print-table th {
               background-color: #f5f5f5;
               font-weight: bold;
@@ -1026,10 +1030,10 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                         </div>
                     </div>
                     
-                    {/* Month Details Table */}
-                    <div className="overflow-x-auto">
-                      <Table>
-                         <TableHeader>
+                     {/* Month Details Table */}
+                     <div className="overflow-x-auto">
+                       <Table className="[&>tbody>tr:nth-child(odd)]:bg-muted/50">
+                          <TableHeader>
                            <TableRow>
                              <TableHead>Data</TableHead>
                              <TableHead>Dia</TableHead>
