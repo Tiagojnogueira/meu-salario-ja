@@ -10,6 +10,7 @@ import OvertimeCalculatorPage from "./pages/OvertimeCalculatorPage";
 import { EditCalculationPage } from "./pages/EditCalculationPage";
 import { EditTimeEntriesPage } from "./pages/EditTimeEntriesPage";
 import { EditResultsPage } from "./pages/EditResultsPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/horas-extras/editar/:id" element={<EditCalculationPage />} />
           <Route path="/horas-extras/editar-horarios/:id" element={<EditTimeEntriesPage />} />
           <Route path="/horas-extras/resultados/:id" element={<EditResultsPage />} />
+          <Route path="/horas-extras/perfil" element={<ProfilePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

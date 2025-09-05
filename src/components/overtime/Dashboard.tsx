@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
-import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardProps {
   onCreateNew: () => void;
@@ -16,6 +17,7 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
+  const navigate = useNavigate();
   const { profile, logout } = useSupabaseAuth();
   const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
   
@@ -66,10 +68,20 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 </p>
               </div>
             </div>
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/horas-extras/perfil')}
+                title="Minha Conta"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Minha Conta
+              </Button>
+              <Button variant="outline" onClick={logout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>

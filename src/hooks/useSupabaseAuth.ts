@@ -144,6 +144,26 @@ export const useSupabaseAuth = () => {
     }
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (error) {
+        console.error('Error refreshing profile:', error);
+      } else {
+        setProfile(profileData);
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    }
+  };
+
   return {
     user,
     session,
@@ -152,6 +172,7 @@ export const useSupabaseAuth = () => {
     register,
     login,
     logout,
-    forgotPassword
+    forgotPassword,
+    refreshProfile
   };
 };
