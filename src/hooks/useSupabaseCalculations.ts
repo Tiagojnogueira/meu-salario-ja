@@ -218,43 +218,6 @@ export const useSupabaseCalculations = (userId?: string) => {
     return calculations.find(calc => calc.id === id);
   };
 
-  const fetchSingleCalculation = async (id: string): Promise<Calculation | null> => {
-    if (!userId) return null;
-    
-    try {
-      const { data, error } = await supabase
-        .from('calculations')
-        .select('*')
-        .eq('id', id)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching single calculation:', error);
-        toast.error('Erro ao carregar cálculo');
-        return null;
-      }
-
-      if (!data) {
-        return null;
-      }
-
-      // Transform the data to match our interface
-      const transformedData: Calculation = {
-        ...data,
-        working_hours: data.working_hours as unknown as WorkingHours,
-        overtime_percentages: data.overtime_percentages as unknown as OvertimePercentages,
-        day_entries: (data.day_entries as unknown as DayEntry[]) || []
-      };
-
-      return transformedData;
-    } catch (error) {
-      console.error('Fetch single calculation error:', error);
-      toast.error('Erro ao carregar cálculo');
-      return null;
-    }
-  };
-
   const getDefaultWorkingHours = (): WorkingHours => ({
     monday: '08:00',
     tuesday: '08:00',
@@ -282,7 +245,6 @@ export const useSupabaseCalculations = (userId?: string) => {
     updateCalculation,
     deleteCalculation,
     getCalculation,
-    fetchSingleCalculation,
     getDefaultWorkingHours,
     getDefaultOvertimePercentages,
     refetch: fetchCalculations

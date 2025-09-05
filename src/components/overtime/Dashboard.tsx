@@ -36,10 +36,19 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   };
 
   const handlePrint = (calculationId: string) => {
-    // Navigate to the results page and trigger print there
-    // This ensures the user context and data are properly loaded
-    const currentUrl = window.location.href;
-    window.location.href = `/horas-extras/resultados/${calculationId}?print=true`;
+    // Open the results page in a new window for printing
+    const printUrl = `/horas-extras/resultados/${calculationId}`;
+    const printWindow = window.open(printUrl, '_blank');
+    
+    if (printWindow) {
+      // Wait for the page to load and then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 1000);
+      };
+    }
   };
 
   const formatDate = (dateString: string) => {
