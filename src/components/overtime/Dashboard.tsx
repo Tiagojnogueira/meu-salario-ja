@@ -6,6 +6,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -102,6 +103,9 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
+          {/* Impersonation Banner */}
+          <ImpersonationBanner />
+          
           {/* Create Button */}
           <div className="flex justify-between items-center">
             <div>

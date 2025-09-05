@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAdminData } from '@/hooks/useAdminData';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { 
   ArrowLeft, 
   Users, 
@@ -17,15 +18,16 @@ import {
   Trash2, 
   Shield, 
   ShieldCheck,
-  UserPlus
+  UserCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const AdminDashboardPage = () => {
   const navigate = useNavigate();
-  const { logout } = useSupabaseAuth();
+  const { profile: currentProfile, logout } = useSupabaseAuth();
   const { isAdmin, loading: adminLoading } = useAdminAuth();
   const { users, allCalculations, loading, deleteUser, updateUserRole } = useAdminData();
+  const { startImpersonation } = useImpersonation();
   const [selectedUserId, setSelectedUserId] = useState<string>('all');
 
   // Redirect if not admin
@@ -54,6 +56,17 @@ export const AdminDashboardPage = () => {
         toast.error('Erro ao excluir usuário');
       }
     }
+  };
+
+  const handleImpersonateUser = (user: any) => {
+    if (!currentProfile) {
+      toast.error('Erro: perfil administrativo não encontrado');
+      return;
+    }
+    
+    startImpersonation(user, currentProfile);
+    toast.success(`Agora visualizando como ${user.name}`);
+    navigate('/horas-extras');
   };
 
   const handleToggleRole = async (userId: string, currentIsAdmin: boolean, userName: string) => {
@@ -227,6 +240,14 @@ export const AdminDashboardPage = () => {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => handleImpersonateUser(user)}
+                                    title="Visualizar como cliente"
+                                  >
+                                    <UserCheck className="h-4 w-4" />
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"

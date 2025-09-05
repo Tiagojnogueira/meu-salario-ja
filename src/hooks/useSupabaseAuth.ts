@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { toast } from 'sonner';
 
 export interface Profile {
@@ -16,10 +17,14 @@ export interface Profile {
 }
 
 export const useSupabaseAuth = () => {
+  const { impersonatedUser, isImpersonating } = useImpersonation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Return impersonated user data when impersonating
+  const effectiveProfile = isImpersonating ? impersonatedUser : profile;
 
   useEffect(() => {
     // Set up auth state listener
@@ -169,7 +174,7 @@ export const useSupabaseAuth = () => {
   return {
     user,
     session,
-    profile,
+    profile: effectiveProfile,
     loading,
     register,
     login,
