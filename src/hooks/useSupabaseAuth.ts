@@ -9,6 +9,8 @@ export interface Profile {
   name: string;
   email: string;
   username: string;
+  phone?: string;
+  office_name?: string;
   created_at: string;
   updated_at: string;
 }

@@ -77,6 +77,8 @@ export type Database = {
           email: string
           id: string
           name: string
+          office_name: string | null
+          phone: string | null
           updated_at: string
           user_id: string
           username: string
@@ -86,6 +88,8 @@ export type Database = {
           email: string
           id?: string
           name: string
+          office_name?: string | null
+          phone?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -95,6 +99,8 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          office_name?: string | null
+          phone?: string | null
           updated_at?: string
           user_id?: string
           username?: string

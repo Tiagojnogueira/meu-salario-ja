@@ -17,6 +17,8 @@ export const ProfilePage = () => {
   const [formData, setFormData] = useState({
     name: '',
     username: '',
+    phone: '',
+    office_name: '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -33,6 +35,8 @@ export const ProfilePage = () => {
       setFormData({
         name: profile.name || '',
         username: profile.username || '',
+        phone: profile.phone || '',
+        office_name: profile.office_name || '',
       });
     }
   }, [profile]);
@@ -47,6 +51,8 @@ export const ProfilePage = () => {
         .update({
           name: formData.name,
           username: formData.username,
+          phone: formData.phone,
+          office_name: formData.office_name,
         })
         .eq('user_id', profile.user_id);
 
@@ -67,6 +73,8 @@ export const ProfilePage = () => {
     setFormData({
       name: profile?.name || '',
       username: profile?.username || '',
+      phone: profile?.phone || '',
+      office_name: profile?.office_name || '',
     });
     setIsEditing(false);
   };
@@ -200,6 +208,32 @@ export const ProfilePage = () => {
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     disabled={!isEditing}
                     className={!isEditing ? "bg-muted" : ""}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone de Contato</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    disabled={!isEditing}
+                    className={!isEditing ? "bg-muted" : ""}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="office_name">Nome do Escritório</Label>
+                  <Input
+                    id="office_name"
+                    type="text"
+                    value={formData.office_name}
+                    onChange={(e) => setFormData({ ...formData, office_name: e.target.value })}
+                    disabled={!isEditing}
+                    className={!isEditing ? "bg-muted" : ""}
+                    placeholder="Nome do seu escritório ou empresa"
                   />
                 </div>
               </div>
