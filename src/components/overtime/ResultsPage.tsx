@@ -842,7 +842,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           )}
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Total Trabalhado</CardTitle>
@@ -865,13 +865,22 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 <div className="text-3xl font-bold text-green-600">
                   {formatHoursToTime(totals.regularHours)}
                 </div>
-                {totals.nightHours > 0 && (
-                  <div className="text-sm text-blue-600 font-semibold mt-1">
-                    H. Noturnas: {formatHoursToTime(totals.nightHours)}
-                  </div>
-                )}
                 <p className="text-sm text-muted-foreground">
                   Dentro da jornada contratual
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">H. Noturnas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-600">
+                  {formatHoursToTime(totals.nightHours)}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Horário noturno trabalhado
                 </p>
               </CardContent>
             </Card>
@@ -964,8 +973,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {/* Month Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+                     {/* Month Summary Cards */}
+                     <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mb-6">
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">Total Trabalhado</p>
                         <p className="text-xl font-bold text-primary">
@@ -977,11 +986,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                          <p className="text-xl font-bold text-green-600">
                            {formatHoursToTime(monthTotals.regularHours)}
                          </p>
-                         {monthTotals.nightHours > 0 && (
-                           <p className="text-xs text-blue-600 font-semibold">
-                             H. Noturnas: {formatHoursToTime(monthTotals.nightHours)}
-                           </p>
-                         )}
+                       </div>
+                       <div className="text-center p-3 bg-muted/50 rounded-lg">
+                         <p className="text-sm text-muted-foreground">H. Noturnas</p>
+                         <p className="text-xl font-bold text-blue-600">
+                           {formatHoursToTime(monthTotals.nightHours)}
+                         </p>
                        </div>
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
@@ -1134,8 +1144,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Overall Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
+               {/* Overall Summary Cards */}
+               <div className="grid grid-cols-1 md:grid-cols-8 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total Trabalhado</p>
                   <p className="text-2xl font-bold text-primary">
@@ -1147,11 +1157,12 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                    <p className="text-2xl font-bold text-green-600">
                      {formatHoursToTime(totals.regularHours)}
                    </p>
-                   {totals.nightHours > 0 && (
-                     <p className="text-xs text-blue-600 font-semibold">
-                       H. Noturnas: {formatHoursToTime(totals.nightHours)}
-                     </p>
-                   )}
+                 </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">H. Noturnas</p>
+                   <p className="text-2xl font-bold text-blue-600">
+                     {formatHoursToTime(totals.nightHours)}
+                   </p>
                  </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Horas Extras</p>
