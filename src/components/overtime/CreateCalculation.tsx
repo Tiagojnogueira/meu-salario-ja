@@ -125,7 +125,8 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
       setShowWorkingHoursConfig(true);
     } else {
       setAutoFillEnabled(false);
-      setDetailedWorkingHours(null);
+      // Permite desmarcar mesmo com configuração salva
+      // Mas mantém os dados configurados caso o usuário queira marcar novamente
     }
   };
 

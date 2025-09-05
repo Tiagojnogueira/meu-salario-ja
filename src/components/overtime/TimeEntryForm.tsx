@@ -53,9 +53,15 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
 
       // Default type based on day of week (Sunday = 0)
       const dayOfWeek = date.getDay();
-      const defaultType = dayOfWeek === 0 ? 'rest' : 'workday';
+      const defaultType: DayEntry['type'] = dayOfWeek === 0 ? 'rest' : 'workday';
 
-      return {
+      // Função para mapear dia da semana para chave
+      const getDayOfWeekKey = (date: Date) => {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return days[date.getDay()];
+      };
+
+      let entry = {
         date: dateString,
         entry: '',
         intervalStart: '',
@@ -63,6 +69,34 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryF
         exit: '',
         type: defaultType
       };
+
+      // Aplicar horários detalhados se auto_fill estiver habilitado
+      if (calculation.auto_fill_enabled && calculation.detailed_working_hours) {
+        const dayKey = getDayOfWeekKey(date);
+        const detailedHours = calculation.detailed_working_hours;
+        
+        if (defaultType === 'workday' && detailedHours[dayKey]) {
+          const dayHours = detailedHours[dayKey];
+          entry = {
+            ...entry,
+            entry: dayHours.entry || '',
+            intervalStart: dayHours.intervalStart || '',
+            intervalEnd: dayHours.intervalEnd || '',
+            exit: dayHours.exit || ''
+          };
+        } else if (defaultType === 'rest' && detailedHours.restDays) {
+          const restHours = detailedHours.restDays;
+          entry = {
+            ...entry,
+            entry: restHours.entry || '',
+            intervalStart: restHours.intervalStart || '',
+            intervalEnd: restHours.intervalEnd || '',
+            exit: restHours.exit || ''
+          };
+        }
+      }
+
+      return entry;
     });
 
     setDayEntries(entries);

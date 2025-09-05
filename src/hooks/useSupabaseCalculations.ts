@@ -19,6 +19,9 @@ export interface Calculation {
   night_shift_end?: string;
   extend_night_hours?: boolean;
   apply_night_reduction?: boolean;
+  // Campos de configuração detalhada
+  auto_fill_enabled?: boolean;
+  detailed_working_hours?: any;
 }
 
 export const useSupabaseCalculations = (userId?: string) => {
