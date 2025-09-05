@@ -610,8 +610,103 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Print Styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            @page {
+              size: A4;
+              margin: 1.5cm;
+            }
+            
+            .print-page-break {
+              page-break-before: always;
+            }
+            
+            .print-header {
+              display: block !important;
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 2px solid #000;
+              padding-bottom: 10px;
+            }
+            
+            .print-month-header {
+              font-size: 18px;
+              font-weight: bold;
+              text-align: center;
+              margin: 20px 0;
+              color: #333;
+            }
+            
+            .print-summary-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 15px;
+              margin: 20px 0;
+            }
+            
+            .print-summary-card {
+              border: 1px solid #ddd;
+              padding: 10px;
+              text-align: center;
+              border-radius: 4px;
+            }
+            
+            .print-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 9px;
+              margin: 15px 0;
+            }
+            
+            .print-table th,
+            .print-table td {
+              border: 1px solid #ddd;
+              padding: 4px;
+              text-align: left;
+            }
+            
+            .print-table th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+              font-size: 8px;
+            }
+            
+            .print-config {
+              margin-top: 20px;
+              font-size: 10px;
+              border: 1px solid #ddd;
+              padding: 10px;
+            }
+            
+            .print-config-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+            }
+            
+            .screen-only {
+              display: none !important;
+            }
+            
+            .print-only {
+              display: block !important;
+            }
+          }
+          
+          .screen-only {
+            display: block;
+          }
+          
+          .print-only {
+            display: none;
+          }
+        `
+      }} />
+
       {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm print:hidden">
+      <header className="border-b bg-background/80 backdrop-blur-sm screen-only">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -643,7 +738,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 screen-only">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Print Header */}
           <div className="hidden print:block mb-8">
@@ -1083,6 +1178,148 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           </Card>
         </div>
       </main>
+
+      {/* Professional Print Layout */}
+      <div className="print-only">
+        {Object.entries(resultsByMonth)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([monthKey, monthResults], index) => {
+            const monthTotals = calculateMonthTotals(monthResults);
+            const monthProgressiveHours = calculateProgressiveOvertimeHours(monthResults, calculation.overtime_percentages);
+            const monthName = format(parseISO(monthKey + '-01T00:00:00'), 'MMMM/yyyy', { locale: ptBR });
+            const monthNameCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+            
+            return (
+              <div key={monthKey} className={index > 0 ? "print-page-break" : ""}>
+                {/* Professional Header */}
+                <div className="print-header">
+                  <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 10px 0' }}>
+                    RELATÓRIO DE HORAS EXTRAS
+                  </h1>
+                  <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                    <strong>Funcionário:</strong> {getEmployeeName(calculation.description)}<br/>
+                    <strong>Período:</strong> {format(parseISO(calculation.start_date + 'T00:00:00'), "dd/MM/yyyy")} - {format(parseISO(calculation.end_date + 'T00:00:00'), "dd/MM/yyyy")}<br/>
+                    <strong>Mês de Referência:</strong> {monthNameCapitalized}
+                  </div>
+                </div>
+
+                {/* Month Summary */}
+                <div className="print-summary-grid">
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Total Trabalhado</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{formatHoursToTime(monthTotals.workedHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Normais</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#16a34a' }}>{formatHoursToTime(monthTotals.regularHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Extras</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ea580c' }}>{formatHoursToTime(monthTotals.overtimeDayHours + monthTotals.overtimeNightHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. Diurnas</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ea580c' }}>{formatHoursToTime(monthTotals.overtimeDayHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. Noturnas</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#9333ea' }}>{formatHoursToTime(monthTotals.overtimeNightHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Noturnas</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }}>{formatHoursToTime(monthTotals.nightHours)}</div>
+                  </div>
+                </div>
+
+                {/* Progressive Hours */}
+                <div style={{ margin: '15px 0', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Horas Extras por Percentual:</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '10px' }}>
+                    <span><strong>50%:</strong> {formatHoursToTime(monthProgressiveHours.he50)}</span>
+                    <span><strong>70%:</strong> {formatHoursToTime(monthProgressiveHours.he70)}</span>
+                    <span><strong>100%:</strong> {formatHoursToTime(monthProgressiveHours.he100)}</span>
+                  </div>
+                </div>
+
+                {/* Detailed Table */}
+                <table className="print-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Dia</th>
+                      <th>Tipo</th>
+                      <th>Entrada</th>
+                      <th>Iní. Int.</th>
+                      <th>Fim Int.</th>
+                      <th>Saída</th>
+                      <th>H. Trab.</th>
+                      <th>H. Contr.</th>
+                      <th>H. Norm.</th>
+                      <th>H. Ext.</th>
+                      <th>H.E. Diur.</th>
+                      <th>H.E. Not.</th>
+                      <th>H. Not.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthResults.map((result) => (
+                      <tr key={result.date}>
+                        <td>{format(parseISO(result.date + 'T00:00:00'), "dd/MM")}</td>
+                        <td style={{ textTransform: 'capitalize' }}>{result.weekday.substring(0, 3)}</td>
+                        <td>{result.type === 'Dia de Trabalho' ? 'Trabalho' : 
+                             result.type === 'Dia de Descanso' ? 'Descanso' :
+                             result.type === 'Falta' ? 'Falta' : 'F. Just.'}</td>
+                        <td>{result.entry}</td>
+                        <td>{result.intervalStart}</td>
+                        <td>{result.intervalEnd}</td>
+                        <td>{result.exit}</td>
+                        <td>{formatHoursToTime(result.workedHours)}</td>
+                        <td>{formatHoursToTime(result.contractualHours)}</td>
+                        <td>{formatHoursToTime(result.regularHours)}</td>
+                        <td style={{ fontWeight: 'bold' }}>{formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}</td>
+                        <td style={{ color: '#ea580c' }}>{formatHoursToTime(result.overtimeDayHours)}</td>
+                        <td style={{ color: '#9333ea' }}>{formatHoursToTime(result.overtimeNightHours)}</td>
+                        <td style={{ color: '#2563eb' }}>{formatHoursToTime(result.nightHours)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Configuration */}
+                <div className="print-config">
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>CONFIGURAÇÕES UTILIZADAS</div>
+                  <div className="print-config-grid">
+                    <div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Horas Contratuais:</div>
+                      <div style={{ fontSize: '9px', lineHeight: '1.3' }}>
+                        Segunda/Quarta/Sexta: {calculation.working_hours.monday}h<br/>
+                        Terça/Quinta: {calculation.working_hours.tuesday}h<br/>
+                        Sábado: {calculation.working_hours.saturday}h<br/>
+                        Domingo: {calculation.working_hours.sunday}h
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Percentuais H.E.:</div>
+                      <div style={{ fontSize: '9px', lineHeight: '1.3' }}>
+                        Até 2h: {calculation.overtime_percentages.upTo2Hours}% | 
+                        2-3h: {calculation.overtime_percentages.from2To3Hours}%<br/>
+                        3-4h: {calculation.overtime_percentages.from3To4Hours}% | 
+                        4-5h: {calculation.overtime_percentages.from4To5Hours}%<br/>
+                        +5h: {calculation.overtime_percentages.over5Hours}% | 
+                        Folga: {calculation.overtime_percentages.restDay}%
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '10px', fontSize: '9px' }}>
+                    <strong>Horário Noturno:</strong> {((calculation as any).night_shift_start?.replace(':00', '') || '22:00')} às {((calculation as any).night_shift_end?.replace(':00', '') || '05:00')} | 
+                    <strong>Súmula 60:</strong> {((calculation as any).extend_night_hours ?? true) ? 'Sim' : 'Não'} | 
+                    <strong>Redução:</strong> {((calculation as any).apply_night_reduction ?? true) ? 'Sim' : 'Não'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+      </div>
     </div>
   );
 };
