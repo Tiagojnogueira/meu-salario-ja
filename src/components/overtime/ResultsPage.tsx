@@ -642,8 +642,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
             .print-summary-grid {
               display: grid;
               grid-template-columns: repeat(3, 1fr);
-              gap: 15px;
-              margin: 20px 0;
+              gap: 10px;
+              margin: 15px 0;
             }
             
             .print-summary-card {
@@ -1203,6 +1203,35 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                   </div>
                 </div>
 
+                {/* Absence Information - if present */}
+                {monthResults.some(r => r.type === 'Falta' || r.type === 'Falta Justificada') && (
+                  <div style={{ 
+                    backgroundColor: '#fef3c7', 
+                    border: '1px solid #f59e0b', 
+                    borderRadius: '4px', 
+                    padding: '10px', 
+                    marginBottom: '15px' 
+                  }}>
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#92400e' }}>
+                      Informações de Faltas
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                      <div>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>
+                          {monthResults.filter(r => r.type === 'Falta').length}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#666' }}>Faltas Injustificadas</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ea580c' }}>
+                          {monthResults.filter(r => r.type === 'Falta Justificada').length}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#666' }}>Faltas Justificadas</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Month Summary */}
                 <div className="print-summary-grid">
                   <div className="print-summary-card">
@@ -1214,10 +1243,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#16a34a' }}>{formatHoursToTime(monthTotals.regularHours)}</div>
                   </div>
                   <div className="print-summary-card">
-                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Extras</div>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ea580c' }}>{formatHoursToTime(monthTotals.overtimeDayHours + monthTotals.overtimeNightHours)}</div>
-                  </div>
-                  <div className="print-summary-card">
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. Diurnas</div>
                     <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ea580c' }}>{formatHoursToTime(monthTotals.overtimeDayHours)}</div>
                   </div>
@@ -1226,18 +1251,28 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#9333ea' }}>{formatHoursToTime(monthTotals.overtimeNightHours)}</div>
                   </div>
                   <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Extras</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ea580c' }}>{formatHoursToTime(monthTotals.overtimeDayHours + monthTotals.overtimeNightHours)}</div>
+                  </div>
+                  <div className="print-summary-card">
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Horas Noturnas</div>
                     <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }}>{formatHoursToTime(monthTotals.nightHours)}</div>
                   </div>
                 </div>
 
-                {/* Progressive Hours */}
-                <div style={{ margin: '15px 0', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Horas Extras por Percentual:</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '10px' }}>
-                    <span><strong>50%:</strong> {formatHoursToTime(monthProgressiveHours.he50)}</span>
-                    <span><strong>70%:</strong> {formatHoursToTime(monthProgressiveHours.he70)}</span>
-                    <span><strong>100%:</strong> {formatHoursToTime(monthProgressiveHours.he100)}</span>
+                {/* Progressive Hours as Cards */}
+                <div className="print-summary-grid" style={{ marginBottom: '15px' }}>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 50%</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#059669' }}>{formatHoursToTime(monthProgressiveHours.he50)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 70%</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#d97706' }}>{formatHoursToTime(monthProgressiveHours.he70)}</div>
+                  </div>
+                  <div className="print-summary-card">
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 100%</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#dc2626' }}>{formatHoursToTime(monthProgressiveHours.he100)}</div>
                   </div>
                 </div>
 
