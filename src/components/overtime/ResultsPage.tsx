@@ -865,6 +865,11 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                 <div className="text-3xl font-bold text-green-600">
                   {formatHoursToTime(totals.regularHours)}
                 </div>
+                {totals.nightHours > 0 && (
+                  <div className="text-sm text-blue-600 font-semibold mt-1">
+                    H. Noturnas: {formatHoursToTime(totals.nightHours)}
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Dentro da jornada contratual
                 </p>
@@ -936,19 +941,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                    </div>
                 </CardContent>
               </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Horas Noturnas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-600">
-                  {formatHoursToTime(totals.nightHours)}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Horário noturno trabalhado
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Monthly Results */}
@@ -980,12 +972,17 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                           {formatHoursToTime(monthTotals.workedHours)}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Horas Normais</p>
-                        <p className="text-xl font-bold text-green-600">
-                          {formatHoursToTime(monthTotals.regularHours)}
-                        </p>
-                      </div>
+                       <div className="text-center p-3 bg-muted/50 rounded-lg">
+                         <p className="text-sm text-muted-foreground">Horas Normais</p>
+                         <p className="text-xl font-bold text-green-600">
+                           {formatHoursToTime(monthTotals.regularHours)}
+                         </p>
+                         {monthTotals.nightHours > 0 && (
+                           <p className="text-xs text-blue-600 font-semibold">
+                             H. Noturnas: {formatHoursToTime(monthTotals.nightHours)}
+                           </p>
+                         )}
+                       </div>
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
                         <p className="text-xl font-bold text-orange-600">
@@ -1028,25 +1025,25 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     {/* Month Details Table */}
                     <div className="overflow-x-auto">
                       <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Dia</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Entrada</TableHead>
-                            <TableHead>Início Int.</TableHead>
-                            <TableHead>Fim Int.</TableHead>
-                            <TableHead>Saída</TableHead>
-                            <TableHead className="text-right">H. Trab.</TableHead>
-                            <TableHead className="text-right">H. Contr.</TableHead>
-                            <TableHead className="text-right">H. Normais</TableHead>
-                            <TableHead className="text-right">H. Extras</TableHead>
-                            <TableHead className="text-right">H.E. Diurnas</TableHead>
-                            <TableHead className="text-right">H.E. Noturnas</TableHead>
-                            <TableHead className="text-right">H. Noturnas</TableHead>
-                            <TableHead>Discriminação H.E.</TableHead>
-                          </TableRow>
-                        </TableHeader>
+                         <TableHeader>
+                           <TableRow>
+                             <TableHead>Data</TableHead>
+                             <TableHead>Dia</TableHead>
+                             <TableHead>Tipo</TableHead>
+                             <TableHead>Entrada</TableHead>
+                             <TableHead>Início Int.</TableHead>
+                             <TableHead>Fim Int.</TableHead>
+                             <TableHead>Saída</TableHead>
+                             <TableHead className="text-right">H. Trab.</TableHead>
+                             <TableHead className="text-right">H. Contr.</TableHead>
+                             <TableHead className="text-right">H. Normais</TableHead>
+                             <TableHead className="text-right">H. Noturnas</TableHead>
+                             <TableHead className="text-right">H. Extras</TableHead>
+                             <TableHead className="text-right">H.E. Diurnas</TableHead>
+                             <TableHead className="text-right">H.E. Noturnas</TableHead>
+                             <TableHead>Discriminação H.E.</TableHead>
+                           </TableRow>
+                         </TableHeader>
                         <TableBody>
                           {monthResults.map((result) => (
                             <TableRow key={result.date}>
@@ -1072,6 +1069,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                                <TableCell className="text-right font-mono">
                                  {formatHoursToTime(result.regularHours)}
                                </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {result.nightHours > 0 ? (
+                                   <span className="text-blue-600 font-semibold">
+                                     {formatHoursToTime(result.nightHours)}
+                                   </span>
+                                 ) : (
+                                   '00:00'
+                                 )}
+                               </TableCell>
                                 <TableCell className="text-right font-mono">
                                   {(result.overtimeDayHours + result.overtimeNightHours) > 0 ? (
                                     <span className="text-orange-600 font-semibold">
@@ -1094,15 +1100,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                                  {result.overtimeNightHours > 0 ? (
                                    <span className="text-purple-600 font-semibold">
                                      {formatHoursToTime(result.overtimeNightHours)}
-                                   </span>
-                                 ) : (
-                                   '00:00'
-                                 )}
-                               </TableCell>
-                               <TableCell className="text-right font-mono">
-                                 {result.nightHours > 0 ? (
-                                   <span className="text-blue-600 font-semibold">
-                                     {formatHoursToTime(result.nightHours)}
                                    </span>
                                  ) : (
                                    '00:00'
@@ -1145,12 +1142,17 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     {formatHoursToTime(totals.workedHours)}
                   </p>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Horas Normais</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatHoursToTime(totals.regularHours)}
-                  </p>
-                </div>
+                 <div className="text-center">
+                   <p className="text-sm text-muted-foreground">Horas Normais</p>
+                   <p className="text-2xl font-bold text-green-600">
+                     {formatHoursToTime(totals.regularHours)}
+                   </p>
+                   {totals.nightHours > 0 && (
+                     <p className="text-xs text-blue-600 font-semibold">
+                       H. Noturnas: {formatHoursToTime(totals.nightHours)}
+                     </p>
+                   )}
+                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Horas Extras</p>
                   <p className="text-2xl font-bold text-orange-600">
@@ -1167,12 +1169,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                   <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
                   <p className="text-2xl font-bold text-purple-600">
                     {formatHoursToTime(totals.overtimeNightHours)}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Horas Noturnas</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatHoursToTime(totals.nightHours)}
                   </p>
                 </div>
                  <div className="text-center">
@@ -1341,24 +1337,24 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
                 {/* Detailed Table */}
                 <table className="print-table">
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Dia</th>
-                      <th>Tipo</th>
-                      <th>Entrada</th>
-                      <th>Iní. Int.</th>
-                      <th>Fim Int.</th>
-                      <th>Saída</th>
-                      <th>H. Trab.</th>
-                      <th>H. Contr.</th>
-                      <th>H. Norm.</th>
-                      <th>H. Ext.</th>
-                      <th>H.E. Diur.</th>
-                      <th>H.E. Not.</th>
-                      <th>H. Not.</th>
-                    </tr>
-                  </thead>
+                   <thead>
+                     <tr>
+                       <th>Data</th>
+                       <th>Dia</th>
+                       <th>Tipo</th>
+                       <th>Entrada</th>
+                       <th>Iní. Int.</th>
+                       <th>Fim Int.</th>
+                       <th>Saída</th>
+                       <th>H. Trab.</th>
+                       <th>H. Contr.</th>
+                       <th>H. Norm.</th>
+                       <th>H. Not.</th>
+                       <th>H. Ext.</th>
+                       <th>H.E. Diur.</th>
+                       <th>H.E. Not.</th>
+                     </tr>
+                   </thead>
                   <tbody>
                     {monthResults.map((result) => (
                       <tr key={result.date}>
@@ -1371,13 +1367,13 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                         <td>{result.intervalStart}</td>
                         <td>{result.intervalEnd}</td>
                         <td>{result.exit}</td>
-                        <td>{formatHoursToTime(result.workedHours)}</td>
-                        <td>{formatHoursToTime(result.contractualHours)}</td>
-                        <td>{formatHoursToTime(result.regularHours)}</td>
-                        <td style={{ fontWeight: 'bold' }}>{formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}</td>
-                        <td style={{ color: '#ea580c' }}>{formatHoursToTime(result.overtimeDayHours)}</td>
-                        <td style={{ color: '#9333ea' }}>{formatHoursToTime(result.overtimeNightHours)}</td>
-                        <td style={{ color: '#2563eb' }}>{formatHoursToTime(result.nightHours)}</td>
+                         <td>{formatHoursToTime(result.workedHours)}</td>
+                         <td>{formatHoursToTime(result.contractualHours)}</td>
+                         <td>{formatHoursToTime(result.regularHours)}</td>
+                         <td style={{ color: '#2563eb' }}>{formatHoursToTime(result.nightHours)}</td>
+                         <td style={{ fontWeight: 'bold' }}>{formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}</td>
+                         <td style={{ color: '#ea580c' }}>{formatHoursToTime(result.overtimeDayHours)}</td>
+                         <td style={{ color: '#9333ea' }}>{formatHoursToTime(result.overtimeNightHours)}</td>
                       </tr>
                     ))}
                   </tbody>
