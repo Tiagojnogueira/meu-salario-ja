@@ -19,6 +19,14 @@ export const ProfilePage = () => {
     username: '',
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   // Update form data when profile loads
   useEffect(() => {
     if (profile) {
@@ -61,6 +69,44 @@ export const ProfilePage = () => {
       username: profile?.username || '',
     });
     setIsEditing(false);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error('Por favor, preencha todos os campos de senha');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('A nova senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Senha alterada com sucesso!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast.error('Erro ao alterar senha: ' + (error.message || 'Erro desconhecido'));
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   if (!profile) {
@@ -174,6 +220,57 @@ export const ProfilePage = () => {
                     </Button>
                   </>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Password Change */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Alterar Senha</CardTitle>
+              <CardDescription>
+                Mantenha sua conta segura alterando sua senha regularmente
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nova Senha</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    placeholder="Digite sua nova senha"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    placeholder="Confirme sua nova senha"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handlePasswordChange} 
+                  disabled={passwordLoading || !passwordData.newPassword || !passwordData.confirmPassword}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {passwordLoading ? 'Alterando...' : 'Alterar Senha'}
+                </Button>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                <p>• A senha deve ter pelo menos 6 caracteres</p>
+                <p>• Use uma combinação de letras, números e símbolos</p>
+                <p>• Não compartilhe sua senha com outras pessoas</p>
               </div>
             </CardContent>
           </Card>
