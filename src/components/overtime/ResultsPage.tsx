@@ -1218,6 +1218,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                       sunday: 'dom'
                     };
                     
+                    const weekdayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                    
                     Object.entries(calculation.working_hours).forEach(([day, hours]) => {
                       if (day !== 'rest') {
                         const hoursStr = `${hours}h`;
@@ -1229,7 +1231,23 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                       }
                     });
                     
-                    return Array.from(groupedHours.entries()).map(([hours, days]) => (
+                    // Sort days within each group by weekday order
+                    groupedHours.forEach((days, hours) => {
+                      days.sort((a, b) => {
+                        const dayAIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === a);
+                        const dayBIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === b);
+                        return dayAIndex - dayBIndex;
+                      });
+                    });
+                    
+                    // Sort groups by the first day's position in the week
+                    const sortedEntries = Array.from(groupedHours.entries()).sort(([, daysA], [, daysB]) => {
+                      const firstDayAIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === daysA[0]);
+                      const firstDayBIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === daysB[0]);
+                      return firstDayAIndex - firstDayBIndex;
+                    });
+                    
+                    return sortedEntries.map(([hours, days]) => (
                       <dd key={hours}>{hours} ({days.join('-')})</dd>
                     ));
                   })()}
@@ -1426,6 +1444,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                             sunday: 'Domingo'
                           };
                           
+                          const weekdayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                          
                           Object.entries(calculation.working_hours).forEach(([day, hours]) => {
                             if (day !== 'rest') {
                               const hoursStr = `${hours}h`;
@@ -1437,10 +1457,26 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                             }
                           });
                           
-                          return Array.from(groupedHours.entries()).map(([hours, days], index) => (
+                          // Sort days within each group by weekday order
+                          groupedHours.forEach((days, hours) => {
+                            days.sort((a, b) => {
+                              const dayAIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === a);
+                              const dayBIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === b);
+                              return dayAIndex - dayBIndex;
+                            });
+                          });
+                          
+                          // Sort groups by the first day's position in the week
+                          const sortedEntries = Array.from(groupedHours.entries()).sort(([, daysA], [, daysB]) => {
+                            const firstDayAIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === daysA[0]);
+                            const firstDayBIndex = weekdayOrder.findIndex(day => dayNames[day as keyof typeof dayNames] === daysB[0]);
+                            return firstDayAIndex - firstDayBIndex;
+                          });
+                          
+                          return sortedEntries.map(([hours, days], index) => (
                             <span key={hours}>
                               {days.join('/')}: {hours}
-                              {index < groupedHours.size - 1 && <br/>}
+                              {index < sortedEntries.length - 1 && <br/>}
                             </span>
                           ));
                         })()}
