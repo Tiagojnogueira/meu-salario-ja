@@ -1206,10 +1206,33 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <dt className="font-medium">Horas Contratuais</dt>
-                  <dd>{calculation.working_hours.monday}h (seg-qua-sex)</dd>
-                  <dd>{calculation.working_hours.tuesday}h (ter-qui)</dd>
-                  <dd>{calculation.working_hours.saturday}h (sáb)</dd>
-                  <dd>{calculation.working_hours.sunday}h (dom)</dd>
+                  {(() => {
+                    const groupedHours = new Map<string, string[]>();
+                    const dayNames = {
+                      monday: 'seg',
+                      tuesday: 'ter',
+                      wednesday: 'qua',
+                      thursday: 'qui',
+                      friday: 'sex',
+                      saturday: 'sáb',
+                      sunday: 'dom'
+                    };
+                    
+                    Object.entries(calculation.working_hours).forEach(([day, hours]) => {
+                      if (day !== 'rest') {
+                        const hoursStr = `${hours}h`;
+                        const dayName = dayNames[day as keyof typeof dayNames];
+                        if (!groupedHours.has(hoursStr)) {
+                          groupedHours.set(hoursStr, []);
+                        }
+                        groupedHours.get(hoursStr)!.push(dayName);
+                      }
+                    });
+                    
+                    return Array.from(groupedHours.entries()).map(([hours, days]) => (
+                      <dd key={hours}>{hours} ({days.join('-')})</dd>
+                    ));
+                  })()}
                 </div>
                 
                 <div className="space-y-1">
@@ -1391,10 +1414,36 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                     <div>
                       <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Horas Contratuais:</div>
                       <div style={{ fontSize: '9px', lineHeight: '1.3' }}>
-                        Segunda/Quarta/Sexta: {calculation.working_hours.monday}h<br/>
-                        Terça/Quinta: {calculation.working_hours.tuesday}h<br/>
-                        Sábado: {calculation.working_hours.saturday}h<br/>
-                        Domingo: {calculation.working_hours.sunday}h
+                        {(() => {
+                          const groupedHours = new Map<string, string[]>();
+                          const dayNames = {
+                            monday: 'Segunda',
+                            tuesday: 'Terça',
+                            wednesday: 'Quarta',
+                            thursday: 'Quinta',
+                            friday: 'Sexta',
+                            saturday: 'Sábado',
+                            sunday: 'Domingo'
+                          };
+                          
+                          Object.entries(calculation.working_hours).forEach(([day, hours]) => {
+                            if (day !== 'rest') {
+                              const hoursStr = `${hours}h`;
+                              const dayName = dayNames[day as keyof typeof dayNames];
+                              if (!groupedHours.has(hoursStr)) {
+                                groupedHours.set(hoursStr, []);
+                              }
+                              groupedHours.get(hoursStr)!.push(dayName);
+                            }
+                          });
+                          
+                          return Array.from(groupedHours.entries()).map(([hours, days], index) => (
+                            <span key={hours}>
+                              {days.join('/')}: {hours}
+                              {index < groupedHours.size - 1 && <br/>}
+                            </span>
+                          ));
+                        })()}
                       </div>
                     </div>
                     <div>
