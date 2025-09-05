@@ -4,12 +4,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
+import { useSupabaseCalculations, Calculation } from '@/hooks/useSupabaseCalculations';
 import { DayEntry, WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { ArrowLeft, Printer, Calculator, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ResultsPageProps {
   calculationId: string;
@@ -38,23 +38,71 @@ interface DayResult {
 
 export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }: ResultsPageProps) => {
   const { profile } = useSupabaseAuth();
-  const { getCalculation } = useSupabaseCalculations(profile?.user_id);
-  const calculation = getCalculation(calculationId);
+  const { getCalculation, fetchSingleCalculation } = useSupabaseCalculations(profile?.user_id);
+  const [calculation, setCalculation] = useState<Calculation | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load calculation data
+  useEffect(() => {
+    const loadCalculation = async () => {
+      setLoading(true);
+      
+      // First try to get from local state
+      let calc = getCalculation(calculationId);
+      
+      // If not found, fetch from database
+      if (!calc) {
+        calc = await fetchSingleCalculation(calculationId);
+      }
+      
+      setCalculation(calc || null);
+      setLoading(false);
+    };
+    
+    loadCalculation();
+  }, [calculationId, getCalculation, fetchSingleCalculation]);
 
   // Check if print parameter is in URL and auto-print
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('print') === 'true') {
+    if (urlParams.get('print') === 'true' && calculation && !loading) {
       setTimeout(() => {
         window.print();
         // Remove print parameter from URL after printing
         window.history.replaceState({}, document.title, window.location.pathname);
       }, 1500); // Wait a bit longer for data to load
     }
-  }, []);
+  }, [calculation, loading]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <Calculator className="h-16 w-16 mx-auto text-muted-foreground mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Carregando cálculo...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!calculation) {
-    return <div>Cálculo não encontrado</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <Calculator className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+            Cálculo não encontrado
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            O cálculo solicitado não existe ou não pertence a você.
+          </p>
+          <Button onClick={onBackToDashboard}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Painel
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const timeToMinutes = (time: string): number => {
