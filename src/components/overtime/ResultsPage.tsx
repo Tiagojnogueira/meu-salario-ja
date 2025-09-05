@@ -230,8 +230,25 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const applyNightReduction = (calculation as any).apply_night_reduction ?? true;
     const nightHours = calculateNightHours(effectiveEntryTime, effectiveExitTime, entry.type, nightShiftStart, nightShiftEnd, extendNightHours, applyNightReduction);
     
-    // Calculate regular and overtime hours considering night hours
-    let regularHours = Math.min(clockWorkedHours, contractualHours);
+    // Calculate effective worked hours (considering night reduction factor)
+    // For night hours calculation: if reduction is applied, night hours are already converted to effective hours
+    // For total calculation: clock hours + (night effective hours - night clock hours)
+    
+    // Calculate night hours in clock time (before reduction) for comparison
+    let nightClockHours = 0;
+    if (nightHours > 0 && applyNightReduction) {
+      // If reduction was applied, reverse it to get clock hours
+      nightClockHours = (nightHours * 52.5) / 60;
+    } else {
+      nightClockHours = nightHours;
+    }
+    
+    // Calculate effective worked hours
+    const dayClockHours = Math.max(0, clockWorkedHours - nightClockHours);
+    const effectiveWorkedHours = dayClockHours + nightHours;
+    
+    // Calculate regular and overtime hours considering effective hours
+    let regularHours = Math.min(effectiveWorkedHours, contractualHours);
     
     if (entry.type === 'rest') {
       // All hours on rest day are overtime at rest day percentage
@@ -258,9 +275,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
         overtimeDayHours = effectiveHours;
       }
     } else if (entry.type === 'workday') {
-      // For workdays - simplified and correct logic for overtime calculation
-      if (clockWorkedHours > contractualHours) {
-        overtimeHours = clockWorkedHours - contractualHours;
+      // For workdays - use effective worked hours for overtime calculation
+      if (effectiveWorkedHours > contractualHours) {
+        overtimeHours = effectiveWorkedHours - contractualHours;
         regularHours = contractualHours;
 
         // Calculate how much of the work period was during night hours (22:00-05:00)
@@ -292,62 +309,23 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
         
         const nightWorkHours = nightWorkMinutes / 60;
         
-        // Calculate overtime distribution
-        // The overtime is the extra hours beyond contractual
-        // We need to determine how much of those extra hours were during night
-        
-        // Simple logic: if we worked night hours and have overtime,
-        // the overtime that occurred during night period is night overtime
-        const overtimeMinutes = overtimeHours * 60;
-        const totalWorkedMinutes = clockWorkedHours * 60;
-        const contractualMinutes = contractualHours * 60;
-        
-        // Calculate which part of overtime was at night
-        // The overtime hours are the "last" hours worked
-        // So if we worked 10 hours with 8 contractual, the last 2 hours are overtime
-        const overtimeStartMinute = workStart + contractualMinutes;
-        
-        if (nightWorkMinutes > 0 && overtimeStartMinute < workEnd) {
-          // Some overtime occurred during night
-          const nightOvertimeStart = Math.max(overtimeStartMinute, nightStart);
-          const nightOvertimeEnd = workEnd;
+        // For overtime distribution, we need to consider the proportion of night hours
+        // If we have night hours and overtime, calculate how much overtime was at night
+        if (nightHours > 0 && overtimeHours > 0) {
+          // Calculate the effective overtime hours that occurred during night period
+          // Use the ratio of night hours to total effective hours
+          const nightRatio = nightHours / effectiveWorkedHours;
+          const dayRatio = (effectiveWorkedHours - nightHours) / effectiveWorkedHours;
           
-          if (nightOvertimeEnd > nightOvertimeStart) {
-            let nightOvertimeMinutes = nightOvertimeEnd - nightOvertimeStart;
-            
-            // Apply interval reduction to night overtime if applicable
-            if (entry.intervalStart && entry.intervalEnd && entry.exit) {
-              const intervalStart = timeToMinutes(entry.intervalStart);
-              const intervalEnd = timeToMinutes(entry.intervalEnd);
-              
-              if (intervalEnd > nightOvertimeStart && intervalStart < nightOvertimeEnd) {
-                const overlapStart = Math.max(intervalStart, nightOvertimeStart);
-                const overlapEnd = Math.min(intervalEnd, nightOvertimeEnd);
-                if (overlapEnd > overlapStart) {
-                  nightOvertimeMinutes = Math.max(0, nightOvertimeMinutes - (overlapEnd - overlapStart));
-                }
-              }
-            }
-            
-            let nightOvertimeHours = Math.min(nightOvertimeMinutes / 60, overtimeHours);
-            
-            // Apply night reduction factor to night overtime hours if enabled
-            if (applyNightReduction && nightOvertimeHours > 0) {
-              // Each night hour on clock equals 52.5 minutes
-              // Formula: clock_hours × 60 ÷ 52.5 = effective_night_hours
-              nightOvertimeHours = (nightOvertimeHours * 60) / 52.5;
-              console.log(`Applying night reduction to overtime: ${Math.min(nightOvertimeMinutes / 60, overtimeHours)}h clock → ${nightOvertimeHours.toFixed(2)}h effective`);
-            }
-            
-            overtimeNightHours = nightOvertimeHours;
-            // For day hours, we need to recalculate based on basic overtime minus night overtime (before reduction)
-            overtimeDayHours = overtimeHours - Math.min(nightOvertimeMinutes / 60, overtimeHours);
-          } else {
-            overtimeDayHours = overtimeHours;
-            overtimeNightHours = 0;
-          }
+          // Distribute overtime proportionally
+          overtimeNightHours = overtimeHours * nightRatio;
+          overtimeDayHours = overtimeHours * dayRatio;
+        } else if (nightHours > 0) {
+          // No overtime, but we have night hours
+          overtimeNightHours = 0;
+          overtimeDayHours = 0;
         } else {
-          // No night work or overtime doesn't reach night period
+          // No night hours, all overtime is day overtime
           overtimeDayHours = overtimeHours;
           overtimeNightHours = 0;
         }
@@ -370,7 +348,9 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     console.log('Day result calculated:', {
       date: entry.date,
       clockWorkedHours,
+      nightClockHours,
       nightHours,
+      effectiveWorkedHours,
       contractualHours,
       overtimeHours,
       overtimeDayHours,
