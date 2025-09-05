@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
-import { Plus, Eye, Edit, Trash2, LogOut, Calculator, Printer } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -32,22 +32,6 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   const handleDelete = async (id: string, description: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o cálculo "${description}"?`)) {
       await deleteCalculation(id);
-    }
-  };
-
-  const handlePrint = (calculationId: string) => {
-    // Open the results page in a new window for printing
-    const printUrl = `/horas-extras/resultados/${calculationId}`;
-    const printWindow = window.open(printUrl, '_blank');
-    
-    if (printWindow) {
-      // Wait for the page to load and then trigger print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 1000);
-      };
     }
   };
 
@@ -179,15 +163,6 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                   title="Visualizar"
                                 >
                                   <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePrint(calculation.id)}
-                                  title="Imprimir"
-                                  disabled={calculation.day_entries.length === 0}
-                                >
-                                  <Printer className="h-4 w-4" />
                                 </Button>
                                  <Button
                                    variant="secondary"
