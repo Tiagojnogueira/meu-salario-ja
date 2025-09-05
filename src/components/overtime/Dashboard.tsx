@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
-import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User } from 'lucide-react';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ interface DashboardProps {
 export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
   const navigate = useNavigate();
   const { profile, logout } = useSupabaseAuth();
+  const { isAdmin } = useAdminAuth();
   const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
   
   // Pagination state
@@ -77,6 +79,17 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 <User className="h-4 w-4 mr-2" />
                 Minha Conta
               </Button>
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/admin')}
+                  title="Painel Admin"
+                  className="text-orange-600 hover:text-orange-700"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
               <Button variant="outline" onClick={logout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair

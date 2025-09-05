@@ -11,6 +11,7 @@ import { EditCalculationPage } from "./pages/EditCalculationPage";
 import { EditTimeEntriesPage } from "./pages/EditTimeEntriesPage";
 import { EditResultsPage } from "./pages/EditResultsPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/horas-extras/editar-horarios/:id" element={<EditTimeEntriesPage />} />
           <Route path="/horas-extras/resultados/:id" element={<EditResultsPage />} />
           <Route path="/horas-extras/perfil" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
