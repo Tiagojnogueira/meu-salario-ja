@@ -9,6 +9,7 @@ import { DayEntry, WorkingHours, OvertimePercentages } from '@/types/overtime';
 import { ArrowLeft, Printer, Calculator, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useEffect } from 'react';
 
 interface ResultsPageProps {
   calculationId: string;
@@ -39,6 +40,18 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
   const { profile } = useSupabaseAuth();
   const { getCalculation } = useSupabaseCalculations(profile?.user_id);
   const calculation = getCalculation(calculationId);
+
+  // Check if print parameter is in URL and auto-print
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === 'true') {
+      setTimeout(() => {
+        window.print();
+        // Remove print parameter from URL after printing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 1500); // Wait a bit longer for data to load
+    }
+  }, []);
 
   if (!calculation) {
     return <div>Cálculo não encontrado</div>;
