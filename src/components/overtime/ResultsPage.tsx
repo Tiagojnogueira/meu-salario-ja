@@ -438,6 +438,35 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     };
   });
 
+  // Group results by month/year
+  const groupByMonth = (results: DayResult[]) => {
+    const groups: { [key: string]: DayResult[] } = {};
+    
+    results.forEach(result => {
+      const monthKey = format(parseISO(result.date + 'T00:00:00'), 'yyyy-MM', { locale: ptBR });
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(result);
+    });
+    
+    return groups;
+  };
+
+  // Calculate totals for a specific month
+  const calculateMonthTotals = (monthResults: DayResult[]) => {
+    return monthResults.reduce((acc, result) => ({
+      workedHours: acc.workedHours + result.workedHours,
+      regularHours: acc.regularHours + result.regularHours,
+      overtimeHours: acc.overtimeHours + result.overtimeHours,
+      overtimeDayHours: acc.overtimeDayHours + result.overtimeDayHours,
+      overtimeNightHours: acc.overtimeNightHours + result.overtimeNightHours,
+      nightHours: acc.nightHours + result.nightHours
+    }), { workedHours: 0, regularHours: 0, overtimeHours: 0, overtimeDayHours: 0, overtimeNightHours: 0, nightHours: 0 });
+  };
+
+  const resultsByMonth = groupByMonth(dayResults);
+
   // Calculate progressive overtime hours by percentage
   const calculateProgressiveOvertimeHours = (results: DayResult[], overtimePercentages: OvertimePercentages) => {
     let he50 = 0, he70 = 0, he100 = 0;
@@ -555,10 +584,11 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
   const results = calculation.day_entries.map(entry => calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages));
   
-  // Calculate progressive overtime hours
-  const progressiveHours = calculateProgressiveOvertimeHours(results, calculation.overtime_percentages);
+  // Calculate progressive overtime hours for all months combined
+  const progressiveHours = calculateProgressiveOvertimeHours(dayResults, calculation.overtime_percentages);
   
-  const totals = results.reduce((acc, result) => ({
+  // Calculate overall totals (all months combined)
+  const totals = dayResults.reduce((acc, result) => ({
     workedHours: acc.workedHours + result.workedHours,
     regularHours: acc.regularHours + result.regularHours,
     overtimeHours: acc.overtimeHours + result.overtimeHours,
@@ -765,172 +795,244 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
             </Card>
           </div>
 
-          {/* Detailed Results Table */}
+          {/* Monthly Results */}
+          {Object.entries(resultsByMonth)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([monthKey, monthResults]) => {
+              const monthTotals = calculateMonthTotals(monthResults);
+              const monthProgressiveHours = calculateProgressiveOvertimeHours(monthResults, calculation.overtime_percentages);
+              const monthName = format(parseISO(monthKey + '-01T00:00:00'), 'MMMM/yyyy', { locale: ptBR });
+              const monthNameCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+              
+              return (
+                <Card key={monthKey}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calculator className="h-5 w-5 mr-2" />
+                      {monthNameCapitalized}
+                    </CardTitle>
+                    <CardDescription>
+                      Resultado detalhado do cálculo de horas extras para {monthNameCapitalized.toLowerCase()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Month Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Total Trabalhado</p>
+                        <p className="text-xl font-bold text-primary">
+                          {formatHoursToTime(monthTotals.workedHours)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Horas Normais</p>
+                        <p className="text-xl font-bold text-green-600">
+                          {formatHoursToTime(monthTotals.regularHours)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {formatHoursToTime(monthTotals.overtimeDayHours)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
+                        <p className="text-xl font-bold text-purple-600">
+                          {formatHoursToTime(monthTotals.overtimeNightHours)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Horas Extras</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {formatHoursToTime(monthTotals.overtimeDayHours + monthTotals.overtimeNightHours)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">H.E. por %</p>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span>50%:</span>
+                            <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he50)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span>70%:</span>
+                            <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he70)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span>100%:</span>
+                            <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he100)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Month Details Table */}
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Dia</TableHead>
+                            <TableHead>Tipo</TableHead>
+                            <TableHead>Entrada</TableHead>
+                            <TableHead>Início Int.</TableHead>
+                            <TableHead>Fim Int.</TableHead>
+                            <TableHead>Saída</TableHead>
+                            <TableHead className="text-right">H. Trab.</TableHead>
+                            <TableHead className="text-right">H. Contr.</TableHead>
+                            <TableHead className="text-right">H. Normais</TableHead>
+                            <TableHead className="text-right">H. Extras</TableHead>
+                            <TableHead className="text-right">H.E. Diurnas</TableHead>
+                            <TableHead className="text-right">H.E. Noturnas</TableHead>
+                            <TableHead className="text-right">H. Noturnas</TableHead>
+                            <TableHead>Discriminação H.E.</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {monthResults.map((result) => (
+                            <TableRow key={result.date}>
+                              <TableCell>{format(parseISO(result.date + 'T00:00:00'), "dd/MM")}</TableCell>
+                              <TableCell className="capitalize">
+                                {result.weekday}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={getTypeBadgeVariant(result.type)}>
+                                  {result.type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{result.entry}</TableCell>
+                              <TableCell>{result.intervalStart}</TableCell>
+                              <TableCell>{result.intervalEnd}</TableCell>
+                              <TableCell>{result.exit}</TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {formatHoursToTime(result.workedHours)}
+                               </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {formatHoursToTime(result.contractualHours)}
+                               </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {formatHoursToTime(result.regularHours)}
+                               </TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {(result.overtimeDayHours + result.overtimeNightHours) > 0 ? (
+                                    <span className="text-orange-600 font-semibold">
+                                      {formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}
+                                    </span>
+                                  ) : (
+                                    '00:00'
+                                  )}
+                                </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {result.overtimeDayHours > 0 ? (
+                                   <span className="text-orange-600 font-semibold">
+                                     {formatHoursToTime(result.overtimeDayHours)}
+                                   </span>
+                                 ) : (
+                                   '00:00'
+                                 )}
+                               </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {result.overtimeNightHours > 0 ? (
+                                   <span className="text-purple-600 font-semibold">
+                                     {formatHoursToTime(result.overtimeNightHours)}
+                                   </span>
+                                 ) : (
+                                   '00:00'
+                                 )}
+                               </TableCell>
+                               <TableCell className="text-right font-mono">
+                                 {result.nightHours > 0 ? (
+                                   <span className="text-blue-600 font-semibold">
+                                     {formatHoursToTime(result.nightHours)}
+                                   </span>
+                                 ) : (
+                                   '00:00'
+                                 )}
+                               </TableCell>
+                              <TableCell>
+                                <div className="text-xs font-mono">
+                                   {calculateDayOvertimeBreakdown(
+                                     result.overtimeDayHours,
+                                     result.overtimeNightHours, 
+                                     calculation.overtime_percentages,
+                                     result.type === 'Dia de Descanso'
+                                   )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+          {/* Overall Summary */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calculator className="h-5 w-5 mr-2" />
-                Detalhamento por Dia
-              </CardTitle>
+              <CardTitle>Resumo Geral do Período</CardTitle>
               <CardDescription>
-                Resultado detalhado do cálculo de horas extras para cada dia do período
+                Totalizações de todos os meses calculados
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Dia</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Entrada</TableHead>
-                      <TableHead>Início Int.</TableHead>
-                      <TableHead>Fim Int.</TableHead>
-                      <TableHead>Saída</TableHead>
-                      <TableHead className="text-right">H. Trab.</TableHead>
-                      <TableHead className="text-right">H. Contr.</TableHead>
-                      <TableHead className="text-right">H. Normais</TableHead>
-                      <TableHead className="text-right">H. Extras</TableHead>
-                      <TableHead className="text-right">H.E. Diurnas</TableHead>
-                      <TableHead className="text-right">H.E. Noturnas</TableHead>
-                      <TableHead className="text-right">H. Noturnas</TableHead>
-                      <TableHead>Discriminação H.E.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((result) => (
-                      <TableRow key={result.date}>
-                        <TableCell>{format(parseISO(result.date + 'T00:00:00'), "dd/MM")}</TableCell>
-                        <TableCell className="capitalize">
-                          {result.weekday}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getTypeBadgeVariant(result.type)}>
-                            {result.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{result.entry}</TableCell>
-                        <TableCell>{result.intervalStart}</TableCell>
-                        <TableCell>{result.intervalEnd}</TableCell>
-                        <TableCell>{result.exit}</TableCell>
-                         <TableCell className="text-right font-mono">
-                           {formatHoursToTime(result.workedHours)}
-                         </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {formatHoursToTime(result.contractualHours)}
-                         </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {formatHoursToTime(result.regularHours)}
-                         </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {(result.overtimeDayHours + result.overtimeNightHours) > 0 ? (
-                              <span className="text-orange-600 font-semibold">
-                                {formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}
-                              </span>
-                            ) : (
-                              '00:00'
-                            )}
-                          </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {result.overtimeDayHours > 0 ? (
-                             <span className="text-orange-600 font-semibold">
-                               {formatHoursToTime(result.overtimeDayHours)}
-                             </span>
-                           ) : (
-                             '00:00'
-                           )}
-                         </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {result.overtimeNightHours > 0 ? (
-                             <span className="text-purple-600 font-semibold">
-                               {formatHoursToTime(result.overtimeNightHours)}
-                             </span>
-                           ) : (
-                             '00:00'
-                           )}
-                         </TableCell>
-                         <TableCell className="text-right font-mono">
-                           {result.nightHours > 0 ? (
-                             <span className="text-blue-600 font-semibold">
-                               {formatHoursToTime(result.nightHours)}
-                             </span>
-                           ) : (
-                             '00:00'
-                           )}
-                         </TableCell>
-                        <TableCell>
-                          <div className="text-xs font-mono">
-                             {calculateDayOvertimeBreakdown(
-                               result.overtimeDayHours,
-                               result.overtimeNightHours, 
-                               calculation.overtime_percentages,
-                               result.type === 'Dia de Descanso'
-                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <Separator className="my-6" />
-
-              {/* Totals Row */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">Total Trabalhado</p>
-                   <p className="text-2xl font-bold text-primary">
-                     {formatHoursToTime(totals.workedHours)}
-                   </p>
-                 </div>
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">Horas Normais</p>
-                   <p className="text-2xl font-bold text-green-600">
-                     {formatHoursToTime(totals.regularHours)}
-                   </p>
-                 </div>
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">Horas Extras</p>
-                   <p className="text-2xl font-bold text-orange-600">
-                     {formatHoursToTime(totals.overtimeDayHours + totals.overtimeNightHours)}
-                   </p>
-                 </div>
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
-                   <p className="text-2xl font-bold text-orange-600">
-                     {formatHoursToTime(totals.overtimeDayHours)}
-                   </p>
-                 </div>
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
-                   <p className="text-2xl font-bold text-purple-600">
-                     {formatHoursToTime(totals.overtimeNightHours)}
-                   </p>
-                 </div>
-                 <div className="text-center">
-                   <p className="text-sm text-muted-foreground">Horas Noturnas</p>
-                   <p className="text-2xl font-bold text-blue-600">
-                     {formatHoursToTime(totals.nightHours)}
-                   </p>
-                 </div>
+              {/* Overall Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Total Trabalhado</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatHoursToTime(totals.workedHours)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Horas Normais</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatHoursToTime(totals.regularHours)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Horas Extras</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatHoursToTime(totals.overtimeDayHours + totals.overtimeNightHours)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">H.E. Diurnas</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatHoursToTime(totals.overtimeDayHours)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">H.E. Noturnas</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {formatHoursToTime(totals.overtimeNightHours)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Horas Noturnas</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatHoursToTime(totals.nightHours)}
+                  </p>
+                </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">H.E. por %</p>
-                   <div className="space-y-1">
-                     <div className="flex justify-between text-xs">
-                       <span>50%:</span>
-                       <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
-                     </div>
-                     <div className="flex justify-between text-xs">
-                       <span>70%:</span>
-                       <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
-                     </div>
-                     <div className="flex justify-between text-xs">
-                       <span>100%:</span>
-                       <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
-                     </div>
-                   </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>50%:</span>
+                      <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>70%:</span>
+                      <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>100%:</span>
+                      <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
