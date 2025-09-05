@@ -472,18 +472,20 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     let he50 = 0, he60 = 0, he70 = 0, he80 = 0, he90 = 0, he100 = 0;
     
     results.forEach(result => {
-      if (result.type === 'Dia de Descanso') {
+      const totalOvertimeHours = result.overtimeDayHours + result.overtimeNightHours;
+      
+      if (result.type === 'Dia de Descanso' && totalOvertimeHours > 0) {
         // Rest day overtime is always at restDay percentage
         const restDayPercentage = overtimePercentages.restDay;
-        if (restDayPercentage === 50) he50 += result.overtimeHours;
-        else if (restDayPercentage === 60) he60 += result.overtimeHours;
-        else if (restDayPercentage === 70) he70 += result.overtimeHours;
-        else if (restDayPercentage === 80) he80 += result.overtimeHours;
-        else if (restDayPercentage === 90) he90 += result.overtimeHours;
-        else if (restDayPercentage === 100) he100 += result.overtimeHours;
-      } else if (result.overtimeHours > 0) {
+        if (restDayPercentage === 50) he50 += totalOvertimeHours;
+        else if (restDayPercentage === 60) he60 += totalOvertimeHours;
+        else if (restDayPercentage === 70) he70 += totalOvertimeHours;
+        else if (restDayPercentage === 80) he80 += totalOvertimeHours;
+        else if (restDayPercentage === 90) he90 += totalOvertimeHours;
+        else if (restDayPercentage === 100) he100 += totalOvertimeHours;
+      } else if (totalOvertimeHours > 0 && result.type === 'Dia de Trabalho') {
         // Progressive calculation for workdays
-        let remainingOvertimeHours = result.overtimeHours;
+        let remainingOvertimeHours = totalOvertimeHours;
         
         // First 2 hours at upTo2Hours percentage
         if (remainingOvertimeHours > 0) {
@@ -602,8 +604,6 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     const parts = description.split(' - ');
     return parts[0] || 'Funcionário';
   };
-
-  const results = calculation.day_entries.map(entry => calculateDayResult(entry, calculation.working_hours, calculation.overtime_percentages));
   
   // Calculate progressive overtime hours for all months combined
   const progressiveHours = calculateProgressiveOvertimeHours(dayResults, calculation.overtime_percentages);
