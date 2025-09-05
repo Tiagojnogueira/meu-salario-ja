@@ -48,6 +48,61 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
   const [extendNightHours, setExtendNightHours] = useState(true);
   const [applyNightReduction, setApplyNightReduction] = useState(true);
 
+  // Função para aplicar horários configurados na jornada contratual
+  const applyConfiguredHoursToWorkingHours = (configuredHours: any) => {
+    const newWorkingHours = { ...workingHours };
+    
+    // Mapear os dias da semana
+    const dayMapping = {
+      monday: 'monday',
+      tuesday: 'tuesday', 
+      wednesday: 'wednesday',
+      thursday: 'thursday',
+      friday: 'friday',
+      saturday: 'saturday',
+      sunday: 'sunday'
+    };
+    
+    Object.keys(dayMapping).forEach(day => {
+      if (configuredHours[day] && (configuredHours[day].entry || configuredHours[day].exit)) {
+        // Calcula as horas trabalhadas baseado nos horários de entrada e saída
+        const entry = configuredHours[day].entry;
+        const exit = configuredHours[day].exit;
+        const intervalStart = configuredHours[day].intervalStart;
+        const intervalEnd = configuredHours[day].intervalEnd;
+        
+        if (entry && exit) {
+          // Converte horários para minutos para calcular
+          const entryMinutes = timeToMinutes(entry);
+          const exitMinutes = timeToMinutes(exit);
+          const intervalStartMinutes = intervalStart ? timeToMinutes(intervalStart) : 0;
+          const intervalEndMinutes = intervalEnd ? timeToMinutes(intervalEnd) : 0;
+          
+          // Calcula total trabalhado
+          let totalMinutes = exitMinutes - entryMinutes;
+          
+          // Subtrai intervalo se definido
+          if (intervalStartMinutes && intervalEndMinutes) {
+            totalMinutes -= (intervalEndMinutes - intervalStartMinutes);
+          }
+          
+          // Converte de volta para formato HH:MM
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          newWorkingHours[day as keyof WorkingHours] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+      }
+    });
+    
+    setWorkingHours(newWorkingHours);
+  };
+
+  // Função auxiliar para converter HH:MM para minutos
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
   // Remove logs de debug desnecessários
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     setWorkingHours(prev => ({
@@ -77,6 +132,10 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
     setDetailedWorkingHours(configuredHours);
     setAutoFillEnabled(true);
     setShowWorkingHoursConfig(false);
+    
+    // Aplica os horários configurados na jornada contratual
+    applyConfiguredHoursToWorkingHours(configuredHours);
+    
     toast.success('Configuração de horários salva!');
   };
 
