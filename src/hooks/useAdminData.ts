@@ -15,18 +15,31 @@ export const useAdminData = () => {
 
   const fetchUsers = async () => {
     try {
-      // First get profiles with calculation count
+      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          calculations(count)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Then get user roles
+      // Get calculation counts for each user
+      const calculationCounts = await Promise.all(
+        profiles?.map(async (profile) => {
+          const { count, error } = await supabase
+            .from('calculations')
+            .select('*', { count: 'exact' })
+            .eq('user_id', profile.user_id);
+          
+          if (error) {
+            console.error('Error counting calculations for user:', profile.user_id, error);
+            return 0;
+          }
+          return count || 0;
+        }) || []
+      );
+
+      // Get user roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
@@ -34,9 +47,9 @@ export const useAdminData = () => {
       if (rolesError) throw rolesError;
 
       // Transform the data to include calculation count and roles
-      const usersWithCount = profiles?.map(profile => ({
+      const usersWithCount = profiles?.map((profile, index) => ({
         ...profile,
-        calculation_count: Array.isArray(profile.calculations) ? profile.calculations.length : 0,
+        calculation_count: calculationCounts[index] || 0,
         last_activity: profile.updated_at,
         user_roles: userRoles?.filter(role => role.user_id === profile.user_id) || []
       })) || [];
@@ -50,21 +63,31 @@ export const useAdminData = () => {
 
   const fetchAllCalculations = async () => {
     try {
-      const { data: calculations, error } = await supabase
+      // Get all calculations
+      const { data: calculations, error: calculationsError } = await supabase
         .from('calculations')
-        .select(`
-          *,
-          profiles:user_id (
-            name,
-            email,
-            username
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (calculationsError) throw calculationsError;
 
-      setAllCalculations(calculations || []);
+      // Get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, name, email, username');
+
+      if (profilesError) throw profilesError;
+
+      // Join calculations with profiles manually
+      const calculationsWithProfiles = calculations?.map(calculation => {
+        const profile = profiles?.find(p => p.user_id === calculation.user_id);
+        return {
+          ...calculation,
+          profiles: profile || null
+        };
+      }) || [];
+
+      setAllCalculations(calculationsWithProfiles);
     } catch (error) {
       console.error('Error fetching all calculations:', error);
       setAllCalculations([]);
