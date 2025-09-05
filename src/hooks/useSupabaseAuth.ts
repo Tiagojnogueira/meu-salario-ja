@@ -35,16 +35,22 @@ export const useSupabaseAuth = () => {
         
         if (session?.user) {
           // Fetch user profile
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-            
-          if (error) {
+          try {
+            const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+              
+            if (error) {
+              console.error('Error fetching profile:', error);
+              setProfile(null);
+            } else {
+              setProfile(profileData);
+            }
+          } catch (error) {
             console.error('Error fetching profile:', error);
-          } else {
-            setProfile(profileData);
+            setProfile(null);
           }
         } else {
           setProfile(null);
@@ -54,12 +60,43 @@ export const useSupabaseAuth = () => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Check for existing session on mount
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // If we have a user but the auth listener hasn't run yet, fetch profile
+        if (session?.user && !profile) {
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error fetching profile on init:', profileError);
+            } else {
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('Error fetching profile on init:', error);
+          }
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
