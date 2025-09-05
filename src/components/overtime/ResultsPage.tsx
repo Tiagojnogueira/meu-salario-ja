@@ -1195,8 +1195,117 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                    </div>
                  </div>
               </div>
-            </CardContent>
-          </Card>
+             </CardContent>
+           </Card>
+
+           {/* Detailed Daily Table */}
+           <Card>
+             <CardHeader>
+               <CardTitle>Horários Detalhados do Período</CardTitle>
+               <CardDescription>
+                 Registro completo de todos os dias trabalhados com horários digitados e cálculos
+               </CardDescription>
+             </CardHeader>
+             <CardContent>
+               <div className="overflow-x-auto">
+                 <Table className="[&>tbody>tr:nth-child(odd)]:bg-muted/50">
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>Data</TableHead>
+                       <TableHead>Dia</TableHead>
+                       <TableHead>Tipo</TableHead>
+                       <TableHead>Entrada</TableHead>
+                       <TableHead>Início Int.</TableHead>
+                       <TableHead>Fim Int.</TableHead>
+                       <TableHead>Saída</TableHead>
+                       <TableHead className="text-right">H. Trab.</TableHead>
+                       <TableHead className="text-right">H. Contr.</TableHead>
+                       <TableHead className="text-right">H. Normais</TableHead>
+                       <TableHead className="text-right">H. Noturnas</TableHead>
+                       <TableHead className="text-right">H. Extras</TableHead>
+                       <TableHead className="text-right">H.E. Diurnas</TableHead>
+                       <TableHead className="text-right">H.E. Noturnas</TableHead>
+                       <TableHead>Discriminação H.E.</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {dayResults.map((result) => (
+                       <TableRow key={result.date}>
+                         <TableCell>{format(parseISO(result.date + 'T00:00:00'), "dd/MM/yyyy")}</TableCell>
+                         <TableCell className="capitalize">
+                           {result.weekday}
+                         </TableCell>
+                         <TableCell>
+                           <Badge variant={getTypeBadgeVariant(result.type)}>
+                             {result.type}
+                           </Badge>
+                         </TableCell>
+                         <TableCell>{result.entry}</TableCell>
+                         <TableCell>{result.intervalStart}</TableCell>
+                         <TableCell>{result.intervalEnd}</TableCell>
+                         <TableCell>{result.exit}</TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.workedHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.contractualHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {formatHoursToTime(result.regularHours)}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.nightHours > 0 ? (
+                             <span className="text-blue-600 font-semibold">
+                               {formatHoursToTime(result.nightHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {(result.overtimeDayHours + result.overtimeNightHours) > 0 ? (
+                             <span className="text-orange-600 font-semibold">
+                               {formatHoursToTime(result.overtimeDayHours + result.overtimeNightHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.overtimeDayHours > 0 ? (
+                             <span className="text-orange-600 font-semibold">
+                               {formatHoursToTime(result.overtimeDayHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell className="text-right font-mono">
+                           {result.overtimeNightHours > 0 ? (
+                             <span className="text-purple-600 font-semibold">
+                               {formatHoursToTime(result.overtimeNightHours)}
+                             </span>
+                           ) : (
+                             '00:00'
+                           )}
+                         </TableCell>
+                         <TableCell>
+                           <div className="text-xs font-mono">
+                             {calculateDayOvertimeBreakdown(
+                               result.overtimeDayHours,
+                               result.overtimeNightHours, 
+                               calculation.overtime_percentages,
+                               result.type === 'Dia de Descanso'
+                             )}
+                           </div>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               </div>
+             </CardContent>
+           </Card>
 
           {/* Configuration Summary */}
           <Card className="print:break-before-page">
