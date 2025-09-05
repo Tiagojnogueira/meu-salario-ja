@@ -121,9 +121,11 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
 
   const handleAutoFill = (enabled: boolean) => {
     if (enabled) {
+      setAutoFillEnabled(true);
       setShowWorkingHoursConfig(true);
     } else {
       setAutoFillEnabled(false);
+      setDetailedWorkingHours(null);
     }
   };
 
