@@ -102,7 +102,7 @@ const WorkingHoursConfig: React.FC<WorkingHoursConfigProps> = ({
 
   const handleSave = () => {
     onSave(localWorkingHours);
-    onClose();
+    // onClose() não é necessário pois onSave já fecha o modal automaticamente
   };
 
   return (
