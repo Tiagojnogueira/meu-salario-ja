@@ -422,7 +422,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     return {
       date: entry.date,
       weekday: format(parseISO(entry.date + 'T00:00:00'), 'EEEE', { locale: ptBR }),
-      type: entry.type,
+      type: getTypeLabel(entry.type),
       entry: entry.entry,
       intervalStart: entry.intervalStart,
       intervalEnd: entry.intervalEnd,
