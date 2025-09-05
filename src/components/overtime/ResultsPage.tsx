@@ -469,12 +469,18 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
   // Calculate progressive overtime hours by percentage
   const calculateProgressiveOvertimeHours = (results: DayResult[], overtimePercentages: OvertimePercentages) => {
-    let he50 = 0, he60 = 0, he70 = 0, he100 = 0;
+    let he50 = 0, he60 = 0, he70 = 0, he80 = 0, he90 = 0, he100 = 0;
     
     results.forEach(result => {
       if (result.type === 'Dia de Descanso') {
-        // Rest day overtime is always 100%
-        he100 += result.overtimeHours;
+        // Rest day overtime is always at restDay percentage
+        const restDayPercentage = overtimePercentages.restDay;
+        if (restDayPercentage === 50) he50 += result.overtimeHours;
+        else if (restDayPercentage === 60) he60 += result.overtimeHours;
+        else if (restDayPercentage === 70) he70 += result.overtimeHours;
+        else if (restDayPercentage === 80) he80 += result.overtimeHours;
+        else if (restDayPercentage === 90) he90 += result.overtimeHours;
+        else if (restDayPercentage === 100) he100 += result.overtimeHours;
       } else if (result.overtimeHours > 0) {
         // Progressive calculation for workdays
         let remainingOvertimeHours = result.overtimeHours;
@@ -485,6 +491,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           if (overtimePercentages.upTo2Hours === 50) he50 += hoursAt1st;
           else if (overtimePercentages.upTo2Hours === 60) he60 += hoursAt1st;
           else if (overtimePercentages.upTo2Hours === 70) he70 += hoursAt1st;
+          else if (overtimePercentages.upTo2Hours === 80) he80 += hoursAt1st;
+          else if (overtimePercentages.upTo2Hours === 90) he90 += hoursAt1st;
           else if (overtimePercentages.upTo2Hours === 100) he100 += hoursAt1st;
           remainingOvertimeHours -= hoursAt1st;
         }
@@ -495,6 +503,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           if (overtimePercentages.from2To3Hours === 50) he50 += hoursAt2nd;
           else if (overtimePercentages.from2To3Hours === 60) he60 += hoursAt2nd;
           else if (overtimePercentages.from2To3Hours === 70) he70 += hoursAt2nd;
+          else if (overtimePercentages.from2To3Hours === 80) he80 += hoursAt2nd;
+          else if (overtimePercentages.from2To3Hours === 90) he90 += hoursAt2nd;
           else if (overtimePercentages.from2To3Hours === 100) he100 += hoursAt2nd;
           remainingOvertimeHours -= hoursAt2nd;
         }
@@ -505,6 +515,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           if (overtimePercentages.from3To4Hours === 50) he50 += hoursAt3rd;
           else if (overtimePercentages.from3To4Hours === 60) he60 += hoursAt3rd;
           else if (overtimePercentages.from3To4Hours === 70) he70 += hoursAt3rd;
+          else if (overtimePercentages.from3To4Hours === 80) he80 += hoursAt3rd;
+          else if (overtimePercentages.from3To4Hours === 90) he90 += hoursAt3rd;
           else if (overtimePercentages.from3To4Hours === 100) he100 += hoursAt3rd;
           remainingOvertimeHours -= hoursAt3rd;
         }
@@ -515,6 +527,8 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           if (overtimePercentages.from4To5Hours === 50) he50 += hoursAt4th;
           else if (overtimePercentages.from4To5Hours === 60) he60 += hoursAt4th;
           else if (overtimePercentages.from4To5Hours === 70) he70 += hoursAt4th;
+          else if (overtimePercentages.from4To5Hours === 80) he80 += hoursAt4th;
+          else if (overtimePercentages.from4To5Hours === 90) he90 += hoursAt4th;
           else if (overtimePercentages.from4To5Hours === 100) he100 += hoursAt4th;
           remainingOvertimeHours -= hoursAt4th;
         }
@@ -524,12 +538,14 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
           if (overtimePercentages.over5Hours === 50) he50 += remainingOvertimeHours;
           else if (overtimePercentages.over5Hours === 60) he60 += remainingOvertimeHours;
           else if (overtimePercentages.over5Hours === 70) he70 += remainingOvertimeHours;
+          else if (overtimePercentages.over5Hours === 80) he80 += remainingOvertimeHours;
+          else if (overtimePercentages.over5Hours === 90) he90 += remainingOvertimeHours;
           else if (overtimePercentages.over5Hours === 100) he100 += remainingOvertimeHours;
         }
       }
     });
     
-    return { he50, he60, he70, he100 };
+    return { he50, he60, he70, he80, he90, he100 };
   };
 
   // Calculate progressive overtime breakdown for a single day
@@ -539,7 +555,7 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
     if (totalOvertimeHours <= 0) return '-';
     
     if (isRestDay) {
-      return `${formatHoursToTime(totalOvertimeHours)} (100%)`;
+      return `${formatHoursToTime(totalOvertimeHours)} (${overtimePercentages.restDay}%)`;
     }
     
     const breakdown: string[] = [];
@@ -591,6 +607,44 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
   
   // Calculate progressive overtime hours for all months combined
   const progressiveHours = calculateProgressiveOvertimeHours(dayResults, calculation.overtime_percentages);
+  
+  // Get all configured percentage values to show in reports
+  const getAllConfiguredPercentages = (overtimePercentages: OvertimePercentages) => {
+    const percentages = new Set<number>();
+    percentages.add(overtimePercentages.upTo2Hours);
+    percentages.add(overtimePercentages.from2To3Hours);
+    percentages.add(overtimePercentages.from3To4Hours);
+    percentages.add(overtimePercentages.from4To5Hours);
+    percentages.add(overtimePercentages.over5Hours);
+    percentages.add(overtimePercentages.restDay);
+    return Array.from(percentages).sort((a, b) => a - b);
+  };
+
+  const configuredPercentages = getAllConfiguredPercentages(calculation?.overtime_percentages);
+
+  // Helper function to get color for percentage
+  const getColorForPercentage = (percentage: number) => {
+    switch (percentage) {
+      case 50: return '#059669';
+      case 60: return '#0891b2';
+      case 70: return '#d97706';
+      case 80: return '#9333ea';
+      case 90: return '#e11d48';
+      case 100: return '#dc2626';
+      default: return '#666';
+    }
+  };
+  const getHoursForPercentage = (percentage: number, hours: any) => {
+    switch (percentage) {
+      case 50: return hours.he50 || 0;
+      case 60: return hours.he60 || 0;
+      case 70: return hours.he70 || 0;
+      case 80: return hours.he80 || 0;
+      case 90: return hours.he90 || 0;
+      case 100: return hours.he100 || 0;
+      default: return 0;
+    }
+  };
   
   // Calculate overall totals (all months combined)
   const totals = dayResults.reduce((acc, result) => ({
@@ -859,39 +913,24 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
               </CardContent>
             </Card>
 
-             <Card>
-               <CardHeader className="pb-2">
-                 <CardTitle className="text-lg">H.E. por Percentual</CardTitle>
-               </CardHeader>
-               <CardContent>
-                  <div className="space-y-1">
-                    {progressiveHours.he50 > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>50%:</span>
-                        <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
-                      </div>
-                    )}
-                    {progressiveHours.he60 > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>60%:</span>
-                        <span className="font-mono">{formatHoursToTime(progressiveHours.he60)}</span>
-                      </div>
-                    )}
-                    {progressiveHours.he70 > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>70%:</span>
-                        <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
-                      </div>
-                    )}
-                    {progressiveHours.he100 > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>100%:</span>
-                        <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
-                      </div>
-                    )}
-                  </div>
-               </CardContent>
-             </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">H.E. por Percentual</CardTitle>
+                </CardHeader>
+                <CardContent>
+                   <div className="space-y-1">
+                     {configuredPercentages.map(percentage => {
+                       const hours = getHoursForPercentage(percentage, progressiveHours);
+                       return (
+                         <div key={percentage} className="flex justify-between text-sm">
+                           <span>{percentage}%:</span>
+                           <span className="font-mono">{formatHoursToTime(hours)}</span>
+                         </div>
+                       );
+                     })}
+                   </div>
+                </CardContent>
+              </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Horas Noturnas</CardTitle>
@@ -960,35 +999,20 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                           {formatHoursToTime(monthTotals.overtimeDayHours + monthTotals.overtimeNightHours)}
                         </p>
                       </div>
-                       <div className="text-center p-3 bg-muted/50 rounded-lg">
-                         <p className="text-sm text-muted-foreground">H.E. por %</p>
-                         <div className="space-y-1">
-                           {monthProgressiveHours.he50 > 0 && (
-                             <div className="flex justify-between text-xs">
-                               <span>50%:</span>
-                               <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he50)}</span>
-                             </div>
-                           )}
-                           {monthProgressiveHours.he60 > 0 && (
-                             <div className="flex justify-between text-xs">
-                               <span>60%:</span>
-                               <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he60)}</span>
-                             </div>
-                           )}
-                           {monthProgressiveHours.he70 > 0 && (
-                             <div className="flex justify-between text-xs">
-                               <span>70%:</span>
-                               <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he70)}</span>
-                             </div>
-                           )}
-                           {monthProgressiveHours.he100 > 0 && (
-                             <div className="flex justify-between text-xs">
-                               <span>100%:</span>
-                               <span className="font-mono">{formatHoursToTime(monthProgressiveHours.he100)}</span>
-                             </div>
-                           )}
-                         </div>
-                       </div>
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">H.E. por %</p>
+                          <div className="space-y-1">
+                            {configuredPercentages.map(percentage => {
+                              const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                              return (
+                                <div key={percentage} className="flex justify-between text-xs">
+                                  <span>{percentage}%:</span>
+                                  <span className="font-mono">{formatHoursToTime(hours)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                     </div>
                     
                     {/* Month Details Table */}
@@ -1144,30 +1168,15 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
                  <div className="text-center">
                    <p className="text-sm text-muted-foreground">H.E. por %</p>
                    <div className="space-y-1">
-                     {progressiveHours.he50 > 0 && (
-                       <div className="flex justify-between text-xs">
-                         <span>50%:</span>
-                         <span className="font-mono">{formatHoursToTime(progressiveHours.he50)}</span>
-                       </div>
-                     )}
-                     {progressiveHours.he60 > 0 && (
-                       <div className="flex justify-between text-xs">
-                         <span>60%:</span>
-                         <span className="font-mono">{formatHoursToTime(progressiveHours.he60)}</span>
-                       </div>
-                     )}
-                     {progressiveHours.he70 > 0 && (
-                       <div className="flex justify-between text-xs">
-                         <span>70%:</span>
-                         <span className="font-mono">{formatHoursToTime(progressiveHours.he70)}</span>
-                       </div>
-                     )}
-                     {progressiveHours.he100 > 0 && (
-                       <div className="flex justify-between text-xs">
-                         <span>100%:</span>
-                         <span className="font-mono">{formatHoursToTime(progressiveHours.he100)}</span>
-                       </div>
-                     )}
+                     {configuredPercentages.map(percentage => {
+                       const hours = getHoursForPercentage(percentage, progressiveHours);
+                       return (
+                         <div key={percentage} className="flex justify-between text-xs">
+                           <span>{percentage}%:</span>
+                           <span className="font-mono">{formatHoursToTime(hours)}</span>
+                         </div>
+                       );
+                     })}
                    </div>
                  </div>
               </div>
@@ -1303,30 +1312,16 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }
 
                 {/* Progressive Hours as Cards */}
                 <div className="print-summary-grid" style={{ marginBottom: '15px' }}>
-                  {monthProgressiveHours.he50 > 0 && (
-                    <div className="print-summary-card">
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 50%</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#059669' }}>{formatHoursToTime(monthProgressiveHours.he50)}</div>
-                    </div>
-                  )}
-                  {monthProgressiveHours.he60 > 0 && (
-                    <div className="print-summary-card">
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 60%</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#0891b2' }}>{formatHoursToTime(monthProgressiveHours.he60)}</div>
-                    </div>
-                  )}
-                  {monthProgressiveHours.he70 > 0 && (
-                    <div className="print-summary-card">
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 70%</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#d97706' }}>{formatHoursToTime(monthProgressiveHours.he70)}</div>
-                    </div>
-                  )}
-                  {monthProgressiveHours.he100 > 0 && (
-                    <div className="print-summary-card">
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. 100%</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#dc2626' }}>{formatHoursToTime(monthProgressiveHours.he100)}</div>
-                    </div>
-                  )}
+                  {configuredPercentages.map(percentage => {
+                    const hours = getHoursForPercentage(percentage, monthProgressiveHours);
+                    const color = getColorForPercentage(percentage);
+                    return (
+                      <div key={percentage} className="print-summary-card">
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>H.E. {percentage}%</div>
+                        <div style={{ fontSize: '16px', fontWeight: 'bold', color }}>{formatHoursToTime(hours)}</div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Detailed Table */}
