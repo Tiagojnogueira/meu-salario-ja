@@ -25,11 +25,8 @@ export const useSupabaseAuth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile and verify if user is active
           const { data: profileData, error } = await supabase
             .from('profiles')
             .select('*')
@@ -38,10 +35,29 @@ export const useSupabaseAuth = () => {
             
           if (error) {
             console.error('Error fetching profile:', error);
+            // Force logout if profile not found
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          } else if (!profileData.active) {
+            // User is inactive, force logout and show message
+            console.log('User is inactive, forcing logout');
+            await supabase.auth.signOut();
+            localStorage.clear();
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+            toast.error('Sua conta está inativa. Entre em contato com o administrador.');
           } else {
+            // User is active, set profile and session
             setProfile(profileData);
+            setSession(session);
+            setUser(session.user);
           }
         } else {
+          setSession(null);
+          setUser(null);
           setProfile(null);
         }
         
@@ -49,10 +65,33 @@ export const useSupabaseAuth = () => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Check for existing session and validate user status
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        // Verify if user is still active
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+          
+        if (error || !profileData?.active) {
+          // User not found or inactive, force logout
+          await supabase.auth.signOut();
+          localStorage.clear();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          if (!error && !profileData?.active) {
+            toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+          }
+        } else {
+          // User is active
+          setSession(session);
+          setUser(session.user);
+          setProfile(profileData);
+        }
+      }
       setLoading(false);
     });
 
@@ -100,9 +139,17 @@ export const useSupabaseAuth = () => {
         .eq('email', email)
         .maybeSingle();
 
-      // Se encontrou o usuário, verificar se está ativo
+      // Se encontrou o usuário no profiles
       if (userData) {
         if (!userData.active) {
+          // Usuário existe mas está inativo - bloquear completamente
+          // Garantir que não há sessão ativa e limpar dados locais
+          await supabase.auth.signOut();
+          localStorage.clear();
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          
           toast.error('Sua conta está inativa. Entre em contato com o administrador.');
           return false;
         }
@@ -121,7 +168,8 @@ export const useSupabaseAuth = () => {
         toast.success('Login realizado com sucesso!');
         return true;
       } else {
-        // Usuário não encontrado no profiles, tentar login normal (pode ser erro de email/senha)
+        // Usuário não encontrado no profiles, tentar login normal
+        // (pode ser novo usuário ou erro de email/senha)
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -138,6 +186,9 @@ export const useSupabaseAuth = () => {
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Erro ao fazer login');
+      // Garantir limpeza em caso de erro
+      await supabase.auth.signOut();
+      localStorage.clear();
       return false;
     }
   };
