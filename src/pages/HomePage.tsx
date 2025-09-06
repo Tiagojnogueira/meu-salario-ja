@@ -1,14 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, ChevronRight, Code, Zap, Shield, Clock, Settings } from "lucide-react";
+import { Calculator, ChevronRight, Code, Zap, Shield, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const HomePage = () => {
-  const { isAdmin } = useAdminAuth();
-  const { logout } = useSupabaseAuth();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
@@ -19,22 +14,9 @@ const HomePage = () => {
               <h1 className="text-2xl font-bold text-foreground">Aplicativos</h1>
               <p className="text-sm text-muted-foreground">Tiago Nogueira</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Code className="h-4 w-4" />
-                <span>Desenvolvedor</span>
-              </div>
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Sair
-              </Button>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Code className="h-4 w-4" />
+              <span>Desenvolvedor</span>
             </div>
           </div>
         </div>

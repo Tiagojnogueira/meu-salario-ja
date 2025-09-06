@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { toast } from 'sonner';
 
 export interface Profile {
@@ -17,14 +16,10 @@ export interface Profile {
 }
 
 export const useSupabaseAuth = () => {
-  const { impersonatedUser, isImpersonating } = useImpersonation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Return impersonated user data when impersonating
-  const effectiveProfile = isImpersonating ? impersonatedUser : profile;
 
   useEffect(() => {
     // Set up auth state listener
@@ -35,22 +30,16 @@ export const useSupabaseAuth = () => {
         
         if (session?.user) {
           // Fetch user profile
-          try {
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-              
-            if (error) {
-              console.error('Error fetching profile:', error);
-              setProfile(null);
-            } else {
-              setProfile(profileData);
-            }
-          } catch (error) {
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+            
+          if (error) {
             console.error('Error fetching profile:', error);
-            setProfile(null);
+          } else {
+            setProfile(profileData);
           }
         } else {
           setProfile(null);
@@ -60,44 +49,12 @@ export const useSupabaseAuth = () => {
       }
     );
 
-    // Check for existing session on mount
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-        }
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If we have a user, fetch profile on init
-        if (session?.user) {
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-              
-            if (profileError) {
-              console.error('Error fetching profile on init:', profileError);
-            } else {
-              setProfile(profileData);
-            }
-          } catch (error) {
-            console.error('Error fetching profile on init:', error);
-          }
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -197,7 +154,7 @@ export const useSupabaseAuth = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
         
       if (error) {
         console.error('Error refreshing profile:', error);
@@ -212,7 +169,7 @@ export const useSupabaseAuth = () => {
   return {
     user,
     session,
-    profile: effectiveProfile,
+    profile,
     loading,
     register,
     login,
