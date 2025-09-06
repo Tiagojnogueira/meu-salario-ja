@@ -21,16 +21,19 @@ import { cn } from '@/lib/utils';
 interface CreateCalculationProps {
   onBack: () => void;
   onContinue: (calculationId: string) => void;
+  selectedUserId?: string;
 }
 
-export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps) => {
+export const CreateCalculation = ({ onBack, onContinue, selectedUserId }: CreateCalculationProps) => {
   const { profile } = useSupabaseAuth();
+  // Se há selectedUserId (admin criando para outro usuário), usar ele, senão usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
   const { 
     createCalculation, 
     getDefaultWorkingHours, 
     getDefaultOvertimePercentages,
     loading 
-  } = useSupabaseCalculations(profile?.user_id);
+  } = useSupabaseCalculations(targetUserId);
 
   // Initialize states with defaults
   const [description, setDescription] = useState('');
@@ -184,8 +187,13 @@ export const CreateCalculation = ({ onBack, onContinue }: CreateCalculationProps
     };
 
     try {
+      console.log('CreateCalculation - Creating calculation for targetUserId:', targetUserId);
+      console.log('CreateCalculation - Selected user:', selectedUserId);
+      console.log('CreateCalculation - Profile user:', profile?.user_id);
+      
       const newId = await createCalculation(calculationData);
       if (newId) {
+        console.log('CreateCalculation - New calculation created with ID:', newId);
         onContinue(newId);
       }
     } catch (error) {

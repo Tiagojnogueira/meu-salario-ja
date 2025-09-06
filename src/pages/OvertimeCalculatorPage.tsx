@@ -118,6 +118,7 @@ const OvertimeCalculatorPage = () => {
         <CreateCalculation 
           onBack={handleBackToDashboard}
           onContinue={handleContinueToTimeEntry}
+          selectedUserId={selectedUserId}
         />
       );
     
