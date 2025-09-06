@@ -139,6 +139,14 @@ export const useSupabaseAuth = () => {
       });
 
       if (authError) {
+        // Verificar se o erro é de email não confirmado
+        if (authError.message.includes('email not confirmed') || 
+            authError.message.includes('email_not_confirmed') ||
+            authError.message.includes('signup requires email confirmation')) {
+          toast.error('Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada e clique no link de confirmação.');
+          return false;
+        }
+        
         toast.error('Email ou senha incorretos');
         return false;
       }
