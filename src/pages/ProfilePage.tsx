@@ -156,7 +156,7 @@ export const ProfilePage = () => {
                 <div>
                   <CardTitle className="text-xl">Informações do Perfil</CardTitle>
                   <CardDescription>
-                    Atualize suas informações pessoais e senha em um só lugar
+                    Atualize suas informações
                   </CardDescription>
                 </div>
               </div>
@@ -186,6 +186,24 @@ export const ProfilePage = () => {
                       </div>
                       <p className="text-xs text-muted-foreground">
                         O e-mail não pode ser alterado
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Conta Criada em</Label>
+                      <div className="bg-muted/50 rounded-md border border-muted p-3 h-10 flex items-center">
+                        <p className="text-sm">
+                          {new Date(profile.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Data de criação da conta
                       </p>
                     </div>
 
@@ -344,45 +362,6 @@ export const ProfilePage = () => {
             </CardContent>
           </Card>
 
-          {/* Account Information */}
-          <Card className="mt-8 border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Informações da Conta</CardTitle>
-              <CardDescription>
-                Detalhes sobre sua conta no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    ID do Usuário
-                  </Label>
-                  <div className="bg-muted/30 rounded-lg p-3">
-                    <p className="text-sm font-mono break-all">
-                      {profile.user_id}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Conta Criada em
-                  </Label>
-                  <div className="bg-muted/30 rounded-lg p-3">
-                    <p className="text-sm">
-                      {new Date(profile.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </main>
     </div>
