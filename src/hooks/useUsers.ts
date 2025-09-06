@@ -17,50 +17,62 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      console.log('Iniciando busca de usuários...');
-      
-      // Primeiro, buscar todos os profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      console.log('Profiles encontrados:', profiles);
-      
-      if (profilesError) {
-        console.error('Erro ao buscar profiles:', profilesError);
-        throw profilesError;
+      try {
+        console.log('🔍 Buscando usuários do sistema...');
+        
+        // Query simples e direta para buscar todos os profiles
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            user_id,
+            name,
+            email,
+            username,
+            office_name,
+            phone,
+            created_at
+          `)
+          .order('name', { ascending: true });
+        
+        if (error) {
+          console.error('❌ Erro na consulta:', error);
+          throw error;
+        }
+        
+        console.log('✅ Dados encontrados:', data);
+        
+        if (!data || data.length === 0) {
+          console.log('⚠️ Nenhum usuário encontrado no banco');
+          return [];
+        }
+
+        // Buscar roles para cada usuário
+        const usersWithRoles = await Promise.all(
+          data.map(async (user: any) => {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.user_id)
+              .maybeSingle();
+            
+            return {
+              ...user,
+              role: roleData?.role || 'user'
+            };
+          })
+        );
+
+        console.log('✅ Usuários com roles:', usersWithRoles);
+        return usersWithRoles as UserProfile[];
+        
+      } catch (error) {
+        console.error('💥 Erro geral:', error);
+        throw error;
       }
-
-      if (!profiles || profiles.length === 0) {
-        console.log('Nenhum profile encontrado');
-        return [];
-      }
-
-      // Buscar roles separadamente
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      console.log('Roles encontradas:', roles);
-      
-      if (rolesError) {
-        console.error('Erro ao buscar roles:', rolesError);
-        // Continuar mesmo se houver erro nas roles
-      }
-
-      // Combinar profiles com roles
-      const usersWithRoles = profiles.map((profile: any) => {
-        const userRole = roles?.find(r => r.user_id === profile.user_id);
-        return {
-          ...profile,
-          role: userRole?.role || 'user'
-        };
-      });
-
-      console.log('Usuários finais:', usersWithRoles);
-      return usersWithRoles as UserProfile[];
     },
+    retry: 1,
+    staleTime: 30000, // 30 segundos
   });
 };
 
