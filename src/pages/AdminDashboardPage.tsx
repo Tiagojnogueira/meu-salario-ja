@@ -500,10 +500,13 @@ const AdminDashboardPage = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => window.location.href = '/'}
+                onClick={async () => {
+                  await logout();
+                  window.location.href = '/';
+                }}
                 disabled={isLoggingIn}
               >
-                Voltar ao Sistema
+                Voltar Para Página Inicial
               </Button>
             </div>
           </CardContent>
@@ -513,6 +516,11 @@ const AdminDashboardPage = () => {
   }
 
   if (!isAdmin) {
+    // Destruir sessão ativa quando não é admin
+    if (isAuthenticated) {
+      logout();
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -527,8 +535,11 @@ const AdminDashboardPage = () => {
                 Apenas administradores podem acessar esta área.
               </AlertDescription>
             </Alert>
-            <Button onClick={() => window.location.href = '/'} className="w-full mt-4">
-              Voltar ao Sistema
+            <Button onClick={async () => {
+              await logout();
+              window.location.href = '/';
+            }} className="w-full mt-4">
+              Voltar Para Página Inicial
             </Button>
           </CardContent>
         </Card>
