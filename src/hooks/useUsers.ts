@@ -11,6 +11,7 @@ export interface UserProfile {
   phone?: string;
   created_at: string;
   role?: string;
+  active: boolean;
 }
 
 export const useUsers = () => {
@@ -31,7 +32,8 @@ export const useUsers = () => {
             username,
             office_name,
             phone,
-            created_at
+            created_at,
+            active
           `)
           .order('name', { ascending: true });
         

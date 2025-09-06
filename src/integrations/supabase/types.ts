@@ -73,6 +73,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           created_at: string
           email: string
           id: string
@@ -84,6 +85,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           email: string
           id?: string
@@ -95,6 +97,7 @@ export type Database = {
           username: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           email?: string
           id?: string

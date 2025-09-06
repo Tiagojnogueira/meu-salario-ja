@@ -136,9 +136,36 @@ export const useUserManagement = () => {
     }
   };
 
+  const toggleUserActive = async (userId: string, active: boolean) => {
+    try {
+      console.log('🔄 Alterando status do usuário:', userId, active ? 'ativo' : 'inativo');
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          active: active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .select();
+
+      if (error) {
+        console.error('❌ Erro ao alterar status:', error);
+        throw error;
+      }
+
+      console.log('✅ Status alterado com sucesso:', data);
+      return { success: true, data };
+    } catch (error) {
+      console.error('💥 Erro geral ao alterar status:', error);
+      return { success: false, error };
+    }
+  };
+
   return {
     updateUserProfile,
     updateUserRole,
     deleteUser,
+    toggleUserActive,
   };
 };

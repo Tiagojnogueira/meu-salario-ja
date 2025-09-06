@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal, Key, Plus, UserPlus } from "lucide-react";
+import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal, Key, Plus, UserPlus, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -78,7 +79,7 @@ const AdminDashboardPage = () => {
   const { data: stats } = useUserStats();
   const { user, isAdmin, loading: adminLoading, isAuthenticated } = useAdminAuth();
   const { logout, login } = useSupabaseAuth();
-  const { updateUserProfile, updateUserRole, deleteUser } = useUserManagement();
+  const { updateUserProfile, updateUserRole, deleteUser, toggleUserActive } = useUserManagement();
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -384,6 +385,39 @@ const AdminDashboardPage = () => {
         } else {
           toast.error('Erro ao deletar usuário: ' + (error?.message || 'Erro desconhecido'));
         }
+      }
+    }
+  };
+
+  const handleToggleUserActive = async (userData: UserProfile) => {
+    // Não permitir inativar administradores
+    if (userData.role === 'admin') {
+      toast.error('Não é possível inativar administradores');
+      return;
+    }
+
+    // Não permitir inativar o próprio usuário
+    if (userData.user_id === user?.id) {
+      toast.error('Você não pode inativar sua própria conta');
+      return;
+    }
+
+    const newStatus = !userData.active;
+    const action = newStatus ? 'ativar' : 'inativar';
+
+    if (confirm(`Tem certeza que deseja ${action} o usuário ${userData.name}?${!newStatus ? '\n\nUsuários inativos não poderão fazer login no sistema.' : ''}`)) {
+      try {
+        const result = await toggleUserActive(userData.user_id, newStatus);
+        
+        if (!result.success) {
+          throw result.error;
+        }
+        
+        toast.success(`Usuário ${userData.name} ${newStatus ? 'ativado' : 'inativado'} com sucesso!`);
+        refetchUsers();
+      } catch (error: any) {
+        console.error('Erro ao alterar status do usuário:', error);
+        toast.error(`Erro ao ${action} usuário: ` + (error?.message || 'Erro desconhecido'));
       }
     }
   };
@@ -794,6 +828,7 @@ const AdminDashboardPage = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>Status</TableHead>
                           <TableHead>Usuário</TableHead>
                           <TableHead>Contato</TableHead>
                           <TableHead>Empresa</TableHead>
@@ -805,6 +840,27 @@ const AdminDashboardPage = () => {
                       <TableBody>
                         {users.map((userData) => (
                           <TableRow key={userData.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                {userData.active ? (
+                                  <div className="flex items-center space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    <span className="text-sm text-green-500 font-medium">Ativo</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center space-x-2">
+                                    <XCircle className="h-4 w-4 text-red-500" />
+                                    <span className="text-sm text-red-500 font-medium">Inativo</span>
+                                  </div>
+                                )}
+                                {userData.role !== 'admin' && userData.user_id !== user?.id && (
+                                  <Switch
+                                    checked={userData.active}
+                                    onCheckedChange={() => handleToggleUserActive(userData)}
+                                  />
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-3">
                                 <div className="inline-flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">

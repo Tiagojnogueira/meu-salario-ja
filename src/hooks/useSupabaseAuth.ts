@@ -93,7 +93,7 @@ export const useSupabaseAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -101,6 +101,28 @@ export const useSupabaseAuth = () => {
       if (error) {
         toast.error('Email ou senha incorretos');
         return false;
+      }
+
+      // Verificar se o usuário está ativo
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('active')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (profileError || !profileData) {
+          console.error('Erro ao verificar status do usuário:', profileError);
+          toast.error('Erro ao verificar dados do usuário');
+          return false;
+        }
+
+        if (!profileData.active) {
+          // Fazer logout imediatamente se usuário inativo
+          await supabase.auth.signOut();
+          toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+          return false;
+        }
       }
 
       toast.success('Login realizado com sucesso!');
