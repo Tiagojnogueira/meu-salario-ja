@@ -23,9 +23,17 @@ export const EditCalculationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
+  // Pegar userId da query string se disponível (quando admin edita outro usuário)
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedUserId = urlParams.get('userId');
+  
   console.log('EditCalculationPage - Received ID from URL:', id);
+  console.log('EditCalculationPage - Selected User ID from query:', selectedUserId);
+  
   const { profile } = useSupabaseAuth();
-  const { updateCalculation } = useSupabaseCalculations(profile?.user_id);
+  // Se há selectedUserId (admin editando outro usuário), usar ele, senão usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
+  const { updateCalculation } = useSupabaseCalculations(targetUserId);
 
   // Initialize states with defaults
   const [description, setDescription] = useState('');
@@ -64,9 +72,10 @@ export const EditCalculationPage = () => {
   // Load existing data when component mounts
   useEffect(() => {
     const loadCalculation = async () => {
-      if (!id || !profile?.user_id) return;
+      if (!id || !targetUserId) return;
 
       console.log('EditCalculation - Loading calculation with ID:', id);
+      console.log('EditCalculation - Target User ID:', targetUserId);
       setIsLoading(true);
       
       try {
@@ -74,7 +83,7 @@ export const EditCalculationPage = () => {
           .from('calculations')
           .select('*')
           .eq('id', id)
-          .eq('user_id', profile.user_id)
+          .eq('user_id', targetUserId)
           .single();
 
         if (error) {
@@ -113,7 +122,7 @@ export const EditCalculationPage = () => {
     };
 
     loadCalculation();
-  }, [id, profile?.user_id, navigate]);
+  }, [id, targetUserId, navigate]);
 
   const handleWorkingHourChange = (day: keyof WorkingHours, value: string) => {
     console.log('EditCalculation - Working hour change:', day, value);
@@ -209,8 +218,11 @@ export const EditCalculationPage = () => {
     try {
       const success = await updateCalculation(id, calculationData);
       if (success) {
-        // Navegar para a tela de edição de horários 
-        navigate(`/horas-extras/editar-horarios/${id}`);
+        // Navegar para a tela de edição de horários com o userId se aplicável
+        const url = selectedUserId 
+          ? `/horas-extras/editar-horarios/${id}?userId=${selectedUserId}`
+          : `/horas-extras/editar-horarios/${id}`;
+        navigate(url);
       }
     } catch (error) {
       console.error('EditCalculation - Update error:', error);

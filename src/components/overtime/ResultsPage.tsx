@@ -15,6 +15,7 @@ interface ResultsPageProps {
   onBack: () => void;
   onBackToDashboard: () => void;
   onEdit?: () => void;
+  selectedUserId?: string;
 }
 
 interface DayResult {
@@ -35,9 +36,11 @@ interface DayResult {
   overtimePercentage: number;
 }
 
-export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit }: ResultsPageProps) => {
+export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit, selectedUserId }: ResultsPageProps) => {
   const { profile } = useSupabaseAuth();
-  const { getCalculation } = useSupabaseCalculations(profile?.user_id);
+  // Se há selectedUserId (admin visualizando outro usuário), usar ele, senão usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
+  const { getCalculation } = useSupabaseCalculations(targetUserId);
   const calculation = getCalculation(calculationId);
 
   if (!calculation) {

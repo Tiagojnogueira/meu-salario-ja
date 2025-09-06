@@ -51,7 +51,11 @@ const OvertimeCalculatorPage = () => {
 
   const handleEditCalculation = (id: string) => {
     console.log('OvertimeCalculatorPage - Navigating to edit with database ID:', id);
-    navigate('/horas-extras/editar/' + id);
+    // Se for admin visualizando outro usuário, incluir o selectedUserId na URL
+    const url = selectedUserId 
+      ? `/horas-extras/editar/${id}?userId=${selectedUserId}`
+      : `/horas-extras/editar/${id}`;
+    navigate(url);
   };
 
   const handleContinueToTimeEntry = (calculationId: string) => {
@@ -118,6 +122,7 @@ const OvertimeCalculatorPage = () => {
           calculationId={currentCalculationId}
           onBack={() => setCurrentStep('create')}
           onCalculate={handleCalculateResults}
+          selectedUserId={selectedUserId}
         />
       );
     
@@ -127,7 +132,13 @@ const OvertimeCalculatorPage = () => {
           calculationId={currentCalculationId}
           onBack={() => setCurrentStep('time-entry')}
           onBackToDashboard={handleBackToDashboard}
-          onEdit={() => navigate('/horas-extras/editar/' + currentCalculationId)}
+          onEdit={() => {
+            const url = selectedUserId 
+              ? `/horas-extras/editar/${currentCalculationId}?userId=${selectedUserId}`
+              : `/horas-extras/editar/${currentCalculationId}`;
+            navigate(url);
+          }}
+          selectedUserId={selectedUserId}
         />
       );
     

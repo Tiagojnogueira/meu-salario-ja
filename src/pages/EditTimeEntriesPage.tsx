@@ -18,8 +18,15 @@ export const EditTimeEntriesPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Pegar userId da query string se disponível (quando admin edita outro usuário)
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedUserId = urlParams.get('userId');
+  
   const { profile } = useSupabaseAuth();
-  const { updateCalculation } = useSupabaseCalculations(profile?.user_id);
+  // Se há selectedUserId (admin editando outro usuário), usar ele, senão usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
+  const { updateCalculation } = useSupabaseCalculations(targetUserId);
   
   const [calculation, setCalculation] = useState<any>(null);
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
@@ -28,7 +35,7 @@ export const EditTimeEntriesPage = () => {
   // Load calculation data
   useEffect(() => {
     const loadCalculation = async () => {
-      if (!id || !profile?.user_id) return;
+      if (!id || !targetUserId) return;
 
       setIsLoading(true);
       
@@ -37,7 +44,7 @@ export const EditTimeEntriesPage = () => {
           .from('calculations')
           .select('*')
           .eq('id', id)
-          .eq('user_id', profile.user_id)
+          .eq('user_id', targetUserId)
           .single();
 
         if (error) {
@@ -120,7 +127,7 @@ export const EditTimeEntriesPage = () => {
     };
 
     loadCalculation();
-  }, [id, profile?.user_id, navigate]);
+  }, [id, targetUserId, navigate]);
 
   const applyAutoFill = (entries: DayEntry[], workingHours: any) => {
     const getDayOfWeekKey = (date: Date) => {

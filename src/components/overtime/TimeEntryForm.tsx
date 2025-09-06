@@ -17,11 +17,14 @@ interface TimeEntryFormProps {
   calculationId: string;
   onBack: () => void;
   onCalculate: () => void;
+  selectedUserId?: string;
 }
 
-export const TimeEntryForm = ({ calculationId, onBack, onCalculate }: TimeEntryFormProps) => {
+export const TimeEntryForm = ({ calculationId, onBack, onCalculate, selectedUserId }: TimeEntryFormProps) => {
   const { profile } = useSupabaseAuth();
-  const { getCalculation, updateCalculation } = useSupabaseCalculations(profile?.user_id);
+  // Se há selectedUserId (admin visualizando outro usuário), usar ele, senão usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
+  const { getCalculation, updateCalculation } = useSupabaseCalculations(targetUserId);
   const calculation = getCalculation(calculationId);
   
   const [dayEntries, setDayEntries] = useState<DayEntry[]>([]);
