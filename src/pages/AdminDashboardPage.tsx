@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal, Key } from "lucide-react";
+import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal, Key, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -47,12 +47,25 @@ const AdminDashboardPage = () => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     newPassword: '',
     confirmPassword: ''
   });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState({
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    office_name: '',
+    phone: '',
+    role: 'user'
+  });
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showCreateConfirmPassword, setShowCreateConfirmPassword] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
@@ -96,6 +109,137 @@ const AdminDashboardPage = () => {
       role: userToEdit.role || 'user'
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleCreateUser = () => {
+    setCreateUserForm({
+      name: '',
+      email: '',
+      username: '',
+      password: '',
+      confirmPassword: '',
+      office_name: '',
+      phone: '',
+      role: 'user'
+    });
+    setShowCreatePassword(false);
+    setShowCreateConfirmPassword(false);
+    setIsCreateUserDialogOpen(true);
+  };
+
+  const handleSaveNewUser = async () => {
+    // Validações
+    if (!createUserForm.name || !createUserForm.email || !createUserForm.username || !createUserForm.password) {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (createUserForm.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (createUserForm.password !== createUserForm.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(createUserForm.email)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    try {
+      console.log('👤 Criando novo usuário:', createUserForm.email);
+      
+      // Criar usuário no auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: createUserForm.email,
+        password: createUserForm.password,
+        options: {
+          data: {
+            name: createUserForm.name,
+            username: createUserForm.username
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Erro ao criar usuário:', authError);
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('Usuário não foi criado corretamente');
+      }
+
+      console.log('✅ Usuário criado no auth:', authData.user.id);
+
+      // Criar perfil manualmente (caso o trigger não funcione)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: authData.user.id,
+          name: createUserForm.name,
+          email: createUserForm.email,
+          username: createUserForm.username,
+          office_name: createUserForm.office_name || null,
+          phone: createUserForm.phone || null,
+        });
+
+      if (profileError && !profileError.message.includes('duplicate key')) {
+        console.error('❌ Erro ao criar perfil:', profileError);
+        // Continuar mesmo assim, pois o trigger pode ter criado
+      }
+
+      // Definir role se não for 'user'
+      if (createUserForm.role !== 'user') {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: authData.user.id,
+            role: createUserForm.role as 'user' | 'admin'
+          });
+
+        if (roleError) {
+          console.error('❌ Erro ao definir role:', roleError);
+          // Não bloquear por isso
+        }
+      }
+
+      toast.success(`Usuário ${createUserForm.name} criado com sucesso!`);
+      setIsCreateUserDialogOpen(false);
+      setCreateUserForm({
+        name: '',
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+        office_name: '',
+        phone: '',
+        role: 'user'
+      });
+      refetchUsers(); // Recarregar a lista
+      
+    } catch (error: any) {
+      console.error('💥 Erro ao criar usuário:', error);
+      
+      if (error?.message?.includes('User already registered')) {
+        toast.error('Este email já está em uso');
+      } else if (error?.code === '23505') {
+        if (error.details?.includes('username')) {
+          toast.error('Nome de usuário já está em uso');
+        } else if (error.details?.includes('email')) {
+          toast.error('Email já está em uso');
+        } else {
+          toast.error('Dados duplicados encontrados');
+        }
+      } else {
+        toast.error('Erro ao criar usuário: ' + (error?.message || 'Erro desconhecido'));
+      }
+    }
   };
 
   const handleChangePassword = (userToEdit: UserProfile) => {
@@ -616,6 +760,10 @@ const AdminDashboardPage = () => {
                     {users?.length || 0} usuários cadastrados no sistema
                   </p>
                 </div>
+                <Button onClick={handleCreateUser} className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Adicionar Usuário
+                </Button>
               </div>
 
               {/* Users Table */}
@@ -943,6 +1091,187 @@ const AdminDashboardPage = () => {
             >
               <Key className="w-4 h-4 mr-2" />
               Alterar Senha
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Criação de Usuário */}
+      <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Criar Novo Usuário
+            </DialogTitle>
+            <DialogDescription>
+              Crie uma nova conta de usuário para o sistema de horas extras.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createName" className="text-right">
+                Nome *
+              </Label>
+              <Input
+                id="createName"
+                placeholder="Nome completo"
+                value={createUserForm.name}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createEmail" className="text-right">
+                Email *
+              </Label>
+              <Input
+                id="createEmail"
+                type="email"
+                placeholder="email@exemplo.com"
+                value={createUserForm.email}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createUsername" className="text-right">
+                Username *
+              </Label>
+              <Input
+                id="createUsername"
+                placeholder="nome.usuario"
+                value={createUserForm.username}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, username: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createPassword" className="text-right">
+                Senha *
+              </Label>
+              <div className="col-span-3 relative">
+                <Input
+                  id="createPassword"
+                  type={showCreatePassword ? "text" : "password"}
+                  placeholder="Mínimo 6 caracteres"
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCreatePassword(!showCreatePassword)}
+                >
+                  {showCreatePassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createConfirmPassword" className="text-right">
+                Confirmar *
+              </Label>
+              <div className="col-span-3 relative">
+                <Input
+                  id="createConfirmPassword"
+                  type={showCreateConfirmPassword ? "text" : "password"}
+                  placeholder="Confirme a senha"
+                  value={createUserForm.confirmPassword}
+                  onChange={(e) => setCreateUserForm({ ...createUserForm, confirmPassword: e.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCreateConfirmPassword(!showCreateConfirmPassword)}
+                >
+                  {showCreateConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createOffice" className="text-right">
+                Empresa
+              </Label>
+              <Input
+                id="createOffice"
+                placeholder="Nome da empresa"
+                value={createUserForm.office_name}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, office_name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createPhone" className="text-right">
+                Telefone
+              </Label>
+              <Input
+                id="createPhone"
+                placeholder="(00) 00000-0000"
+                value={createUserForm.phone}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, phone: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="createRole" className="text-right">
+                Função
+              </Label>
+              <Select
+                value={createUserForm.role}
+                onValueChange={(value) => setCreateUserForm({ ...createUserForm, role: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione uma função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {createUserForm.password && createUserForm.password.length < 6 && (
+              <div className="col-span-4 text-sm text-destructive">
+                A senha deve ter pelo menos 6 caracteres
+              </div>
+            )}
+            {createUserForm.password && createUserForm.confirmPassword && 
+             createUserForm.password !== createUserForm.confirmPassword && (
+              <div className="col-span-4 text-sm text-destructive">
+                As senhas não coincidem
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateUserDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleSaveNewUser}
+              disabled={
+                !createUserForm.name || 
+                !createUserForm.email || 
+                !createUserForm.username || 
+                !createUserForm.password || 
+                !createUserForm.confirmPassword || 
+                createUserForm.password !== createUserForm.confirmPassword ||
+                createUserForm.password.length < 6
+              }
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Criar Usuário
             </Button>
           </DialogFooter>
         </DialogContent>
