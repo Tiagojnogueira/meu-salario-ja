@@ -17,21 +17,23 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Buscar todos os profiles
-      const { data: profiles, error: profilesError } = await supabase
+      // Buscar profiles com roles através de JOIN
+      const { data: users, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_roles!inner(role)
+        `)
         .order('created_at', { ascending: false });
       
-      if (profilesError) {
-        throw profilesError;
+      if (error) {
+        throw error;
       }
 
-      // Por enquanto, assumir role 'user' para todos os usuários
-      // TODO: Implementar busca de roles quando os tipos estiverem corretos
-      const usersWithRoles = profiles.map((profile) => ({
-        ...profile,
-        role: 'user' // Valor padrão por enquanto
+      // Transformar os dados para o formato esperado
+      const usersWithRoles = users.map((user: any) => ({
+        ...user,
+        role: user.user_roles?.[0]?.role || 'user'
       }));
 
       return usersWithRoles as UserProfile[];

@@ -1,16 +1,21 @@
+import { useState } from "react";
+import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, FileText, Settings, TrendingUp, ChevronLeft, Mail, Phone, Building, User } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { useUsers, useUserStats } from "@/hooks/useUsers";
-import { useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview');
   const { data: users, isLoading: usersLoading } = useUsers();
   const { data: stats } = useUserStats();
+  const { user, isAdmin, loading: adminLoading, isAuthenticated } = useAdminAuth();
+  const { logout } = useSupabaseAuth();
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -26,6 +31,67 @@ const AdminDashboardPage = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/';
+  };
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Shield className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <CardTitle>Acesso Administrativo</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-4">
+              Você precisa estar logado para acessar o painel administrativo.
+            </p>
+            <Button onClick={() => window.location.href = '/'} className="w-full">
+              Fazer Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Shield className="w-12 h-12 mx-auto mb-4 text-destructive" />
+            <CardTitle>Acesso Negado</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Alert>
+              <AlertDescription>
+                Você não tem permissão para acessar o painel administrativo.
+                Apenas administradores podem acessar esta área.
+              </AlertDescription>
+            </Alert>
+            <Button onClick={() => window.location.href = '/'} className="w-full mt-4">
+              Voltar ao Sistema
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -45,9 +111,20 @@ const AdminDashboardPage = () => {
                 <p className="text-sm text-muted-foreground">Gerenciamento do Sistema</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Settings className="h-4 w-4" />
-              <span>Admin</span>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">{user?.email}</span>
+                <Badge variant="outline" className="ml-2">Admin</Badge>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
             </div>
           </div>
         </div>
