@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -14,12 +15,19 @@ interface DashboardProps {
   onCreateNew: () => void;
   onViewCalculation: (id: string) => void;
   onEditCalculation: (id: string) => void;
+  selectedUserId?: string;
+  selectedUserName?: string;
 }
 
-export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }: DashboardProps) => {
+export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, selectedUserId, selectedUserName }: DashboardProps) => {
   const navigate = useNavigate();
   const { profile, logout } = useSupabaseAuth();
-  const { calculations, deleteCalculation, loading } = useSupabaseCalculations(profile?.user_id);
+  const { isAdmin } = useAdminAuth();
+  
+  // Se for admin e estiver visualizando cálculos de outro usuário, usar o selectedUserId
+  // Caso contrário, usar o próprio user_id
+  const targetUserId = selectedUserId || profile?.user_id;
+  const { calculations, deleteCalculation, loading } = useSupabaseCalculations(targetUserId);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,7 +82,11 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                   Sistema de Horas Extras
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Bem-vindo, {profile?.name}
+                  {selectedUserName ? (
+                    <>Visualizando cálculos de: <span className="font-medium">{selectedUserName}</span></>
+                  ) : (
+                    <>Bem-vindo, {profile?.name}</>
+                  )}
                 </p>
               </div>
             </div>
@@ -102,21 +114,33 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
           {/* Create Button */}
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground">Painel de Controle</h2>
-              <p className="text-muted-foreground">Gerencie seus cálculos de horas extras</p>
+              <h2 className="text-3xl font-bold text-foreground">
+                {selectedUserName ? `Cálculos de ${selectedUserName}` : 'Painel de Controle'}
+              </h2>
+              <p className="text-muted-foreground">
+                {selectedUserName ? 
+                  `Gerencie os cálculos de horas extras de ${selectedUserName}` : 
+                  'Gerencie seus cálculos de horas extras'
+                }
+              </p>
             </div>
-            <Button onClick={onCreateNew} size="lg" className="shadow-lg">
+            <Button onClick={onCreateNew} size="lg" className="shadow-lg" disabled={!!selectedUserId}>
               <Plus className="h-5 w-5 mr-2" />
-              Criar Novo Cálculo
+              {selectedUserId ? 'Criar Novo (Desabilitado)' : 'Criar Novo Cálculo'}
             </Button>
           </div>
 
           {/* Calculations Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Seus Cálculos</CardTitle>
+              <CardTitle>
+                {selectedUserName ? `Cálculos de ${selectedUserName}` : 'Seus Cálculos'}
+              </CardTitle>
               <CardDescription>
-                Lista de todos os cálculos de horas extras criados
+                {selectedUserName ? 
+                  `Lista de todos os cálculos de horas extras de ${selectedUserName}` :
+                  'Lista de todos os cálculos de horas extras criados'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -127,12 +151,17 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                     Nenhum cálculo encontrado
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Comece criando seu primeiro cálculo de horas extras
+                    {selectedUserName ? 
+                      `${selectedUserName} ainda não possui cálculos de horas extras` :
+                      'Comece criando seu primeiro cálculo de horas extras'
+                    }
                   </p>
-                  <Button onClick={onCreateNew}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar Primeiro Cálculo
-                  </Button>
+                  {!selectedUserId && (
+                    <Button onClick={onCreateNew}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Primeiro Cálculo
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -195,6 +224,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                      onEditCalculation(calculation.id);
                                    }}
                                    title="Editar"
+                                   disabled={!!selectedUserId}
                                  >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -204,6 +234,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                                   onClick={() => handleDelete(calculation.id, calculation.description)}
                                   className="text-destructive hover:text-destructive"
                                   title="Excluir"
+                                  disabled={!!selectedUserId}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
