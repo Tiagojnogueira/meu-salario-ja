@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, ChevronRight, Code, Zap, Shield, Clock } from "lucide-react";
+import { Calculator, ChevronRight, Code, Zap, Shield, Clock, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HomePage = () => {
@@ -155,37 +155,41 @@ const HomePage = () => {
               </CardContent>
             </Card>
 
-            {/* Future Project 2 */}
-            <Card className="border-dashed border-2 border-muted-foreground/20 bg-muted/5 flex flex-col">
+            {/* Admin Panel */}
+            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
               <CardHeader className="flex-grow">
-                <div className="inline-flex items-center justify-between">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-muted rounded-lg">
-                    <Code className="h-6 w-6 text-muted-foreground" />
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
+                    <Settings className="h-6 w-6 text-primary" />
                   </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-                <CardTitle className="text-xl text-muted-foreground">Futuro Projeto</CardTitle>
+                <CardTitle className="text-xl">Painel Administrativo</CardTitle>
                 <CardDescription>
-                  Mais uma ferramenta inovadora está sendo desenvolvida para facilitar seus processos.
+                  Acesso ao painel de administração do sistema. Gerencie usuários, configurações e relatórios avançados.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
-                    Próxima atualização
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Gerenciamento de usuários
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
-                    Interface moderna
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Relatórios avançados
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-muted rounded-full mr-2"></div>
-                    Resultados precisos
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Configurações do sistema
                   </div>
                 </div>
-                <Button variant="outline" className="w-full" disabled>
-                  Em Desenvolvimento
-                </Button>
+                <Link to="/painel-administrativo">
+                  <Button className="w-full group-hover:bg-primary/90 transition-colors">
+                    Acessar Painel
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

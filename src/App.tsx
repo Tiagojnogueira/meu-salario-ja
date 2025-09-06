@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import SalaryCalculatorPage from "./pages/SalaryCalculatorPage";
 import UnemploymentSimulatorPage from "./pages/UnemploymentSimulatorPage";
 import OvertimeCalculatorPage from "./pages/OvertimeCalculatorPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import { EditCalculationPage } from "./pages/EditCalculationPage";
 import { EditTimeEntriesPage } from "./pages/EditTimeEntriesPage";
 import { EditResultsPage } from "./pages/EditResultsPage";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/calculadora-salario" element={<SalaryCalculatorPage />} />
           <Route path="/simulador-seguro-desemprego" element={<UnemploymentSimulatorPage />} />
           <Route path="/horas-extras" element={<OvertimeCalculatorPage />} />
+          <Route path="/painel-administrativo" element={<AdminDashboardPage />} />
           <Route path="/horas-extras/editar/:id" element={<EditCalculationPage />} />
           <Route path="/horas-extras/editar-horarios/:id" element={<EditTimeEntriesPage />} />
           <Route path="/horas-extras/resultados/:id" element={<EditResultsPage />} />
