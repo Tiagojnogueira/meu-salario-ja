@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export interface UserProfile {
   id: string;
@@ -15,11 +16,19 @@ export interface UserProfile {
 }
 
 export const useUsers = () => {
+  const { session, user } = useSupabaseAuth();
+
   return useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', user?.id],
     queryFn: async () => {
       try {
-        console.log('🔍 Buscando usuários do sistema...');
+        // Verificar se há sessão ativa
+        if (!session || !user) {
+          console.log('⚠️ Usuário não autenticado');
+          throw new Error('Usuário não autenticado');
+        }
+
+        console.log('🔍 Buscando usuários do sistema...', { userId: user.id });
         
         // Query simples e direta para buscar todos os profiles
         const { data, error } = await supabase
@@ -73,15 +82,22 @@ export const useUsers = () => {
         throw error;
       }
     },
+    enabled: !!session && !!user, // Só executar se houver sessão ativa
     retry: 1,
     staleTime: 30000, // 30 segundos
   });
 };
 
 export const useUserStats = () => {
+  const { session, user } = useSupabaseAuth();
+
   return useQuery({
-    queryKey: ['user-stats'],
+    queryKey: ['user-stats', user?.id],
     queryFn: async () => {
+      if (!session || !user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, created_at');
@@ -90,16 +106,17 @@ export const useUserStats = () => {
         throw error;
       }
 
-      const totalUsers = profiles.length;
+      const totalUsers = profiles?.length || 0;
       const today = new Date().toISOString().split('T')[0];
-      const newUsersToday = profiles.filter(p => 
+      const newUsersToday = profiles?.filter(p => 
         p.created_at.startsWith(today)
-      ).length;
+      ).length || 0;
 
       return {
         totalUsers,
         newUsersToday
       };
     },
+    enabled: !!session && !!user, // Só executar se houver sessão ativa
   });
 };
