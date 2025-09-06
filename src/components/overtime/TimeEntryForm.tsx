@@ -116,6 +116,13 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate, selectedUser
   };
 
   const handleCalculate = async () => {
+    console.log('TimeEntryForm - handleCalculate called with:', {
+      calculationId,
+      selectedUserId,
+      targetUserId,
+      dayEntriesCount: dayEntries.length
+    });
+    
     // Update calculation with day entries (no validation required)
     const success = await updateCalculation(calculationId, {
       day_entries: dayEntries
@@ -123,6 +130,7 @@ export const TimeEntryForm = ({ calculationId, onBack, onCalculate, selectedUser
 
     if (success) {
       toast.success('Cálculo criado com sucesso!');
+      console.log('TimeEntryForm - Calling onCalculate, should navigate to results with calculationId:', calculationId);
       onCalculate();
     }
   };

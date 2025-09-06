@@ -29,9 +29,14 @@ export const useSupabaseCalculations = (userId?: string) => {
   const [loading, setLoading] = useState(false);
 
   const fetchCalculations = async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('useSupabaseCalculations - No userId provided, skipping fetch');
+      return;
+    }
     
     setLoading(true);
+    console.log('useSupabaseCalculations - Fetching calculations for userId:', userId);
+    
     try {
       const { data, error } = await supabase
         .from('calculations')
@@ -40,10 +45,12 @@ export const useSupabaseCalculations = (userId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching calculations:', error);
+        console.error('useSupabaseCalculations - Error fetching calculations:', error);
         toast.error('Erro ao carregar cálculos');
         return;
       }
+
+      console.log('useSupabaseCalculations - Fetched calculations:', data?.length || 0, 'records');
 
       // Transform the data to match our interface
       const transformedData: Calculation[] = (data || []).map(item => ({
@@ -215,7 +222,19 @@ export const useSupabaseCalculations = (userId?: string) => {
   };
 
   const getCalculation = (id: string): Calculation | undefined => {
-    return calculations.find(calc => calc.id === id);
+    console.log('useSupabaseCalculations - getCalculation called with id:', id);
+    console.log('useSupabaseCalculations - Available calculations:', calculations.length);
+    console.log('useSupabaseCalculations - userId:', userId);
+    
+    const calculation = calculations.find(calc => calc.id === id);
+    
+    console.log('useSupabaseCalculations - Found calculation:', !!calculation, calculation?.id);
+    
+    if (!calculation) {
+      console.log('useSupabaseCalculations - All calculation IDs:', calculations.map(c => c.id));
+    }
+    
+    return calculation;
   };
 
   const getDefaultWorkingHours = (): WorkingHours => ({
