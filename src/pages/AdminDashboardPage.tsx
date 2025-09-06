@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,6 +35,7 @@ import { useUsers, useUserStats, UserProfile } from "@/hooks/useUsers";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AdminDashboardPage = () => {
@@ -45,6 +46,13 @@ const AdminDashboardPage = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
@@ -88,6 +96,74 @@ const AdminDashboardPage = () => {
       role: userToEdit.role || 'user'
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleChangePassword = (userToEdit: UserProfile) => {
+    setEditingUser(userToEdit);
+    setPasswordForm({
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handleSavePassword = async () => {
+    if (!editingUser) return;
+
+    // Validações
+    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    try {
+      console.log('🔑 Alterando senha do usuário:', editingUser.user_id);
+      
+      const { data, error } = await supabase.functions.invoke('admin-change-password', {
+        body: {
+          userId: editingUser.user_id,
+          newPassword: passwordForm.newPassword
+        }
+      });
+
+      if (error) {
+        console.error('❌ Erro na função:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error('❌ Erro retornado pela função:', data.error);
+        throw new Error(data.error);
+      }
+
+      console.log('✅ Resposta da função:', data);
+      toast.success(`Senha de ${editingUser.name} alterada com sucesso!`);
+      setIsPasswordDialogOpen(false);
+      setEditingUser(null);
+      setPasswordForm({ newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      console.error('💥 Erro ao alterar senha:', error);
+      
+      if (error?.message?.includes('Permissão negada')) {
+        toast.error('Você não tem permissão para alterar senhas');
+      } else if (error?.message?.includes('Token inválido')) {
+        toast.error('Sessão expirada. Faça login novamente');
+      } else {
+        toast.error('Erro ao alterar senha: ' + (error?.message || 'Erro desconhecido'));
+      }
+    }
   };
 
   const handleSaveUser = async () => {
@@ -627,29 +703,36 @@ const AdminDashboardPage = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                  <DropdownMenuItem
-                                    onClick={() => handleEditUser(userData)}
-                                    className="cursor-pointer"
-                                  >
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Editar Perfil
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleEditUser(userData)}
-                                    className="cursor-pointer"
-                                  >
-                                    <UserCog className="mr-2 h-4 w-4" />
-                                    Alterar Função
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeleteUser(userData)}
-                                    className="cursor-pointer text-destructive focus:text-destructive"
-                                    disabled={userData.user_id === user?.id}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Deletar Usuário
-                                  </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleEditUser(userData)}
+                                      className="cursor-pointer"
+                                    >
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Editar Perfil
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleEditUser(userData)}
+                                      className="cursor-pointer"
+                                    >
+                                      <UserCog className="mr-2 h-4 w-4" />
+                                      Alterar Função
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleChangePassword(userData)}
+                                      className="cursor-pointer"
+                                    >
+                                      <Key className="mr-2 h-4 w-4" />
+                                      Alterar Senha
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteUser(userData)}
+                                      className="cursor-pointer text-destructive focus:text-destructive"
+                                      disabled={userData.user_id === user?.id}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Deletar Usuário
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -758,6 +841,108 @@ const AdminDashboardPage = () => {
           <DialogFooter>
             <Button type="submit" onClick={handleSaveUser}>
               Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Alteração de Senha */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Alterar Senha
+            </DialogTitle>
+            <DialogDescription>
+              {editingUser && (
+                <>Altere a senha do usuário <strong>{editingUser.name}</strong>. A nova senha deve ter pelo menos 6 caracteres.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="newPassword" className="text-right">
+                Nova Senha
+              </Label>
+              <div className="col-span-3 relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Digite a nova senha"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="confirmPassword" className="text-right">
+                Confirmar
+              </Label>
+              <div className="col-span-3 relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirme a nova senha"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            {passwordForm.newPassword && passwordForm.newPassword.length < 6 && (
+              <div className="col-span-4 text-sm text-destructive">
+                A senha deve ter pelo menos 6 caracteres
+              </div>
+            )}
+            {passwordForm.newPassword && passwordForm.confirmPassword && 
+             passwordForm.newPassword !== passwordForm.confirmPassword && (
+              <div className="col-span-4 text-sm text-destructive">
+                As senhas não coincidem
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleSavePassword}
+              disabled={
+                !passwordForm.newPassword || 
+                !passwordForm.confirmPassword || 
+                passwordForm.newPassword !== passwordForm.confirmPassword ||
+                passwordForm.newPassword.length < 6
+              }
+            >
+              <Key className="w-4 h-4 mr-2" />
+              Alterar Senha
             </Button>
           </DialogFooter>
         </DialogContent>
