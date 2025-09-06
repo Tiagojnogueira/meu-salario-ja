@@ -173,23 +173,6 @@ export const ProfilePage = () => {
                   
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profile.email}
-                          disabled
-                          className="pl-10 bg-muted/50 border-muted"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        O e-mail não pode ser alterado
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label className="text-sm font-medium">Conta Criada em</Label>
                       <div className="bg-muted/50 rounded-md border border-muted p-3 h-10 flex items-center">
                         <p className="text-sm">
@@ -204,6 +187,23 @@ export const ProfilePage = () => {
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Data de criação da conta
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          value={profile.email}
+                          disabled
+                          className="pl-10 bg-muted/50 border-muted"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        O e-mail não pode ser alterado
                       </p>
                     </div>
 
