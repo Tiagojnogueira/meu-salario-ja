@@ -24,6 +24,14 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const calculationsPerPage = 10;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
+  };
   
   // Calculate pagination
   const totalPages = Math.ceil(calculations.length / calculationsPerPage);
@@ -77,7 +85,7 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
                 <User className="h-4 w-4 mr-2" />
                 Minha Conta
               </Button>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
