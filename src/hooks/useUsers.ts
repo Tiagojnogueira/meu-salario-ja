@@ -17,25 +17,48 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Buscar todos os profiles com LEFT JOIN para incluir usuários sem roles
-      const { data: users, error } = await supabase
+      console.log('Iniciando busca de usuários...');
+      
+      // Primeiro, buscar todos os profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        throw error;
+      console.log('Profiles encontrados:', profiles);
+      
+      if (profilesError) {
+        console.error('Erro ao buscar profiles:', profilesError);
+        throw profilesError;
       }
 
-      // Transformar os dados para o formato esperado
-      const usersWithRoles = users.map((user: any) => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user'
-      }));
+      if (!profiles || profiles.length === 0) {
+        console.log('Nenhum profile encontrado');
+        return [];
+      }
 
+      // Buscar roles separadamente
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      console.log('Roles encontradas:', roles);
+      
+      if (rolesError) {
+        console.error('Erro ao buscar roles:', rolesError);
+        // Continuar mesmo se houver erro nas roles
+      }
+
+      // Combinar profiles com roles
+      const usersWithRoles = profiles.map((profile: any) => {
+        const userRole = roles?.find(r => r.user_id === profile.user_id);
+        return {
+          ...profile,
+          role: userRole?.role || 'user'
+        };
+      });
+
+      console.log('Usuários finais:', usersWithRoles);
       return usersWithRoles as UserProfile[];
     },
   });
