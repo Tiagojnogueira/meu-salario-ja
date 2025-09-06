@@ -17,12 +17,12 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Buscar profiles com roles através de JOIN
+      // Buscar todos os profiles com LEFT JOIN para incluir usuários sem roles
       const { data: users, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles!inner(role)
+          user_roles(role)
         `)
         .order('created_at', { ascending: false });
       
