@@ -80,6 +80,7 @@ const OvertimeCalculatorPage = () => {
   };
 
   const handleCalculateResults = () => {
+    console.log('OvertimeCalculatorPage - handleCalculateResults called with selectedUserId:', selectedUserId);
     setCurrentStep('results');
   };
 

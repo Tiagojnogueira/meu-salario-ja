@@ -279,7 +279,11 @@ export const EditTimeEntriesPage = () => {
       
       if (success) {
         toast.success('Dados salvos com sucesso!');
-        navigate(`/horas-extras/resultados/${id}`);
+        // Incluir userId na URL se for admin visualizando outro usuário
+        const url = selectedUserId 
+          ? `/horas-extras/resultados/${id}?userId=${selectedUserId}`
+          : `/horas-extras/resultados/${id}`;
+        navigate(url);
       }
     } catch (error) {
       toast.error('Erro ao salvar dados');
@@ -445,7 +449,12 @@ export const EditTimeEntriesPage = () => {
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-6">
-            <Button variant="outline" onClick={() => navigate(`/horas-extras/editar/${id}`)}>
+            <Button variant="outline" onClick={() => {
+              const url = selectedUserId 
+                ? `/horas-extras/editar/${id}?userId=${selectedUserId}`
+                : `/horas-extras/editar/${id}`;
+              navigate(url);
+            }}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar aos Parâmetros
             </Button>

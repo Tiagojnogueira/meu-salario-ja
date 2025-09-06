@@ -40,26 +40,10 @@ export const ResultsPage = ({ calculationId, onBack, onBackToDashboard, onEdit, 
   const { profile } = useSupabaseAuth();
   // Se há selectedUserId (admin visualizando outro usuário), usar ele, senão usar o próprio user_id
   const targetUserId = selectedUserId || profile?.user_id;
-  
-  console.log('ResultsPage - Debug info:', {
-    calculationId,
-    selectedUserId,
-    profileUserId: profile?.user_id,
-    targetUserId,
-    isAdmin: !!selectedUserId
-  });
-  
   const { getCalculation } = useSupabaseCalculations(targetUserId);
   const calculation = getCalculation(calculationId);
 
-  console.log('ResultsPage - Calculation found:', !!calculation, calculation?.id);
-
   if (!calculation) {
-    console.error('ResultsPage - Calculation not found!', {
-      calculationId,
-      targetUserId,
-      availableCalculations: 'checking...'
-    });
     return <div>Cálculo não encontrado</div>;
   }
 
