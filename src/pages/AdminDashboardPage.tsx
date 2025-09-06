@@ -34,6 +34,7 @@ import { Link } from "react-router-dom";
 import { useUsers, useUserStats, UserProfile } from "@/hooks/useUsers";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useUserManagement } from "@/hooks/useUserManagement";
 import { toast } from "sonner";
 
 const AdminDashboardPage = () => {
@@ -56,13 +57,12 @@ const AdminDashboardPage = () => {
   const { data: stats } = useUserStats();
   const { user, isAdmin, loading: adminLoading, isAuthenticated } = useAdminAuth();
   const { logout, login } = useSupabaseAuth();
+  const { updateUserProfile, updateUserRole, deleteUser } = useUserManagement();
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'admin':
         return 'destructive';
-      case 'moderator':
-        return 'default';
       default:
         return 'secondary';
     }
@@ -94,16 +94,49 @@ const AdminDashboardPage = () => {
     if (!editingUser) return;
 
     try {
-      // Aqui você implementaria a lógica para salvar no Supabase
-      // Por enquanto, apenas simulamos o sucesso
-      console.log('Salvando usuário:', editForm);
+      // Atualizar perfil do usuário
+      const profileResult = await updateUserProfile(editingUser.user_id, {
+        name: editForm.name,
+        email: editForm.email,
+        username: editForm.username,
+        office_name: editForm.office_name,
+        phone: editForm.phone,
+      });
+
+      if (!profileResult.success) {
+        throw profileResult.error;
+      }
+
+      // Atualizar role se mudou
+      if (editForm.role !== editingUser.role) {
+        const roleResult = await updateUserRole(editingUser.user_id, editForm.role as 'user' | 'admin');
+        
+        if (!roleResult.success) {
+          throw roleResult.error;
+        }
+      }
+
       toast.success('Usuário atualizado com sucesso!');
       setIsEditDialogOpen(false);
       setEditingUser(null);
       refetchUsers(); // Recarregar a lista
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar usuário:', error);
-      toast.error('Erro ao atualizar usuário');
+      
+      // Tratar erros específicos
+      if (error?.code === '23505') {
+        if (error.details?.includes('username')) {
+          toast.error('Nome de usuário já está em uso');
+        } else if (error.details?.includes('email')) {
+          toast.error('Email já está em uso');
+        } else {
+          toast.error('Dados duplicados encontrados');
+        }
+      } else if (error?.code === 'PGRST116') {
+        toast.error('Usuário não encontrado');
+      } else {
+        toast.error('Erro ao atualizar usuário: ' + (error?.message || 'Erro desconhecido'));
+      }
     }
   };
 
@@ -113,15 +146,24 @@ const AdminDashboardPage = () => {
       return;
     }
 
-    if (confirm(`Tem certeza que deseja deletar o usuário ${userToDelete.name}?`)) {
+    if (confirm(`Tem certeza que deseja deletar o usuário ${userToDelete.name}?\n\nEsta ação irá:\n- Remover o perfil do usuário\n- Remover todas as permissões\n- Deletar todos os cálculos do usuário\n\nEsta ação não pode ser desfeita.`)) {
       try {
-        // Implementar lógica de deleção
-        console.log('Deletando usuário:', userToDelete);
-        toast.success('Usuário deletado com sucesso!');
+        const result = await deleteUser(userToDelete.user_id);
+        
+        if (!result.success) {
+          throw result.error;
+        }
+        
+        toast.success(`Usuário ${userToDelete.name} deletado com sucesso!`);
         refetchUsers();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao deletar usuário:', error);
-        toast.error('Erro ao deletar usuário');
+        
+        if (error?.code === 'PGRST116') {
+          toast.error('Usuário não encontrado');
+        } else {
+          toast.error('Erro ao deletar usuário: ' + (error?.message || 'Erro desconhecido'));
+        }
       }
     }
   };
@@ -569,8 +611,7 @@ const AdminDashboardPage = () => {
                             </TableCell>
                             <TableCell>
                               <Badge variant={getRoleBadgeVariant(userData.role || 'user')}>
-                                {userData.role === 'admin' ? 'Administrador' : 
-                                 userData.role === 'moderator' ? 'Moderador' : 'Usuário'}
+                                {userData.role === 'admin' ? 'Administrador' : 'Usuário'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
@@ -709,7 +750,6 @@ const AdminDashboardPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="moderator">Moderador</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
