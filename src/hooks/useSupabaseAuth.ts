@@ -132,57 +132,41 @@ export const useSupabaseAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      // Primeiro verificar se o usuário existe e está ativo ANTES de fazer login
+      // Primeiro tentar fazer login para validar credenciais
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        toast.error('Email ou senha incorretos');
+        return false;
+      }
+
+      // Login foi bem sucedido, agora verificar se o usuário está ativo
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('active, user_id')
         .eq('email', email)
         .maybeSingle();
 
-      // Se encontrou o usuário no profiles
-      if (userData) {
-        if (!userData.active) {
-          // Usuário existe mas está inativo - bloquear completamente
-          // Garantir que não há sessão ativa e limpar dados locais
-          await supabase.auth.signOut();
-          localStorage.clear();
-          setUser(null);
-          setSession(null);
-          setProfile(null);
-          
-          toast.error('Sua conta está inativa. Entre em contato com o administrador.');
-          return false;
-        }
+      // Se encontrou o usuário no profiles e está inativo
+      if (userData && !userData.active) {
+        // Usuário existe mas está inativo - fazer logout imediatamente
+        await supabase.auth.signOut();
+        localStorage.clear();
+        setUser(null);
+        setSession(null);
+        setProfile(null);
         
-        // Usuário existe e está ativo, prosseguir com login
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          toast.error('Email ou senha incorretos');
-          return false;
-        }
-
-        toast.success('Login realizado com sucesso!');
-        return true;
-      } else {
-        // Usuário não encontrado no profiles, tentar login normal
-        // (pode ser novo usuário ou erro de email/senha)
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          toast.error('Email ou senha incorretos');
-          return false;
-        }
-
-        toast.success('Login realizado com sucesso!');
-        return true;
+        toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+        return false;
       }
+
+      // Usuário ativo ou não encontrado no profiles - manter login
+      toast.success('Login realizado com sucesso!');
+      return true;
+
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Erro ao fazer login');
