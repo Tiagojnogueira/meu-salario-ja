@@ -6,7 +6,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseCalculations } from '@/hooks/useSupabaseCalculations';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, LogOut, Calculator, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,9 +17,10 @@ interface DashboardProps {
   onEditCalculation: (id: string) => void;
   selectedUserId?: string;
   selectedUserName?: string;
+  onBackToSelection?: () => void;
 }
 
-export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, selectedUserId, selectedUserName }: DashboardProps) => {
+export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, selectedUserId, selectedUserName, onBackToSelection }: DashboardProps) => {
   const navigate = useNavigate();
   const { profile, logout } = useSupabaseAuth();
   const { isAdmin } = useAdminAuth();
@@ -91,6 +92,16 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, s
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {selectedUserId && onBackToSelection && (
+                <Button 
+                  variant="ghost" 
+                  onClick={onBackToSelection}
+                  title="Voltar à Seleção"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar à Seleção
+                </Button>
+              )}
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/horas-extras/perfil')}
@@ -124,9 +135,9 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, s
                 }
               </p>
             </div>
-            <Button onClick={onCreateNew} size="lg" className="shadow-lg" disabled={!!selectedUserId}>
+            <Button onClick={onCreateNew} size="lg" className="shadow-lg">
               <Plus className="h-5 w-5 mr-2" />
-              {selectedUserId ? 'Criar Novo (Desabilitado)' : 'Criar Novo Cálculo'}
+              Criar Novo Cálculo
             </Button>
           </div>
 
@@ -156,12 +167,10 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, s
                       'Comece criando seu primeiro cálculo de horas extras'
                     }
                   </p>
-                  {!selectedUserId && (
-                    <Button onClick={onCreateNew}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Primeiro Cálculo
-                    </Button>
-                  )}
+                  <Button onClick={onCreateNew}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Primeiro Cálculo
+                  </Button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -224,7 +233,6 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, s
                                      onEditCalculation(calculation.id);
                                    }}
                                    title="Editar"
-                                   disabled={!!selectedUserId}
                                  >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -234,7 +242,6 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation, s
                                   onClick={() => handleDelete(calculation.id, calculation.description)}
                                   className="text-destructive hover:text-destructive"
                                   title="Excluir"
-                                  disabled={!!selectedUserId}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>

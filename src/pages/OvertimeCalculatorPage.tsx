@@ -109,6 +109,11 @@ const OvertimeCalculatorPage = () => {
           onEditCalculation={handleEditCalculation}
           selectedUserId={selectedUserId}
           selectedUserName={selectedUserName}
+          onBackToSelection={() => {
+            setSelectedUserId('');
+            setSelectedUserName('');
+            setCurrentStep('admin-selection');
+          }}
         />
       );
     
@@ -147,6 +152,11 @@ const OvertimeCalculatorPage = () => {
           onEditCalculation={handleEditCalculation}
           selectedUserId={selectedUserId}
           selectedUserName={selectedUserName}
+          onBackToSelection={() => {
+            setSelectedUserId('');
+            setSelectedUserName('');
+            setCurrentStep('admin-selection');
+          }}
         />
       );
   }
