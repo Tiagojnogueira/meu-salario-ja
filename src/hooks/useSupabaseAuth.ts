@@ -27,18 +27,13 @@ export const useSupabaseAuth = () => {
   const effectiveProfile = isImpersonating ? impersonatedUser : profile;
 
   useEffect(() => {
-    console.log('useSupabaseAuth: Setting up auth listener');
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('useSupabaseAuth: Auth state changed', { event, hasSession: !!session, userId: session?.user?.id });
-        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('useSupabaseAuth: Fetching profile for user:', session.user.id);
           // Fetch user profile
           try {
             const { data: profileData, error } = await supabase
@@ -46,8 +41,6 @@ export const useSupabaseAuth = () => {
               .select('*')
               .eq('user_id', session.user.id)
               .maybeSingle();
-              
-            console.log('useSupabaseAuth: Profile fetch result', { profileData, error });
               
             if (error) {
               console.error('Error fetching profile:', error);
@@ -60,21 +53,17 @@ export const useSupabaseAuth = () => {
             setProfile(null);
           }
         } else {
-          console.log('useSupabaseAuth: No session, clearing profile');
           setProfile(null);
         }
         
-        console.log('useSupabaseAuth: Setting loading to false');
         setLoading(false);
       }
     );
 
     // Check for existing session on mount
     const initializeAuth = async () => {
-      console.log('useSupabaseAuth: Initializing auth');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('useSupabaseAuth: Initial session check', { hasSession: !!session, error, userId: session?.user?.id });
         
         if (error) {
           console.error('Error getting session:', error);
@@ -82,17 +71,14 @@ export const useSupabaseAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If we have a user but the auth listener hasn't run yet, fetch profile
-        if (session?.user && !profile) {
-          console.log('useSupabaseAuth: Fetching profile on init for user:', session.user.id);
+        // If we have a user, fetch profile on init
+        if (session?.user) {
           try {
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .maybeSingle();
-              
-            console.log('useSupabaseAuth: Initial profile fetch result', { profileData, profileError });
               
             if (profileError) {
               console.error('Error fetching profile on init:', profileError);
@@ -104,7 +90,6 @@ export const useSupabaseAuth = () => {
           }
         }
         
-        console.log('useSupabaseAuth: Setting loading to false after initialization');
         setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
