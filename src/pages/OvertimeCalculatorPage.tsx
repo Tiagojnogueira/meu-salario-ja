@@ -64,12 +64,16 @@ const OvertimeCalculatorPage = () => {
   };
 
   const handleBackToDashboard = () => {
-    if (isAdmin) {
-      // Se for admin, voltar sempre para seleção de usuário
+    if (isAdmin && selectedUserId) {
+      // Se for admin com usuário selecionado, ir para dashboard do usuário selecionado
+      setCurrentStep('dashboard');
+    } else if (isAdmin) {
+      // Se for admin sem usuário selecionado, ir para seleção de usuário
       setCurrentStep('user-selection');
       setSelectedUserId('');
       setSelectedUserName('');
     } else {
+      // Usuário normal vai para dashboard
       setCurrentStep('dashboard');
     }
     setCurrentCalculationId('');
