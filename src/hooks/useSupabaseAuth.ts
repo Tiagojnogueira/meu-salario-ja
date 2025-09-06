@@ -100,24 +100,27 @@ export const useSupabaseAuth = () => {
         .eq('email', email)
         .single();
 
-      if (userError) {
-        toast.error('Email ou senha incorretos');
-        return false;
+      // Se encontrou o usuário, verificar se está ativo
+      if (userData && !userError) {
+        if (!userData.active) {
+          toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+          return false;
+        }
       }
 
-      if (!userData.active) {
-        toast.error('Sua conta está inativa. Entre em contato com o administrador.');
-        return false;
-      }
-
-      // Só fazer login se o usuário estiver ativo
+      // Tentar fazer login (independente se encontrou o perfil ou não)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        toast.error('Email ou senha incorretos');
+        // Se o login falhou mas sabemos que o usuário existe e está inativo
+        if (userData && !userData.active) {
+          toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+        } else {
+          toast.error('Email ou senha incorretos');
+        }
         return false;
       }
 
