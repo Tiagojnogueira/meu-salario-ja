@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useUsers } from '@/hooks/useUsers';
-import { Calculator, Users, LogOut, User, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Calculator, Users, LogOut, User, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -19,13 +19,16 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
   const { data: users, isLoading } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
-  // Ordenar usuários: primeiro o próprio admin, depois outros usuários ativos
+  // Ordenar usuários: primeiro o próprio admin, depois usuários ativos, depois inativos
   const sortedUsers = users ? users
-    .filter(user => user.active)
     .sort((a, b) => {
       // Colocar o próprio usuário logado primeiro
       if (a.user_id === profile?.user_id) return -1;
       if (b.user_id === profile?.user_id) return 1;
+      // Usuários ativos vêm antes dos inativos
+      if (a.active !== b.active) {
+        return a.active ? -1 : 1;
+      }
       // Depois ordenar por nome
       return a.name.localeCompare(b.name);
     }) : [];
@@ -61,8 +64,8 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
     onUserSelected(selectedUserId, selectedUser.name);
   };
 
-  // Filtrar apenas usuários ativos (já feito no sortedUsers)
-  const activeUsers = sortedUsers;
+  // Todos os usuários (ativos e inativos)
+  const allUsers = sortedUsers;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -131,14 +134,14 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                   <p className="text-muted-foreground">Carregando usuários...</p>
                 </div>
-              ) : activeUsers.length === 0 ? (
+              ) : allUsers.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                    Nenhum usuário ativo encontrado
+                    Nenhum usuário encontrado
                   </h3>
                   <p className="text-muted-foreground">
-                    Não há usuários ativos no sistema no momento
+                    Não há usuários no sistema no momento
                   </p>
                 </div>
               ) : (
@@ -152,15 +155,22 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
                         <SelectValue placeholder="Selecione um usuário" />
                       </SelectTrigger>
                       <SelectContent>
-                        {activeUsers.map((user) => (
+                        {allUsers.map((user) => (
                           <SelectItem key={user.user_id} value={user.user_id}>
                             <div className="flex items-center space-x-3">
                               <div className="flex items-center space-x-2">
-                                <CheckCircle className="h-3 w-3 text-green-500" />
-                                <span className="font-medium">
+                                {user.active ? (
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 text-red-500" />
+                                )}
+                                <span className={`font-medium ${!user.active ? 'text-muted-foreground' : ''}`}>
                                   {user.name}
                                   {user.user_id === profile?.user_id && (
                                     <span className="text-xs text-primary ml-1">(Você)</span>
+                                  )}
+                                  {!user.active && (
+                                    <span className="text-xs text-red-500 ml-1">(Inativo)</span>
                                   )}
                                 </span>
                               </div>
