@@ -28,6 +28,8 @@ export const Dashboard = ({ onCreateNew, onViewCalculation, onEditCalculation }:
   const handleLogout = async () => {
     try {
       await logout();
+      // Redirecionar para a página inicial após logout
+      navigate('/');
     } catch (error) {
       console.error('Erro no logout:', error);
     }
