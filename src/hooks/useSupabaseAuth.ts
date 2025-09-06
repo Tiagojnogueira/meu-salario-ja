@@ -136,15 +136,42 @@ export const useSupabaseAuth = () => {
 
   const logout = async () => {
     try {
+      // Limpar estados locais primeiro
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Limpar localStorage (dados em cache)
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('sb-vtvxneaveskidxjmfmiw-auth-token');
+      localStorage.clear(); // Limpa todo o localStorage para garantir
+      
+      // Fazer logout no Supabase
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
+        console.error('Logout error:', error);
         toast.error('Erro ao sair');
       } else {
         toast.success('Logout realizado com sucesso!');
       }
+      
+      // Forçar redirecionamento para página inicial
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Erro ao sair');
+      // Mesmo com erro, limpar dados locais e redirecionar
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      localStorage.clear();
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     }
   };
 
