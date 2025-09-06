@@ -4,7 +4,6 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { LoginForm } from '@/components/overtime/LoginForm';
 import { Dashboard } from '@/components/overtime/Dashboard';
-import { AdminDashboardSelection } from '@/components/overtime/AdminDashboardSelection';
 import { UserSelection } from '@/components/overtime/UserSelection';
 import { CreateCalculation } from '@/components/overtime/CreateCalculation';
 import { TimeEntryForm } from '@/components/overtime/TimeEntryForm';
@@ -14,7 +13,7 @@ import { CalculationStep } from '@/types/overtime';
 const OvertimeCalculatorPage = () => {
   const { user, loading } = useSupabaseAuth();
   const { isAdmin } = useAdminAuth();
-  const [currentStep, setCurrentStep] = useState<CalculationStep | 'admin-selection' | 'user-selection'>('dashboard');
+  const [currentStep, setCurrentStep] = useState<CalculationStep | 'user-selection'>('dashboard');
   const [currentCalculationId, setCurrentCalculationId] = useState<string>('');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
@@ -35,9 +34,9 @@ const OvertimeCalculatorPage = () => {
     return <LoginForm onLoginSuccess={() => setCurrentStep('dashboard')} />;
   }
 
-  // Se o usuário logou e é admin, mostrar seleção inicial  
+  // Se o usuário logou e é admin e está no dashboard sem usuário selecionado, redirecionar para seleção
   if (user && isAdmin && currentStep === 'dashboard' && !selectedUserId) {
-    setCurrentStep('admin-selection');
+    setCurrentStep('user-selection');
   }
 
   const handleCreateNew = () => {
@@ -61,9 +60,9 @@ const OvertimeCalculatorPage = () => {
   };
 
   const handleBackToDashboard = () => {
-    if (isAdmin && selectedUserId) {
-      // Se for admin visualizando outro usuário, voltar para seleção
-      setCurrentStep('admin-selection');
+    if (isAdmin) {
+      // Se for admin, voltar sempre para seleção de usuário
+      setCurrentStep('user-selection');
       setSelectedUserId('');
       setSelectedUserName('');
     } else {
@@ -77,22 +76,10 @@ const OvertimeCalculatorPage = () => {
   };
 
   switch (currentStep) {
-    case 'admin-selection':
-      return (
-        <AdminDashboardSelection 
-          onMyCalculations={() => {
-            setSelectedUserId('');
-            setSelectedUserName('');
-            setCurrentStep('dashboard');
-          }}
-          onUserCalculations={() => setCurrentStep('user-selection')}
-        />
-      );
-
     case 'user-selection':
       return (
         <UserSelection 
-          onBack={() => setCurrentStep('admin-selection')}
+          onBack={() => navigate('/')}
           onUserSelected={(userId, userName) => {
             setSelectedUserId(userId);
             setSelectedUserName(userName);
@@ -112,7 +99,7 @@ const OvertimeCalculatorPage = () => {
           onBackToSelection={() => {
             setSelectedUserId('');
             setSelectedUserName('');
-            setCurrentStep('admin-selection');
+            setCurrentStep('user-selection');
           }}
         />
       );
@@ -155,7 +142,7 @@ const OvertimeCalculatorPage = () => {
           onBackToSelection={() => {
             setSelectedUserId('');
             setSelectedUserName('');
-            setCurrentStep('admin-selection');
+            setCurrentStep('user-selection');
           }}
         />
       );

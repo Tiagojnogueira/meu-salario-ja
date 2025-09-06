@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +19,24 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
   const { data: users, isLoading } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
+  // Ordenar usuários: primeiro o próprio admin, depois outros usuários ativos
+  const sortedUsers = users ? users
+    .filter(user => user.active)
+    .sort((a, b) => {
+      // Colocar o próprio usuário logado primeiro
+      if (a.user_id === profile?.user_id) return -1;
+      if (b.user_id === profile?.user_id) return 1;
+      // Depois ordenar por nome
+      return a.name.localeCompare(b.name);
+    }) : [];
+
+  // Definir o usuário padrão como o próprio admin ao carregar a lista
+  useEffect(() => {
+    if (sortedUsers.length > 0 && !selectedUserId && profile?.user_id) {
+      setSelectedUserId(profile.user_id);
+    }
+  }, [sortedUsers, selectedUserId, profile?.user_id]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -34,7 +52,7 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
       return;
     }
 
-    const selectedUser = users?.find(u => u.user_id === selectedUserId);
+    const selectedUser = sortedUsers.find(u => u.user_id === selectedUserId);
     if (!selectedUser) {
       toast.error('Usuário não encontrado');
       return;
@@ -43,8 +61,8 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
     onUserSelected(selectedUserId, selectedUser.name);
   };
 
-  // Filtrar apenas usuários ativos
-  const activeUsers = users?.filter(user => user.active) || [];
+  // Filtrar apenas usuários ativos (já feito no sortedUsers)
+  const activeUsers = sortedUsers;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -102,9 +120,9 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
               <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 rounded-full mb-4 mx-auto">
                 <Users className="h-8 w-8 text-secondary-foreground" />
               </div>
-              <CardTitle className="text-xl">Cálculos dos Usuários</CardTitle>
+              <CardTitle className="text-xl">Seleção de Usuário</CardTitle>
               <CardDescription>
-                Selecione um usuário para visualizar seus cálculos de horas extras
+                Selecione um usuário para gerenciar seus cálculos de horas extras
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -139,7 +157,12 @@ export const UserSelection = ({ onBack, onUserSelected }: UserSelectionProps) =>
                             <div className="flex items-center space-x-3">
                               <div className="flex items-center space-x-2">
                                 <CheckCircle className="h-3 w-3 text-green-500" />
-                                <span className="font-medium">{user.name}</span>
+                                <span className="font-medium">
+                                  {user.name}
+                                  {user.user_id === profile?.user_id && (
+                                    <span className="text-xs text-primary ml-1">(Você)</span>
+                                  )}
+                                </span>
                               </div>
                               <span className="text-sm text-muted-foreground">
                                 ({user.email})
