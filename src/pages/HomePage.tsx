@@ -41,6 +41,44 @@ const HomePage = () => {
 
           {/* Applications Grid */}
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {/* Overtime Calculator App */}
+            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
+              <CardHeader className="flex-grow">
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
+                    <Clock className="h-6 w-6 text-primary" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <CardTitle className="text-xl">Sistema de Horas Extras</CardTitle>
+                <CardDescription>
+                  Sistema completo para cálculo de pontos, horas extras e adicional noturno. Controle preciso da jornada de trabalho.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Cálculo de horas extras 50% e 100%
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Adicional noturno automático
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Relatórios detalhados
+                  </div>
+                </div>
+                <Link to="/horas-extras">
+                  <Button className="w-full group-hover:bg-primary/90 transition-colors">
+                    Acessar Sistema
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Salary Calculator App */}
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
               <CardHeader className="flex-grow">
@@ -111,44 +149,6 @@ const HomePage = () => {
                 <Link to="/simulador-seguro-desemprego">
                   <Button className="w-full group-hover:bg-primary/90 transition-colors">
                     Acessar Simulador
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Overtime Calculator App */}
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col">
-              <CardHeader className="flex-grow">
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
-                    <Clock className="h-6 w-6 text-primary" />
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <CardTitle className="text-xl">Sistema de Horas Extras</CardTitle>
-                <CardDescription>
-                  Sistema completo para cálculo de pontos, horas extras e adicional noturno. Controle preciso da jornada de trabalho.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Cálculo de horas extras 50% e 100%
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Adicional noturno automático
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Relatórios detalhados
-                  </div>
-                </div>
-                <Link to="/horas-extras">
-                  <Button className="w-full group-hover:bg-primary/90 transition-colors">
-                    Acessar Sistema
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
