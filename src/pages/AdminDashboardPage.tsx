@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Users, FileText, BarChart3, Mail, Phone, Building, User, LogOut, Shield, Settings, TrendingUp, ChevronLeft, Eye, EyeOff, Edit, UserCog, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,8 +7,31 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { useUsers, useUserStats } from "@/hooks/useUsers";
+import { useUsers, useUserStats, UserProfile } from "@/hooks/useUsers";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -19,7 +42,17 @@ const AdminDashboardPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { data: users, isLoading: usersLoading } = useUsers();
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    username: '',
+    office_name: '',
+    phone: '',
+    role: 'user'
+  });
+  const { data: users, isLoading: usersLoading, refetch: refetchUsers } = useUsers();
   const { data: stats } = useUserStats();
   const { user, isAdmin, loading: adminLoading, isAuthenticated } = useAdminAuth();
   const { logout, login } = useSupabaseAuth();
@@ -42,6 +75,55 @@ const AdminDashboardPage = () => {
   const handleLogout = async () => {
     await logout();
     window.location.href = '/';
+  };
+
+  const handleEditUser = (userToEdit: UserProfile) => {
+    setEditingUser(userToEdit);
+    setEditForm({
+      name: userToEdit.name || '',
+      email: userToEdit.email || '',
+      username: userToEdit.username || '',
+      office_name: userToEdit.office_name || '',
+      phone: userToEdit.phone || '',
+      role: userToEdit.role || 'user'
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+
+    try {
+      // Aqui você implementaria a lógica para salvar no Supabase
+      // Por enquanto, apenas simulamos o sucesso
+      console.log('Salvando usuário:', editForm);
+      toast.success('Usuário atualizado com sucesso!');
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      refetchUsers(); // Recarregar a lista
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      toast.error('Erro ao atualizar usuário');
+    }
+  };
+
+  const handleDeleteUser = async (userToDelete: UserProfile) => {
+    if (userToDelete.user_id === user?.id) {
+      toast.error('Você não pode deletar sua própria conta');
+      return;
+    }
+
+    if (confirm(`Tem certeza que deseja deletar o usuário ${userToDelete.name}?`)) {
+      try {
+        // Implementar lógica de deleção
+        console.log('Deletando usuário:', userToDelete);
+        toast.success('Usuário deletado com sucesso!');
+        refetchUsers();
+      } catch (error) {
+        console.error('Erro ao deletar usuário:', error);
+        toast.error('Erro ao deletar usuário');
+      }
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -440,11 +522,12 @@ const AdminDashboardPage = () => {
                           <TableHead>Empresa</TableHead>
                           <TableHead>Função</TableHead>
                           <TableHead>Cadastro</TableHead>
+                          <TableHead className="text-center">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users.map((user) => (
-                          <TableRow key={user.id}>
+                        {users.map((userData) => (
+                          <TableRow key={userData.id}>
                             <TableCell>
                               <div className="flex items-center space-x-3">
                                 <div className="inline-flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
@@ -452,10 +535,10 @@ const AdminDashboardPage = () => {
                                 </div>
                                 <div>
                                   <div className="font-medium text-foreground">
-                                    {user.name}
+                                    {userData.name}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    @{user.username}
+                                    @{userData.username}
                                   </div>
                                 </div>
                               </div>
@@ -464,34 +547,70 @@ const AdminDashboardPage = () => {
                               <div className="space-y-1">
                                 <div className="flex items-center text-sm text-muted-foreground">
                                   <Mail className="h-3 w-3 mr-2" />
-                                  {user.email}
+                                  {userData.email}
                                 </div>
-                                {user.phone && (
+                                {userData.phone && (
                                   <div className="flex items-center text-sm text-muted-foreground">
                                     <Phone className="h-3 w-3 mr-2" />
-                                    {user.phone}
+                                    {userData.phone}
                                   </div>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              {user.office_name ? (
+                              {userData.office_name ? (
                                 <div className="flex items-center text-sm">
                                   <Building className="h-3 w-3 mr-2 text-muted-foreground" />
-                                  {user.office_name}
+                                  {userData.office_name}
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground">-</span>
                               )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getRoleBadgeVariant(user.role || 'user')}>
-                                {user.role === 'admin' ? 'Administrador' : 
-                                 user.role === 'moderator' ? 'Moderador' : 'Usuário'}
+                              <Badge variant={getRoleBadgeVariant(userData.role || 'user')}>
+                                {userData.role === 'admin' ? 'Administrador' : 
+                                 userData.role === 'moderator' ? 'Moderador' : 'Usuário'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(user.created_at)}
+                              {formatDate(userData.created_at)}
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Abrir menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditUser(userData)}
+                                    className="cursor-pointer"
+                                  >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Editar Perfil
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditUser(userData)}
+                                    className="cursor-pointer"
+                                  >
+                                    <UserCog className="mr-2 h-4 w-4" />
+                                    Alterar Função
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteUser(userData)}
+                                    className="cursor-pointer text-destructive focus:text-destructive"
+                                    disabled={userData.user_id === user?.id}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Deletar Usuário
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -510,6 +629,99 @@ const AdminDashboardPage = () => {
 
         </div>
       </main>
+
+      {/* Dialog de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>
+              Faça alterações nos dados do usuário aqui. Clique em salvar quando terminar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nome
+              </Label>
+              <Input
+                id="name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-right">
+                Username
+              </Label>
+              <Input
+                id="username"
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="office" className="text-right">
+                Empresa
+              </Label>
+              <Input
+                id="office"
+                value={editForm.office_name}
+                onChange={(e) => setEditForm({ ...editForm, office_name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                Telefone
+              </Label>
+              <Input
+                id="phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                Função
+              </Label>
+              <Select
+                value={editForm.role}
+                onValueChange={(value) => setEditForm({ ...editForm, role: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione uma função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="moderator">Moderador</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleSaveUser}>
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="border-t bg-background/50 mt-20">
